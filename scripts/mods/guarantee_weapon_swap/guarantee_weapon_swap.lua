@@ -6,6 +6,7 @@ local ability_configuration = PlayerCharacterConstants.ability_configuration
 
 mod._can_wield_grenade = nil
 mod._current_slot = nil
+mod._previous_slot = nil
 
 mod._promises = {
     quick = false,
@@ -17,9 +18,37 @@ mod._promises = {
     device = false
 }
 
+mod._promise_slot_map = {
+    slot_primary = "primary",
+    slot_secondary = "secondary",
+    slot_grenade_ability = "grenade",
+    slot_pocketable = "pocketable",
+    slot_pocketable_small = "pocketable_small",
+    slot_device = "device",
+}
+
+mod._promise_action_map = {
+    quick_wield = "quick",
+    wield_1 = "primary",
+    wield_2 = "secondary",
+    grenade_ability_pressed = "grenade",
+    wield_3 = "pocketable",
+    wield_4 = "pocketable_small",
+    wield_5 = "device"
+}
+
+mod._action_slot_map = {
+    wield_1 = "slot_primary",
+    wield_2 = "slot_secondary",
+    grenade_ability_pressed = "slot_grenade_ability",
+    wield_3 = "slot_pocketable",
+    wield_4 = "slot_pocketable_small",
+    wield_5 = "slot_device"
+}
+
 local function isPromised(action)
     -- if mod._promises[action] and mod._current_slot ~= nil then
-    --     mod:echo(mod._current_slot .. " -> " .. action)
+    --     mod:echo("mod:                                        " .. mod._current_slot .. " -> " .. action)
     -- end
     return mod._promises[action]
 end
@@ -32,65 +61,26 @@ end
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     mod._promises.quick = false
-    if slot_name == "slot_primary" then
-        mod._promises.primary = false
-    elseif slot_name == "slot_secondary" then
-        mod._promises.secondary = false
-    elseif slot_name == "slot_grenade_ability" then
-        mod._promises.grenade = false
-    elseif slot_name == "slot_pocketable" then
-        mod._promises.pocketable = false
-    elseif slot_name == "slot_pocketable_small" then
-        mod._promises.pocketable_small = false
-    elseif slot_name == "slot_device" then
-        mod._promises.device = false
-    end
+    mod._promises[mod._promise_slot_map[slot_name] or ""] = false
+    mod._previous_slot = mod._current_slot
     mod._current_slot = slot_name
+    -- if mod._current_slot ~= nil and mod._previous_slot ~= nil then
+    --     mod:echo("game:                                        " .. mod._previous_slot .. " -> " .. mod._current_slot)
+    -- end
 end)
 
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
 
-    if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
-        if action_name == "quick_wield" then
+    if mod._promise_action_map[action_name] then
+        if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
             clearAllPromises()
-            mod._promises.quick = true
-        elseif action_name == "wield_1" and mod._current_slot ~= "slot_primary" then
-            clearAllPromises()
-            mod._promises.primary = true
-        elseif action_name == "wield_2" and mod._current_slot ~= "slot_secondary" then
-            clearAllPromises()
-            mod._promises.secondary = true
-        elseif action_name == "grenade_ability_pressed" and mod._current_slot ~= "slot_grenade_ability" and mod._can_wield_grenade == true then
-            clearAllPromises()
-            mod._promises.grenade = true
-        elseif action_name == "wield_3" and mod._current_slot ~= "slot_pocketable" then
-            clearAllPromises()
-            mod._promises.pocketable = true
-        elseif action_name == "wield_4" and mod._current_slot ~= "slot_pocketable_small" then
-            clearAllPromises()
-            mod._promises.pocketable_small = true
-        elseif action_name == "wield_5" and mod._current_slot ~= "slot_device" then
-            clearAllPromises()
-            mod._promises.device = true
+            if mod._current_slot ~= mod._action_slot_map[action_name] then
+                mod._promises[mod._promise_action_map[action_name]] = true
+            end
         end
-    end
-
-    if action_name == "quick_wield" then
-        return func(self, "quick_wield") or isPromised("quick")
-    elseif action_name == "wield_1" then
-        return func(self, "wield_1") or isPromised("primary")
-    elseif action_name == "wield_2" then
-        return func(self, "wield_2") or isPromised("secondary")
-    elseif action_name == "grenade_ability_pressed" then
-        return func(self, "grenade_ability_pressed") or isPromised("grenade")
-    elseif action_name == "wield_3" then
-        return func(self, "wield_3") or isPromised("pocketable")
-    elseif action_name == "wield_4" then
-        return func(self, "wield_4") or isPromised("pocketable_small")
-    elseif action_name == "wield_5" then
-        return func(self, "wield_5") or isPromised("device")
+        return func(self, action_name) or isPromised(mod._promise_action_map[action_name])
     end
 
     return out
@@ -119,6 +109,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
 			local can_be_wielded_when_depleted = ability.can_be_wielded_when_depleted
 			local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
 			local can_use_ability = self:can_use_ability(ability_type)
+
             mod._can_wield_grenade = can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to
 
             if mod._can_wield_grenade ~= true then
