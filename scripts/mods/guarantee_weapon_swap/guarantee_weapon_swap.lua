@@ -53,6 +53,10 @@ local function isPromised(action)
     return mod._promises[action]
 end
 
+local function setPromise(action_name)
+    mod._promises[mod._promise_action_map[action_name]] = true
+end
+
 local function clearAllPromises()
     for key in pairs(mod._promises) do
         mod._promises[key] = false
@@ -77,7 +81,13 @@ local _input_hook = function(func, self, action_name)
         if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
             clearAllPromises()
             if mod._current_slot ~= mod._action_slot_map[action_name] then
-                mod._promises[mod._promise_action_map[action_name]] = true
+                if action_name == "grenade_ability_pressed" then
+                    if mod._can_wield_grenade == true then
+                        setPromise(action_name)
+                    end
+                else
+                    setPromise(action_name)
+                end
             end
         end
         return func(self, action_name) or isPromised(mod._promise_action_map[action_name])
