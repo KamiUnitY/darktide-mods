@@ -13,7 +13,8 @@ mod._promises = {
     secondary = false,
     grenade = false,
     pocketable = false,
-    pocketable_small = false
+    pocketable_small = false,
+    device = false
 }
 
 local function isPromised(action)
@@ -44,6 +45,8 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
         mod._promises.pocketable = false
     elseif slot_name == "slot_pocketable_small" then
         mod._promises.pocketable_small = false
+    elseif slot_name == "slot_device" then
+        mod._promises.device = false
     end
     mod._current_slot = slot_name
 end)
@@ -71,6 +74,9 @@ local _input_hook = function(func, self, action_name)
         elseif action_name == "wield_4" and mod._current_slot ~= "slot_pocketable_small" then
             clearAllPromises()
             mod._promises.pocketable_small = true
+        elseif action_name == "wield_5" and mod._current_slot ~= "slot_device" then
+            clearAllPromises()
+            mod._promises.device = true
         end
     end
 
@@ -86,6 +92,8 @@ local _input_hook = function(func, self, action_name)
         return func(self, "wield_3") or isPromised("pocketable")
     elseif action_name == "wield_4" then
         return func(self, "wield_4") or isPromised("pocketable_small")
+    elseif action_name == "wield_5" then
+        return func(self, "wield_5") or isPromised("device")
     end
 
     return out
@@ -100,6 +108,9 @@ mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, e
     end
     if (self._player_weapons.slot_pocketable == nil) then
         mod._promises.pocketable = false
+    end
+    if (self._player_weapons.slot_device == nil) then
+        mod._promises.device = false
     end
 end)
 
