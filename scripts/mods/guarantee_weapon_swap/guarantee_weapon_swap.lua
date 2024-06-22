@@ -91,7 +91,7 @@ local _input_hook = function(func, self, action_name)
 end
 
 mod:hook("InputService", "_get", _input_hook)
-
+mod:hook("InputService", "_get_simulate", _input_hook)
 
 mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
     if (self._player_weapons.slot_pocketable_small == nil) then
