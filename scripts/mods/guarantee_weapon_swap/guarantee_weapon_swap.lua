@@ -81,13 +81,7 @@ local _input_hook = function(func, self, action_name)
         if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
             clearAllPromises()
             if mod._current_slot ~= mod._action_slot_map[action_name] then
-                if action_name == "grenade_ability_pressed" then
-                    if mod._can_wield_grenade == true then
-                        setPromise(action_name)
-                    end
-                else
-                    setPromise(action_name)
-                end
+                setPromise(action_name)
             end
         end
         return func(self, action_name) or isPromised(mod._promise_action_map[action_name])
@@ -120,7 +114,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
 			local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
 			local can_use_ability = self:can_use_ability(ability_type)
 
-            mod._can_wield_grenade = can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to
+            mod._can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
 
             if mod._can_wield_grenade ~= true then
                 mod._promises.grenade = false
