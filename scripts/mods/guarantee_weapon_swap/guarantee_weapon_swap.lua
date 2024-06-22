@@ -18,13 +18,10 @@ mod._promises = {
 }
 
 local function isPromised(action)
-    if mod._promises[action] then
-        -- if mod._current_slot ~= nil then
-        --     mod:echo(mod._current_slot .. " -> " .. action)
-        -- end
-        return true
-    end
-    return false
+    -- if mod._promises[action] and mod._current_slot ~= nil then
+    --     mod:echo(mod._current_slot .. " -> " .. action)
+    -- end
+    return mod._promises[action]
 end
 
 local function clearAllPromises()
