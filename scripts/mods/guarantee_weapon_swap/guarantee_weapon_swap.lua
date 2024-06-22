@@ -112,7 +112,12 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
 			local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
 			local can_use_ability = self:can_use_ability(ability_type)
             mod._can_wield_grenade = can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to
+
             if mod._can_wield_grenade ~= true then
+                mod._promises.grenade = false
+            end
+
+            if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
                 mod._promises.grenade = false
             end
 		end
