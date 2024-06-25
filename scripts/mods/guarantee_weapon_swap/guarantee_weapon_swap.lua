@@ -1,12 +1,12 @@
--- Guarantee Weapon Swap mod by KamiUnitY. Ver. 1.1.2
+-- Guarantee Weapon Swap mod by KamiUnitY. Ver. 1.1.3
 
 local mod = get_mod("guarantee_weapon_swap")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 local ability_configuration = PlayerCharacterConstants.ability_configuration
 
 mod._can_wield_grenade = nil
-mod._current_slot = nil
-mod._previous_slot = nil
+mod._current_slot = ""
+mod._previous_slot = ""
 
 mod._promises = {
     quick = false,
@@ -47,7 +47,7 @@ mod._action_slot_map = {
 }
 
 local function isPromised(action)
-    -- if mod._promises[action] and mod._current_slot ~= nil then
+    -- if mod._promises[action] and mod._current_slot ~= "" then
     --     mod:echo("mod:                                        " .. mod._current_slot .. " -> " .. action)
     -- end
     return mod._promises[action]
@@ -68,7 +68,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
     mod._promises[mod._promise_slot_map[slot_name] or ""] = false
     mod._previous_slot = mod._current_slot
     mod._current_slot = slot_name
-    -- if mod._current_slot ~= nil and mod._previous_slot ~= nil then
+    -- if mod._current_slot ~= "" and mod._previous_slot ~= "" then
     --     mod:echo("game:                                        " .. mod._previous_slot .. " -> " .. mod._current_slot)
     -- end
 end)
@@ -126,4 +126,3 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
 		end
 	end
 end)
-
