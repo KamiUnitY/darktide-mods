@@ -8,5 +8,8 @@ return {
 			mod_localization = "guarantee_weapon_swap/scripts/mods/guarantee_weapon_swap/guarantee_weapon_swap_localization",
 		})
 	end,
+	load_after = {
+		"modding_tools",
+	},
 	packages = {},
 }
