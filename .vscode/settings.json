@@ -1,5 +1,7 @@
 {
     "Lua.diagnostics.globals": [
-        "get_mod"
+        "get_mod",
+        "ScriptUnit",
+        "Managers"
     ]
 }
