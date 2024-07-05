@@ -6,7 +6,7 @@ return {
 		en = "Guarantee weapon swapping when player try to swap weapon in middle of animation",
 	},
 	enable_zealot_throwing_knives = {
-		en = "Zealot's Blade of Faith",
+		en = "Zealot's Blades of Faith",
 	},
 	debug_group = {
 		en = "Debug",
