@@ -1,0 +1,8 @@
+*
+/.vscode
+!/LICENSE
+!/README.md
+!.gitignore
+
+!guarantee_weapon_swap
+!guarantee_weapon_swap/**
