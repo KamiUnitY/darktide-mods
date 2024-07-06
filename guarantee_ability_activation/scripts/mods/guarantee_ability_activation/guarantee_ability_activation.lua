@@ -44,7 +44,9 @@ local _input_hook = function(func, self, action_name)
 
     if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
         if action_name == "combat_ability_pressed" or action_name == "combat_ability_hold" or action_name == "combat_ability_release" then
-            mod.debug.print(action_name)
+            if mod.debug.is_enabled() then
+                mod.debug.print("Guarantee Ability Activation: player pressed " .. action_name)
+            end
         end
 
         local num_charges = getCombatAbilityNumCharges()
@@ -70,8 +72,10 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 mod:hook_require("scripts/extension_systems/weapon/actions/action_aim_force_field", function(ActionAimForceField)
     mod:hook_safe(ActionAimForceField, "start", function(self, dt, t)
         clearPromises()
-        mod.debug.print("ActionAimForceField: Start")
-        mod.debug.print("________________________________")
+        if mod.debug.is_enabled() then
+            mod.debug.print("Guarantee Ability Activation: " .. "ActionAimForceField:Start")
+            mod.debug.print("________________________________")
+        end
     end)
 end)
 
@@ -79,9 +83,11 @@ mod:hook_require("scripts/extension_systems/weapon/actions/action_base", functio
     mod:hook_safe(ActionAbilityBase, "start", function(self, action_settings, t, time_scale, action_start_params)
         if action_settings.ability_type == "combat_ability" then
             clearPromises()
-            mod.debug.print("ActionAbilityBase: Start")
-            mod.debug.print(action_settings)
-            mod.debug.print("________________________________")
+            if mod.debug.is_enabled() then
+                mod.debug.print("Guarantee Ability Activation: " .. "ActionAbilityBase:Start")
+                mod.debug.print(action_settings)
+                mod.debug.print("________________________________")
+            end
         end
     end)
 end)
