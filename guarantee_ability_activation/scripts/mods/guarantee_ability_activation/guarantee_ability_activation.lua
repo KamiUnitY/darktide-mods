@@ -35,7 +35,7 @@ local function getCombatAbilityNumCharges()
             return num_charges
         end
     end
-    return nil
+    return 0
 end
 
 local _input_hook = function(func, self, action_name)
@@ -50,7 +50,7 @@ local _input_hook = function(func, self, action_name)
         end
 
         local num_charges = getCombatAbilityNumCharges()
-        if action_name == "combat_ability_pressed" and num_charges ~= nil and num_charges > 0 then
+        if action_name == "combat_ability_pressed" and num_charges > 0 then
             setPromise()
         end
 
