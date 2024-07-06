@@ -74,27 +74,6 @@ end
 mod:hook("InputService", "_get", _input_hook)
 mod:hook("InputService", "_get_simulate", _input_hook)
 
-
--- mod:hook_safe("PlayerUnitAbilityExtension", "_equip_ability", function (self, ability_type, ability, fixed_t, from_server_correction)
--- 	mod.debug.print("Equipping ability: " .. ability.name .. " | type: " .. ability_type)
--- end)
-
--- mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function (self, ability_type, optional_num_charges)
--- 	local ability_components = self._ability_components
--- 	local component = ability_components[ability_type]
--- 	local equipped_abilities_component = self._equipped_abilities_component
--- 	local ability_name = equipped_abilities_component[ability_type]
-
--- 	if ability_type == "combat_ability" then
---         -- mod.debug.print(ability_components)
---         mod.debug.print("Used Ability: " .. ability_name)
--- 	end
-
--- 	local num_charges_to_deduct = optional_num_charges or 1
-
--- 	component.num_charges = math.max(component.num_charges - num_charges_to_deduct, 0)
--- end)
-
 mod:hook_require("scripts/extension_systems/weapon/actions/action_aim_force_field", function(ActionAimForceField)
     mod:hook_safe(ActionAimForceField, "start", function(self, dt, t)
         mod.debug.print("ActionAimForceField: Start")
