@@ -3,5 +3,6 @@
         "get_mod",
         "ScriptUnit",
         "Managers"
-    ]
+    ],
+    "explorer.excludeGitIgnore": true
 }

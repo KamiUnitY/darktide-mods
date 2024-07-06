@@ -1,5 +1,5 @@
 *
-/.vscode
+!/.vscode
 !/LICENSE
 !/README.md
 !.gitignore
