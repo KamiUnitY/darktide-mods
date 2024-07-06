@@ -6,3 +6,6 @@
 
 !guarantee_weapon_swap
 !guarantee_weapon_swap/**
+
+!guarantee_ability_activation
+!guarantee_ability_activation/**
