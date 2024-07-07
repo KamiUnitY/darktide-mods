@@ -1,4 +1,4 @@
--- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.0.0
+-- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.0.1
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
