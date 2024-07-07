@@ -9,8 +9,10 @@ mod.debug = {
     end,
     print = function(text)
         modding_tools:console_print(text)
-    end
-}
+    end,
+    print_separator = function()
+        mod.debug.print("________________________________")
+    end}
 
 mod.promise_ability = false
 
@@ -60,6 +62,12 @@ local _input_hook = function(func, self, action_name)
         if action_name == "combat_ability_hold" and not mod:get("enable_combat_ability_hold") then
             return false
         end
+
+        if action_name == "combat_ability_release" then
+            if mod.debug.is_enabled() then
+                mod.debug.print("")
+            end
+        end
     end
 
     if action_name == "combat_ability_pressed" then
@@ -76,7 +84,7 @@ local _action_aim_force_field_hook = function(self, dt, t)
     clearPromises()
     if mod.debug.is_enabled() then
         mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAimForceField:Start")
-        mod.debug.print("________________________________")
+        mod.debug.print_separator()
     end
 end
 
@@ -86,7 +94,7 @@ local _action_ability_base_hook = function(self, action_settings, t, time_scale,
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
             mod.debug.print(action_settings)
-            mod.debug.print("________________________________")
+            mod.debug.print_separator()
         end
     end
 end
