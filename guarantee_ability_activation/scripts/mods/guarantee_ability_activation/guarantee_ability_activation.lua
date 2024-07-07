@@ -15,6 +15,11 @@ mod.debug = {
 mod.promise_ability = false
 
 local function isPromised()
+    if mod.promise_ability then
+        if mod.debug.is_enabled() then
+            mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
+        end
+    end
     return mod.promise_ability
 end
 
@@ -43,9 +48,9 @@ local _input_hook = function(func, self, action_name)
     local type_str = type(out)
 
     if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
-        if action_name == "combat_ability_pressed" or action_name == "combat_ability_hold" or action_name == "combat_ability_release" then
+        if action_name == "combat_ability_pressed" or action_name == "combat_ability_release" then
             if mod.debug.is_enabled() then
-                mod.debug.print("Guarantee Ability Activation: player pressed " .. action_name)
+                mod.debug.print("Guarantee Ability Activation: Player pressed " .. action_name)
             end
         end
         if action_name == "combat_ability_pressed" and mod._current_slot ~= "slot_unarmed" and getCombatAbilityNumCharges() > 0 then
@@ -70,7 +75,7 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 local _action_aim_force_field_hook = function(self, dt, t)
     clearPromises()
     if mod.debug.is_enabled() then
-        mod.debug.print("Guarantee Ability Activation: " .. "ActionAimForceField:Start")
+        mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAimForceField:Start")
         mod.debug.print("________________________________")
     end
 end
@@ -79,7 +84,7 @@ local _action_ability_base_hook = function(self, action_settings, t, time_scale,
     if action_settings.ability_type == "combat_ability" then
         clearPromises()
         if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "ActionAbilityBase:Start")
+            mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
             mod.debug.print(action_settings)
             mod.debug.print("________________________________")
         end
