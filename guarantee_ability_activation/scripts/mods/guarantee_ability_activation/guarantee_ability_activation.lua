@@ -49,8 +49,7 @@ local _input_hook = function(func, self, action_name)
             end
         end
 
-        local num_charges = getCombatAbilityNumCharges()
-        if action_name == "combat_ability_pressed" and num_charges > 0 then
+        if action_name == "combat_ability_pressed" and not mod._current_slot == "slot_unarmed" and getCombatAbilityNumCharges() > 0 then
             setPromise()
         end
 
@@ -69,25 +68,38 @@ end
 mod:hook("InputService", "_get", _input_hook)
 mod:hook("InputService", "_get_simulate", _input_hook)
 
-mod:hook_require("scripts/extension_systems/weapon/actions/action_aim_force_field", function(ActionAimForceField)
-    mod:hook_safe(ActionAimForceField, "start", function(self, dt, t)
+local _action_aim_force_field_hook = function(self, dt, t)
+    clearPromises()
+    if mod.debug.is_enabled() then
+        mod.debug.print("Guarantee Ability Activation: " .. "ActionAimForceField:Start")
+        mod.debug.print("________________________________")
+    end
+end
+
+local _action_ability_base_hook = function(self, action_settings, t, time_scale, action_start_params)
+    if action_settings.ability_type == "combat_ability" then
         clearPromises()
         if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "ActionAimForceField:Start")
+            mod.debug.print("Guarantee Ability Activation: " .. "ActionAbilityBase:Start")
+            mod.debug.print(action_settings)
             mod.debug.print("________________________________")
         end
-    end)
+    end
+end
+
+mod:hook_require("scripts/extension_systems/weapon/actions/action_aim_force_field", function(ActionAimForceField)
+    ActionAimForceField.start = _action_aim_force_field_hook
 end)
 
 mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(ActionAbilityBase)
-    mod:hook_safe(ActionAbilityBase, "start", function(self, action_settings, t, time_scale, action_start_params)
-        if action_settings.ability_type == "combat_ability" then
-            clearPromises()
-            if mod.debug.is_enabled() then
-                mod.debug.print("Guarantee Ability Activation: " .. "ActionAbilityBase:Start")
-                mod.debug.print(action_settings)
-                mod.debug.print("________________________________")
-            end
-        end
-    end)
+    ActionAbilityBase.start = _action_ability_base_hook
+end)
+
+mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
+    mod.debug.print(self)
+end)
+
+mod._current_slot = ""
+mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
+    mod._current_slot = slot_name
 end)
