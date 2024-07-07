@@ -18,25 +18,6 @@ local function contains(str, substr)
     return string.find(str, substr) ~= nil
 end
 
-mod.promise_ability = false
-
-local function isPromised()
-    if mod.promise_ability then
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
-        end
-    end
-    return mod.promise_ability
-end
-
-local function setPromise()
-    mod.promise_ability = true
-end
-
-local function clearPromise()
-    mod.promise_ability = false
-end
-
 local function getCombatAbilityNumCharges()
     local unit = Managers.player:local_player(1).player_unit
     if unit then
@@ -47,6 +28,29 @@ local function getCombatAbilityNumCharges()
         end
     end
     return 0
+end
+
+mod.promise_ability = false
+
+
+local function setPromise()
+    mod.promise_ability = true
+end
+
+local function clearPromise()
+    mod.promise_ability = false
+end
+
+local function isPromised()
+    if mod.promise_ability then
+        if mod.debug.is_enabled() then
+            mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
+        end
+        if getCombatAbilityNumCharges() == 0 then
+            clearPromise()
+        end
+    end
+    return mod.promise_ability
 end
 
 local function isWieldBugCombo()
