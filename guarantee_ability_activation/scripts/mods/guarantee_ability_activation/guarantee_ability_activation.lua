@@ -48,8 +48,7 @@ local _input_hook = function(func, self, action_name)
                 mod.debug.print("Guarantee Ability Activation: player pressed " .. action_name)
             end
         end
-
-        if action_name == "combat_ability_pressed" and not mod._current_slot == "slot_unarmed" and getCombatAbilityNumCharges() > 0 then
+        if action_name == "combat_ability_pressed" and mod._current_slot ~= "slot_unarmed" and getCombatAbilityNumCharges() > 0 then
             setPromise()
         end
 
