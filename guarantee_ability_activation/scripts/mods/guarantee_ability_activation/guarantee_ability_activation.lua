@@ -82,7 +82,7 @@ local _input_hook = function(func, self, action_name)
 
         if action_name == "combat_ability_release" then
             if mod.debug.is_enabled() then
-                mod.debug.print("")
+                mod.debug.print_separator()
             end
         end
     end
@@ -106,7 +106,6 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
         clearPromise()
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
-            mod.debug.print_separator()
         end
     end
 end)
@@ -117,7 +116,6 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
         clearPromise()
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitWeaponExtension:on_slot_wielded(slot_combat_ability)")
-            mod.debug.print_separator()
         end
     end
     mod._current_slot = slot_name
@@ -128,7 +126,6 @@ local _action_ability_base_hook = function(self, action_settings, t, time_scale,
         clearPromise()
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
-            mod.debug.print_separator()
         end
     end
 end
