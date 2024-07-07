@@ -6,7 +6,7 @@ return {
 		en = "Guarantee combat ability activation when player try to activate them in middle of animation",
 	},
 	enable_combat_ability_hold = {
-		en = "Hold Combat Ability",
+		en = "Hold action",
 	},
 	debug_group = {
 		en = "Debug",
