@@ -33,7 +33,7 @@ local function setPromise()
     mod.promise_ability = true
 end
 
-local function clearPromises()
+local function clearPromise()
     mod.promise_ability = false
 end
 
@@ -101,37 +101,24 @@ end
 mod:hook("InputService", "_get", _input_hook)
 mod:hook("InputService", "_get_simulate", _input_hook)
 
-local _action_aim_force_field_hook = function(self, dt, t)
-    clearPromises()
-    if mod.debug.is_enabled() then
-        mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAimForceField:Start")
-        mod.debug.print_separator()
-    end
-end
-
-local _action_ability_base_hook = function(self, action_settings, t, time_scale, action_start_params)
-    if action_settings.ability_type == "combat_ability" then
-        clearPromises()
+mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
+    if ability_type == "combat_ability" then
+        clearPromise()
         if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
-            mod.debug.print(action_settings)
+            mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
             mod.debug.print_separator()
         end
     end
-end
-
-mod:hook_require("scripts/extension_systems/weapon/actions/action_aim_force_field", function(ActionAimForceField)
-    ActionAimForceField.start = _action_aim_force_field_hook
-end)
-
-mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(ActionAbilityBase)
-    ActionAbilityBase.start = _action_ability_base_hook
 end)
 
 mod._current_slot = ""
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if slot_name == "slot_combat_ability" then
-        clearPromises()
+        clearPromise()
+        if mod.debug.is_enabled() then
+            mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitWeaponExtension:on_slot_wielded(slot_combat_ability)")
+            mod.debug.print_separator()
+        end
     end
     mod._current_slot = slot_name
 end)
