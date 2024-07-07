@@ -8,7 +8,7 @@ mod.debug = {
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
     end,
     print = function(text)
-        pcall(function() modding_tools:console_print(text) end)
+        modding_tools:console_print(text)
     end,
     print_separator = function()
         mod.debug.print("________________________________")
