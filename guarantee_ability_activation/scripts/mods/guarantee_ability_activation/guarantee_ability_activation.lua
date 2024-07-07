@@ -94,10 +94,6 @@ mod:hook_require("scripts/extension_systems/weapon/actions/action_base", functio
     ActionAbilityBase.start = _action_ability_base_hook
 end)
 
-mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
-    mod.debug.print(self)
-end)
-
 mod._current_slot = ""
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     mod._current_slot = slot_name
