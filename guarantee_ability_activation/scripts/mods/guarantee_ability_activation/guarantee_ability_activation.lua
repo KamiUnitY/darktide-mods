@@ -8,11 +8,15 @@ mod.debug = {
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
     end,
     print = function(text)
-        modding_tools:console_print(text)
+        pcall(function() modding_tools:console_print(text) end)
     end,
     print_separator = function()
         mod.debug.print("________________________________")
     end}
+
+local function contains(str, substr)
+    return string.find(str, substr) ~= nil
+end
 
 mod.promise_ability = false
 
@@ -45,6 +49,19 @@ local function getCombatAbilityNumCharges()
     return 0
 end
 
+local function isWieldBugCombo()
+    local unit = Managers.player:local_player(1).player_unit
+    if unit then
+        local unit_data = ScriptUnit.extension(unit, "unit_data_system")
+        local weapon = unit_data._components.weapon_action[1].template_name
+        local ability = unit_data._components.equipped_abilities[1].combat_ability
+        if contains(weapon, "combatsword_p2") and contains(ability, "zealot_relic") then
+            return true
+        end
+    end
+    return false
+end
+
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
@@ -68,6 +85,10 @@ local _input_hook = function(func, self, action_name)
                 mod.debug.print("")
             end
         end
+    end
+
+    if mod.promise_ability and (action_name == "action_two_pressed" or action_name == "action_two_hold") and isWieldBugCombo() then
+        return true
     end
 
     if action_name == "combat_ability_pressed" then
@@ -109,5 +130,8 @@ end)
 
 mod._current_slot = ""
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
+    if slot_name == "slot_combat_ability" then
+        clearPromises()
+    end
     mod._current_slot = slot_name
 end)
