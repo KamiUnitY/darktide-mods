@@ -1,4 +1,4 @@
--- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.0.1
+-- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.0.2
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -8,24 +8,34 @@ mod.debug = {
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
     end,
     print = function(text)
-        modding_tools:console_print(text)
+        pcall(function() modding_tools:console_print(text) end)
     end,
     print_separator = function()
         mod.debug.print("________________________________")
     end}
 
 local function contains(str, substr)
+    if type(str) ~= "string" or type(substr) ~= "string" then
+        return false
+    end
     return string.find(str, substr) ~= nil
 end
 
-local function getCombatAbilityNumCharges()
+local function getUnitData()
     local unit = Managers.player:local_player(1).player_unit
     if unit then
         local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-        local num_charges = unit_data._components.combat_ability[1].num_charges
-        if num_charges ~= nil then
-            return num_charges
+        if unit_data ~= nil then
+            return unit_data
         end
+    end
+    return nil
+end
+
+local function getNumCharges()
+    local unit_data = getUnitData()
+    if unit_data ~= nil then
+        return unit_data._components.combat_ability[1].num_charges
     end
     return 0
 end
@@ -46,7 +56,8 @@ local function isPromised()
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
         end
-        if getCombatAbilityNumCharges() == 0 then
+        if getNumCharges() == 0 then
+            mod.debug.print("Guarantee Ability Activation: " .. "charges = 0")
             clearPromise()
         end
     end
@@ -76,7 +87,7 @@ local _input_hook = function(func, self, action_name)
                 mod.debug.print("Guarantee Ability Activation: Player pressed " .. action_name)
             end
         end
-        if action_name == "combat_ability_pressed" and mod._current_slot ~= "slot_unarmed" and getCombatAbilityNumCharges() > 0 then
+        if action_name == "combat_ability_pressed" and mod._current_slot ~= "slot_unarmed" and getNumCharges() > 0 then
             setPromise()
         end
 
@@ -127,6 +138,7 @@ end)
 
 local _action_ability_base_hook = function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
+        mod.debug.print(action_settings)
         clearPromise()
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
@@ -137,3 +149,4 @@ end
 mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(ActionAbilityBase)
     ActionAbilityBase.start = _action_ability_base_hook
 end)
+
