@@ -9,6 +9,7 @@ return {
 		})
 	end,
 	load_after = {
+		"ChatBlock",
 		"modding_tools",
 	},
 	packages = {},
