@@ -1,4 +1,4 @@
--- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.0.2
+-- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.0.3
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -21,6 +21,17 @@ local function contains(str, substr)
     return string.find(str, substr) ~= nil
 end
 
+mod._num_charges = 0
+
+mod:hook_safe("HudElementPlayerAbility", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
+	local player = self._data.player
+	local parent = self._parent
+    local ability_extension = parent:get_player_extension(player, "ability_system")
+    local ability_id = self._ability_id
+    local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_id)
+    mod._num_charges = remaining_ability_charges
+end)
+
 local function getUnitData()
     local unit = Managers.player:local_player(1).player_unit
     if unit then
@@ -32,16 +43,19 @@ local function getUnitData()
     return nil
 end
 
-local function getNumCharges()
+local function isWieldBugCombo()
     local unit_data = getUnitData()
-    if unit_data ~= nil then
-        return unit_data._components.combat_ability[1].num_charges
+    if unit_data then
+        local weapon = unit_data._components.weapon_action[1].template_name
+        local ability = unit_data._components.equipped_abilities[1].combat_ability
+        if contains(weapon, "combatsword_p2") and contains(ability, "zealot_relic") then
+            return true
+        end
     end
-    return 0
+    return false
 end
 
 mod.promise_ability = false
-
 
 local function setPromise()
     mod.promise_ability = true
@@ -53,28 +67,14 @@ end
 
 local function isPromised()
     if mod.promise_ability then
+        if mod._num_charges == 0 then
+            clearPromise()
+        end
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
         end
-        if getNumCharges() == 0 then
-            mod.debug.print("Guarantee Ability Activation: " .. "charges = 0")
-            clearPromise()
-        end
     end
     return mod.promise_ability
-end
-
-local function isWieldBugCombo()
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-        local weapon = unit_data._components.weapon_action[1].template_name
-        local ability = unit_data._components.equipped_abilities[1].combat_ability
-        if contains(weapon, "combatsword_p2") and contains(ability, "zealot_relic") then
-            return true
-        end
-    end
-    return false
 end
 
 local _input_hook = function(func, self, action_name)
@@ -87,7 +87,7 @@ local _input_hook = function(func, self, action_name)
                 mod.debug.print("Guarantee Ability Activation: Player pressed " .. action_name)
             end
         end
-        if action_name == "combat_ability_pressed" and mod._current_slot ~= "slot_unarmed" and getNumCharges() > 0 then
+        if action_name == "combat_ability_pressed" and mod._current_slot ~= "slot_unarmed" and mod._num_charges > 0 then
             setPromise()
         end
 
@@ -149,4 +149,3 @@ end
 mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(ActionAbilityBase)
     ActionAbilityBase.start = _action_ability_base_hook
 end)
-
