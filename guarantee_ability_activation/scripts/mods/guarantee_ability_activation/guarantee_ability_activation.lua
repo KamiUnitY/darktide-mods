@@ -218,7 +218,7 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
         -- mod.debug.print("is_human_pressed: " .. tostring(_is_human_pressed))
-        if (reason == AIM_RELASE or reason == AIM_RELASE_WHILE_DASH) and _is_human_pressed then
+        if (reason ~= AIM_CANCEL) and _is_human_pressed then
             if is_aim_dash[action_settings.kind] then
                 local state = character_state.name
                 if CHARACTER_STATE_PROMISE_MAP[state] then
