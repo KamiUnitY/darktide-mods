@@ -3,6 +3,8 @@
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
 
+mod.promise_ability = false
+
 mod.debug = {
     is_enabled = function()
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
@@ -25,10 +27,11 @@ local CHARACTER_STATE_PROMISE_MAP = {
 	dodging = true,
 	ladder_top_leaving = true,
 	ledge_vaulting = true,
+    lunging = true,
 	sliding = true,
-	sprinting = false,
+	sprinting = true,
 	stunned = true,
-	walking = false,
+	walking = true,
 }
 
 local ALLOWED_DASH_STATE = {
@@ -53,18 +56,20 @@ local ability_num_charges = 0
 local combat_ability
 local weapon_template
 
+local DELAY_DASH = 0.2 --second
+local last_set_promise = os.clock()
+
 mod.on_all_mods_loaded = function()
     modding_tools:watch("character_state",character_state,"name")
 end
 
-
-mod.promise_ability = false
 
 local function setPromise(from)
     if mod.debug.is_enabled() then
         mod.debug.print("Guarantee Ability Activation: setPromiseFrom: " .. from)
     end
     mod.promise_ability = true
+    last_set_promise = os.clock()
 end
 
 local function clearPromise(from)
@@ -75,9 +80,11 @@ local function clearPromise(from)
 end
 
 local function isPromised()
-    local result = mod.promise_ability
-    if IS_DASH_ABILITY[combat_ability] then
-        result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name]
+    local result
+    if IS_DASH_ABILITY[combat_ability] then -- preventing pressing too early which sometimes could result in double dashing
+        result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name] and os.clock() - last_set_promise > DELAY_DASH
+    else
+        result = mod.promise_ability
     end
     if result then
         if mod.debug.is_enabled() then
@@ -182,7 +189,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
 end)
 
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
-    if action_settings.ability_type == "combat_ability" then
+    if action_settings.ability_type == "combat_ability" and not IS_DASH_ABILITY[combat_ability] then
         clearPromise("ability_base_start")
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
@@ -192,6 +199,7 @@ end
 
 local AIM_CANCEL = "hold_input_released"
 local AIM_RELASE = "new_interrupting_action"
+local AIM_RELASE_WHILE_DASH = "started_sprint"
 
 local is_aim_dash = {
     targeted_dash_aim = true,
@@ -203,8 +211,8 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
     is_human_pressed = false
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
-        mod.debug.print("is_human_pressed: " .. tostring(_is_human_pressed))
-        if reason == AIM_RELASE and _is_human_pressed then
+        -- mod.debug.print("is_human_pressed: " .. tostring(_is_human_pressed))
+        if (reason == AIM_RELASE or reason == AIM_RELASE_WHILE_DASH) and _is_human_pressed then
             if is_aim_dash[action_settings.kind] then
                 local state = character_state.name
                 if CHARACTER_STATE_PROMISE_MAP[state] then
