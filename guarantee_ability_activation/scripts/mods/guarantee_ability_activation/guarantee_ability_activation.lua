@@ -1,4 +1,4 @@
--- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.0.3
+-- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.1.0
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -21,7 +21,104 @@ local function contains(str, substr)
     return string.find(str, substr) ~= nil
 end
 
-mod._num_charges = 0
+local character_state_promise_map = {
+	catapulted = false,
+	consumed = false,
+	dead = false,
+	dodging = true,
+	exploding = false,
+	falling = false,
+	grabbed = false,
+	hogtied = false,
+	hub_emote = false,
+	hub_jog = false,
+	interacting = false,
+	jumping = false,
+	knocked_down = false,
+	ladder_climbing = false,
+	ladder_top_entering = false,
+	ladder_top_leaving = true,
+	ledge_hanging = false,
+	ledge_hanging_falling = false,
+	ledge_hanging_pull_up = false,
+	ledge_vaulting = true,
+	lunging = false,
+	minigame = false,
+	mutant_charged = false,
+	netted = false,
+	pounced = false,
+	sliding = true,
+	sprinting = true,
+	stunned = true,
+	walking = true,
+	warp_grabbed = false,
+}
+
+local allowed_dash_state = {
+	sprinting = true,
+	walking = true,
+}
+
+local is_dash_ability = {
+    zealot_targeted_dash = true,
+    zealot_targeted_dash_improved = true,
+    zealot_targeted_dash_improved_double = true,
+    ogryn_charge = true,
+    ogryn_charge_increased_distance = true,
+}
+
+local character_state = {
+    name = nil,
+}
+
+local current_slot = ""
+local ability_num_charges = 0
+local combat_ability
+local weapon_template
+
+mod.on_all_mods_loaded = function()
+    -- modding_tools:watch("character_state",character_state,"name")
+end
+
+
+mod.promise_ability = false
+
+local function setPromise(from)
+    -- mod.debug.print("setPromiseFrom: " .. from)
+    mod.promise_ability = true
+end
+
+local function clearPromise(from)
+    -- mod.debug.print("clearPromiseFrom: " .. from)
+    mod.promise_ability = false
+end
+
+local function isPromised()
+    local result = mod.promise_ability
+    if is_dash_ability[combat_ability] then
+        result = mod.promise_ability and allowed_dash_state[character_state.name]
+    end
+    if result then
+        if mod.debug.is_enabled() then
+            mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
+        end
+    end
+    return result
+end
+
+mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
+    character_state.name = self._state_current.name
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
+	local wielded_slot = inventory_component.wielded_slot
+    weapon_template = weapons[wielded_slot].weapon_template.name
+end)
+
+mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
+    local unit_data = ScriptUnit.extension(unit, "unit_data_system")
+    combat_ability = unit_data._components.equipped_abilities[1].combat_ability
+end)
 
 mod:hook_safe("HudElementPlayerAbility", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
 	local player = self._data.player
@@ -29,54 +126,17 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self, dt, t, ui_rend
     local ability_extension = parent:get_player_extension(player, "ability_system")
     local ability_id = self._ability_id
     local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_id)
-    mod._num_charges = remaining_ability_charges
+    ability_num_charges = remaining_ability_charges
+    if ability_num_charges == 0 then
+        clearPromise("ability_num_charges")
+    end
 end)
 
-local function getUnitData()
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-        if unit_data ~= nil then
-            return unit_data
-        end
-    end
-    return nil
-end
-
 local function isWieldBugCombo()
-    local unit_data = getUnitData()
-    if unit_data then
-        local weapon = unit_data._components.weapon_action[1].template_name
-        local ability = unit_data._components.equipped_abilities[1].combat_ability
-        if contains(weapon, "combatsword_p2") and contains(ability, "zealot_relic") then
-            return true
-        end
-    end
-    return false
+    return contains(weapon_template, "combatsword_p2") and contains(combat_ability, "zealot_relic")
 end
 
-mod.promise_ability = false
-
-local function setPromise()
-    mod.promise_ability = true
-end
-
-local function clearPromise()
-    mod.promise_ability = false
-end
-
-local function isPromised()
-    if mod.promise_ability then
-        if mod._num_charges == 0 then
-            clearPromise()
-        end
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
-        end
-    end
-    return mod.promise_ability
-end
-
+local is_human_pressed = false
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
@@ -87,8 +147,13 @@ local _input_hook = function(func, self, action_name)
                 mod.debug.print("Guarantee Ability Activation: Player pressed " .. action_name)
             end
         end
-        if action_name == "combat_ability_pressed" and mod._current_slot ~= "slot_unarmed" and mod._num_charges > 0 then
-            setPromise()
+        -- slot_unarmed means player is netted or pounced
+        if action_name == "combat_ability_pressed" and current_slot ~= "slot_unarmed" and ability_num_charges > 0 then
+            setPromise("pressed")
+        end
+
+        if action_name == "combat_ability_hold" then
+            is_human_pressed = true
         end
 
         if action_name == "combat_ability_hold" and not mod:get("enable_combat_ability_hold") then
@@ -118,34 +183,52 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
     if ability_type == "combat_ability" then
-        clearPromise()
+        clearPromise("use_ability_charge")
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
         end
     end
 end)
 
-mod._current_slot = ""
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if slot_name == "slot_combat_ability" then
-        clearPromise()
+        clearPromise("on_slot_wielded")
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitWeaponExtension:on_slot_wielded(slot_combat_ability)")
         end
     end
-    mod._current_slot = slot_name
+    current_slot = slot_name
 end)
 
-local _action_ability_base_hook = function(self, action_settings, t, time_scale, action_start_params)
+local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
-        mod.debug.print(action_settings)
-        clearPromise()
+        clearPromise("ability_base_start")
         if mod.debug.is_enabled() then
             mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
         end
     end
 end
 
-mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(ActionAbilityBase)
-    ActionAbilityBase.start = _action_ability_base_hook
+local AIM_CANCEL = "hold_input_released"
+local AIM_RELASE = "new_interrupting_action"
+
+local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
+    local action_settings = self._action_settings
+    if action_settings then
+        if action_settings.ability_type == "combat_ability" then
+            if reason == AIM_RELASE and is_human_pressed then
+                if action_settings.kind == "targeted_dash_aim" or action_settings.kind == "directional_dash_aim" then
+                    if character_state_promise_map[character_state.name] then
+                        setPromise("finishaction")
+                    end
+                end
+                is_human_pressed = false
+            end
+        end
+    end
+end
+
+mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(instance)
+    instance.start = _action_ability_base_start_hook
+    instance.finish = _action_ability_base_finish_hook
 end)
