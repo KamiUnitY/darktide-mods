@@ -225,8 +225,7 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
                 end
             else
                 if IS_AIM_DASH[action_settings.kind] then
-                    local state = character_state.name
-                    if CHARACTER_STATE_PROMISE_MAP[state] then
+                    if CHARACTER_STATE_PROMISE_MAP[character_state.name] then
                         setPromise("finishaction")
                     end
                 end
