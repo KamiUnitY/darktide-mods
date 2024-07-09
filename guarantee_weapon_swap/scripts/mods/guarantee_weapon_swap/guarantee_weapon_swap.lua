@@ -5,6 +5,7 @@ local PlayerCharacterConstants = require("scripts/settings/player_character/play
 local ability_configuration = PlayerCharacterConstants.ability_configuration
 local modding_tools = get_mod("modding_tools")
 
+local grenade_ability
 local can_wield_grenade = nil
 local current_slot = ""
 local previous_slot = ""
@@ -75,17 +76,10 @@ local function clearAllPromises()
     end
 end
 
-local function getGrenadeAbility()
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-        local grenade_ability = unit_data._components.equipped_abilities[1].grenade_ability
-        if (grenade_ability ~= nil) then
-            return grenade_ability
-        end
-    end
-    return nil
-end
+mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
+    local unit_data = ScriptUnit.extension(unit, "unit_data_system")
+    grenade_ability = unit_data._components.equipped_abilities[1].grenade_ability
+end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     promises.quick = false
@@ -107,7 +101,7 @@ local _input_hook = function(func, self, action_name)
         if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
             clearAllPromises()
             if current_slot ~= action_slot_map[action_name] then
-                if not (not mod:get("enable_zealot_throwing_knives") and action_name == "grenade_ability_pressed" and getGrenadeAbility() == "zealot_throwing_knives") then
+                if not (not mod:get("enable_zealot_throwing_knives") and action_name == "grenade_ability_pressed" and grenade_ability == "zealot_throwing_knives") then
                     setPromise(action_name)
                 end
             end
