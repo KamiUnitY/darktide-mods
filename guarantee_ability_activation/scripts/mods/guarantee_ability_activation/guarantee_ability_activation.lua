@@ -60,7 +60,7 @@ local DELAY_DASH = 0.2 --second
 local last_set_promise = os.clock()
 
 mod.on_all_mods_loaded = function()
-    modding_tools:watch("character_state",character_state,"name")
+    -- modding_tools:watch("character_state",character_state,"name")
 end
 
 
