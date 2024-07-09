@@ -5,9 +5,9 @@ local PlayerCharacterConstants = require("scripts/settings/player_character/play
 local ability_configuration = PlayerCharacterConstants.ability_configuration
 local modding_tools = get_mod("modding_tools")
 
-mod._can_wield_grenade = nil
-mod._current_slot = ""
-mod._previous_slot = ""
+local can_wield_grenade = nil
+local current_slot = ""
+local previous_slot = ""
 
 local promises = {
     quick = false,
@@ -57,9 +57,9 @@ mod.debug = {
 }
 
 local function isPromised(action)
-    if promises[action] and mod._current_slot ~= "" then
+    if promises[action] and current_slot ~= "" then
         if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Weapon Swap: Attempting to switch weapon: " .. mod._current_slot .. " -> " .. action)
+            mod.debug.print("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action)
         end
     end
     return promises[action]
@@ -90,11 +90,11 @@ end
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     promises.quick = false
     promises[promise_slot_map[slot_name] or ""] = false
-    mod._previous_slot = mod._current_slot
-    mod._current_slot = slot_name
-    if mod._current_slot ~= "" and mod._previous_slot ~= "" then
+    previous_slot = current_slot
+    current_slot = slot_name
+    if current_slot ~= "" and previous_slot ~= "" then
         if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Weapon Swap: " .. mod._previous_slot .. " -> " .. mod._current_slot)
+            mod.debug.print("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot)
         end
     end
 end)
@@ -106,7 +106,7 @@ local _input_hook = function(func, self, action_name)
     if promise_action_map[action_name] then
         if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
             clearAllPromises()
-            if mod._current_slot ~= action_slot_map[action_name] then
+            if current_slot ~= action_slot_map[action_name] then
                 if not (not mod:get("enable_zealot_throwing_knives") and action_name == "grenade_ability_pressed" and getGrenadeAbility() == "zealot_throwing_knives") then
                     setPromise(action_name)
                 end
@@ -142,9 +142,9 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
 			local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
 			local can_use_ability = self:can_use_ability(ability_type)
 
-            mod._can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
+            can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
 
-            if mod._can_wield_grenade ~= true then
+            if can_wield_grenade ~= true then
                 promises.grenade = false
             end
 
