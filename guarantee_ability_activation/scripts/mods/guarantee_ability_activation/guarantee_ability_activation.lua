@@ -86,8 +86,9 @@ local function isPromised()
     --     local ability_system = ScriptUnit.extension(unit, "ability_system")
     --     mod.debug.print(ability_system:can_use_ability("combat_ability"))
     -- end
-    if IS_DASH_ABILITY[combat_ability] then -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need an can_use_ability function so I can replace this)
-        result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name] and os.clock() - last_set_promise > DELAY_DASH
+    if IS_DASH_ABILITY[combat_ability] then 
+        result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name]
+            and os.clock() - last_set_promise > DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
     else
         result = mod.promise_ability
     end
