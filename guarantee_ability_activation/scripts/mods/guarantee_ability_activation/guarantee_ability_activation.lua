@@ -81,7 +81,7 @@ end
 
 local function isPromised()
     local result
-    if IS_DASH_ABILITY[combat_ability] then -- preventing pressing too early which sometimes could result in double dashing
+    if IS_DASH_ABILITY[combat_ability] then -- preventing pressing too early which sometimes could result in double dashing (hacky solution)
         result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name] and os.clock() - last_set_promise > DELAY_DASH
     else
         result = mod.promise_ability
