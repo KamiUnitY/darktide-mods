@@ -21,45 +21,22 @@ local function contains(str, substr)
     return string.find(str, substr) ~= nil
 end
 
-local character_state_promise_map = {
-	catapulted = false,
-	consumed = false,
-	dead = false,
+local CHARACTER_STATE_PROMISE_MAP = {
 	dodging = true,
-	exploding = false,
-	falling = false,
-	grabbed = false,
-	hogtied = false,
-	hub_emote = false,
-	hub_jog = false,
-	interacting = false,
-	jumping = false,
-	knocked_down = false,
-	ladder_climbing = false,
-	ladder_top_entering = false,
 	ladder_top_leaving = true,
-	ledge_hanging = false,
-	ledge_hanging_falling = false,
-	ledge_hanging_pull_up = false,
 	ledge_vaulting = true,
-	lunging = false,
-	minigame = false,
-	mutant_charged = false,
-	netted = false,
-	pounced = false,
 	sliding = true,
-	sprinting = true,
+	sprinting = false,
 	stunned = true,
-	walking = true,
-	warp_grabbed = false,
+	walking = false,
 }
 
-local allowed_dash_state = {
+local ALLOWED_DASH_STATE = {
 	sprinting = true,
 	walking = true,
 }
 
-local is_dash_ability = {
+local IS_DASH_ABILITY = {
     zealot_targeted_dash = true,
     zealot_targeted_dash_improved = true,
     zealot_targeted_dash_improved_double = true,
@@ -77,7 +54,7 @@ local combat_ability
 local weapon_template
 
 mod.on_all_mods_loaded = function()
-    -- modding_tools:watch("character_state",character_state,"name")
+    modding_tools:watch("character_state",character_state,"name")
 end
 
 
@@ -99,8 +76,8 @@ end
 
 local function isPromised()
     local result = mod.promise_ability
-    if is_dash_ability[combat_ability] then
-        result = mod.promise_ability and allowed_dash_state[character_state.name]
+    if IS_DASH_ABILITY[combat_ability] then
+        result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name]
     end
     if result then
         if mod.debug.is_enabled() then
@@ -132,7 +109,7 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self, dt, t, ui_rend
     local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_id)
     ability_num_charges = remaining_ability_charges
     if ability_num_charges == 0 then
-        clearPromise("ability_num_charges")
+        mod.promise_ability = false
     end
 end)
 
@@ -152,7 +129,7 @@ local _input_hook = function(func, self, action_name)
             end
         end
         -- slot_unarmed means player is netted or pounced
-        if action_name == "combat_ability_pressed" and current_slot ~= "slot_unarmed" and ability_num_charges > 0 then
+        if action_name == "combat_ability_pressed" and current_slot ~= "slot_unarmed" and ability_num_charges > 0 and not IS_DASH_ABILITY[combat_ability] then
             setPromise("pressed")
         end
 
@@ -222,15 +199,18 @@ local is_aim_dash = {
 }
 
 local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
+    local _is_human_pressed = is_human_pressed
+    is_human_pressed = false
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
-        if reason == AIM_RELASE and is_human_pressed then
+        mod.debug.print("is_human_pressed: " .. tostring(_is_human_pressed))
+        if reason == AIM_RELASE and _is_human_pressed then
             if is_aim_dash[action_settings.kind] then
-                if character_state_promise_map[character_state.name] then
+                local state = character_state.name
+                if CHARACTER_STATE_PROMISE_MAP[state] then
                     setPromise("finishaction")
                 end
             end
-            is_human_pressed = false
         end
     end
 end
