@@ -84,12 +84,16 @@ end
 mod.promise_ability = false
 
 local function setPromise(from)
-    -- mod.debug.print("setPromiseFrom: " .. from)
+    if mod.debug.is_enabled() then
+        mod.debug.print("Guarantee Ability Activation: setPromiseFrom: " .. from)
+    end
     mod.promise_ability = true
 end
 
 local function clearPromise(from)
-    -- mod.debug.print("clearPromiseFrom: " .. from)
+    if mod.debug.is_enabled() then
+        mod.debug.print("Guarantee Ability Activation: clearPromiseFrom: " .. from)
+    end
     mod.promise_ability = false
 end
 
@@ -212,18 +216,21 @@ end
 local AIM_CANCEL = "hold_input_released"
 local AIM_RELASE = "new_interrupting_action"
 
+local is_aim_dash = {
+    targeted_dash_aim = true,
+    directional_dash_aim = true,
+}
+
 local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
-    if action_settings then
-        if action_settings.ability_type == "combat_ability" then
-            if reason == AIM_RELASE and is_human_pressed then
-                if action_settings.kind == "targeted_dash_aim" or action_settings.kind == "directional_dash_aim" then
-                    if character_state_promise_map[character_state.name] then
-                        setPromise("finishaction")
-                    end
+    if action_settings and action_settings.ability_type == "combat_ability" then
+        if reason == AIM_RELASE and is_human_pressed then
+            if is_aim_dash[action_settings.kind] then
+                if character_state_promise_map[character_state.name] then
+                    setPromise("finishaction")
                 end
-                is_human_pressed = false
             end
+            is_human_pressed = false
         end
     end
 end
