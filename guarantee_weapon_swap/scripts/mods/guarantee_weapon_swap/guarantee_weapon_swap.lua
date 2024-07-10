@@ -100,7 +100,7 @@ local _input_hook = function(func, self, action_name)
     if promise_action_map[action_name] then
         if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
             clearAllPromises()
-            if current_slot ~= action_slot_map[action_name] then
+            if current_slot ~= action_slot_map[action_name] and current_slot ~= "slot_unarmed" then
                 if not (not mod:get("enable_zealot_throwing_knives") and action_name == "grenade_ability_pressed" and grenade_ability == "zealot_throwing_knives") then
                     setPromise(action_name)
                 end
