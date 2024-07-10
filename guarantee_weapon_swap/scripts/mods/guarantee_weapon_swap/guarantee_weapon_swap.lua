@@ -48,19 +48,19 @@ local action_slot_map = {
     wield_5 = "slot_device"
 }
 
-mod.debug = {
-    is_enabled = function()
+local debug = {
+    is_enabled = function(self)
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
     end,
-    print = function(text)
+    print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
     end
 }
 
 local function isPromised(action)
     if promises[action] and current_slot ~= "" then
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action)
+        if debug:is_enabled() then
+            debug:print("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action)
         end
     end
     return promises[action]
@@ -87,8 +87,8 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
     previous_slot = current_slot
     current_slot = slot_name
     if current_slot ~= "" and previous_slot ~= "" then
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot)
+        if debug:is_enabled() then
+            debug:print("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot)
         end
     end
 end)

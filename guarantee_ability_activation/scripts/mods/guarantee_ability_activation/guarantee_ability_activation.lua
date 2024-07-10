@@ -5,15 +5,15 @@ local modding_tools = get_mod("modding_tools")
 
 mod.promise_ability = false
 
-mod.debug = {
-    is_enabled = function()
+local debug = {
+    is_enabled = function(self)
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
     end,
-    print = function(text)
+    print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
     end,
-    print_separator = function()
-        mod.debug.print("________________________________")
+    print_separator = function(self)
+        self:print("________________________________")
     end}
 
 local function contains(str, substr)
@@ -65,16 +65,16 @@ end
 
 
 local function setPromise(from)
-    if mod.debug.is_enabled() then
-        mod.debug.print("Guarantee Ability Activation: setPromiseFrom: " .. from)
+    if debug:is_enabled() then
+        debug:print("Guarantee Ability Activation: setPromiseFrom: " .. from)
     end
     mod.promise_ability = true
     last_set_promise = os.clock()
 end
 
 local function clearPromise(from)
-    if mod.debug.is_enabled() then
-        mod.debug.print("Guarantee Ability Activation: clearPromiseFrom: " .. from)
+    if debug:is_enabled() then
+        debug:print("Guarantee Ability Activation: clearPromiseFrom: " .. from)
     end
     mod.promise_ability = false
 end
@@ -84,7 +84,7 @@ local function isPromised()
     -- local unit = Managers.player:local_player(1).player_unit
     -- if unit then
     --     local ability_system = ScriptUnit.extension(unit, "ability_system")
-    --     mod.debug.print(ability_system:can_use_ability("combat_ability"))
+    --     debug:print(ability_system:can_use_ability("combat_ability"))
     -- end
     if IS_DASH_ABILITY[combat_ability] then 
         result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name]
@@ -93,8 +93,8 @@ local function isPromised()
         result = mod.promise_ability
     end
     if result then
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
+        if debug:is_enabled() then
+            debug:print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
         end
     end
     return result
@@ -137,8 +137,8 @@ local _input_hook = function(func, self, action_name)
 
     if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
         if action_name == "combat_ability_pressed" or action_name == "combat_ability_release" then
-            if mod.debug.is_enabled() then
-                mod.debug.print("Guarantee Ability Activation: Player pressed " .. action_name)
+            if debug:is_enabled() then
+                debug:print("Guarantee Ability Activation: Player pressed " .. action_name)
             end
         end
         -- slot_unarmed means player is netted or pounced
@@ -155,8 +155,8 @@ local _input_hook = function(func, self, action_name)
         end
 
         if action_name == "combat_ability_release" then
-            if mod.debug.is_enabled() then
-                mod.debug.print_separator()
+            if debug:is_enabled() then
+                debug:print_separator()
             end
         end
     end
@@ -178,8 +178,8 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
     if ability_type == "combat_ability" then
         clearPromise("use_ability_charge")
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
+        if debug:is_enabled() then
+            debug:print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
         end
     end
 end)
@@ -187,8 +187,8 @@ end)
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if slot_name == "slot_combat_ability" then
         clearPromise("on_slot_wielded")
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitWeaponExtension:on_slot_wielded(slot_combat_ability)")
+        if debug:is_enabled() then
+            debug:print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitWeaponExtension:on_slot_wielded(slot_combat_ability)")
         end
     end
     current_slot = slot_name
@@ -197,8 +197,8 @@ end)
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" and not IS_DASH_ABILITY[combat_ability] then
         clearPromise("ability_base_start")
-        if mod.debug.is_enabled() then
-            mod.debug.print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
+        if debug:is_enabled() then
+            debug:print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
         end
     end
 end
@@ -217,11 +217,11 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
     is_human_pressed = false
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
-        -- mod.debug.print("is_human_pressed: " .. tostring(_is_human_pressed))
+        -- debug:print("is_human_pressed: " .. tostring(_is_human_pressed))
         if _is_human_pressed then
             if (reason == AIM_CANCEL) then
-                if mod.debug.is_enabled() then
-                    mod.debug.print("Guarantee Ability Activation: " .. "AIM_CANCEL")
+                if debug:is_enabled() then
+                    debug:print("Guarantee Ability Activation: " .. "AIM_CANCEL")
                 end
             else
                 if IS_AIM_DASH[action_settings.kind] then
