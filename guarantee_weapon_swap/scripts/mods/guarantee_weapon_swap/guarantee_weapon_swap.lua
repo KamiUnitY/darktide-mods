@@ -6,7 +6,6 @@ local ability_configuration = PlayerCharacterConstants.ability_configuration
 local modding_tools = get_mod("modding_tools")
 
 local grenade_ability
-local can_wield_grenade = nil
 local current_slot = ""
 local previous_slot = ""
 
@@ -136,7 +135,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
 			local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
 			local can_use_ability = self:can_use_ability(ability_type)
 
-            can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
+            local can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
 
             if can_wield_grenade ~= true then
                 mod.promises.grenade = false
