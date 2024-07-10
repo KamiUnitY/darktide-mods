@@ -106,7 +106,7 @@ local _input_hook = function(func, self, action_name)
                 end
             end
         end
-        return func(self, action_name) or isPromised(promise_action_map[action_name])
+        return out or isPromised(promise_action_map[action_name])
     end
 
     return out
