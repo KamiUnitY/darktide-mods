@@ -10,7 +10,7 @@ local can_wield_grenade = nil
 local current_slot = ""
 local previous_slot = ""
 
-local promises = {
+mod.promises = {
     quick = false,
     primary = false,
     secondary = false,
@@ -20,7 +20,7 @@ local promises = {
     device = false
 }
 
-local promise_slot_map = {
+local PROMISE_SLOT_MAP = {
     slot_primary = "primary",
     slot_secondary = "secondary",
     slot_grenade_ability = "grenade",
@@ -29,7 +29,7 @@ local promise_slot_map = {
     slot_device = "device",
 }
 
-local promise_action_map = {
+local PROMISE_ACTION_MAP = {
     quick_wield = "quick",
     wield_1 = "primary",
     wield_2 = "secondary",
@@ -39,7 +39,7 @@ local promise_action_map = {
     wield_5 = "device"
 }
 
-local action_slot_map = {
+local ACTION_SLOT_MAP = {
     wield_1 = "slot_primary",
     wield_2 = "slot_secondary",
     grenade_ability_pressed = "slot_grenade_ability",
@@ -58,21 +58,21 @@ local debug = {
 }
 
 local function isPromised(action)
-    if promises[action] and current_slot ~= "" then
+    if mod.promises[action] and current_slot ~= "" then
         if debug:is_enabled() then
             debug:print("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action)
         end
     end
-    return promises[action]
+    return mod.promises[action]
 end
 
 local function setPromise(action_name)
-    promises[promise_action_map[action_name]] = true
+    mod.promises[PROMISE_ACTION_MAP[action_name]] = true
 end
 
 local function clearAllPromises()
-    for key in pairs(promises) do
-        promises[key] = false
+    for key in pairs(mod.promises) do
+        mod.promises[key] = false
     end
 end
 
@@ -82,8 +82,8 @@ mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function (self, unit, d
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
-    promises.quick = false
-    promises[promise_slot_map[slot_name] or ""] = false
+    mod.promises.quick = false
+    mod.promises[PROMISE_SLOT_MAP[slot_name] or ""] = false
     previous_slot = current_slot
     current_slot = slot_name
     if current_slot ~= "" and previous_slot ~= "" then
@@ -97,16 +97,16 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
 
-    if promise_action_map[action_name] then
+    if PROMISE_ACTION_MAP[action_name] then
         if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
             clearAllPromises()
-            if current_slot ~= action_slot_map[action_name] and current_slot ~= "slot_unarmed" then
+            if current_slot ~= ACTION_SLOT_MAP[action_name] and current_slot ~= "slot_unarmed" then
                 if not (not mod:get("enable_zealot_throwing_knives") and action_name == "grenade_ability_pressed" and grenade_ability == "zealot_throwing_knives") then
                     setPromise(action_name)
                 end
             end
         end
-        return out or isPromised(promise_action_map[action_name])
+        return out or isPromised(PROMISE_ACTION_MAP[action_name])
     end
 
     return out
@@ -117,13 +117,13 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 
 mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
     if (self._player_weapons.slot_pocketable_small == nil) then
-        promises.pocketable_small = false
+        mod.promises.pocketable_small = false
     end
     if (self._player_weapons.slot_pocketable == nil) then
-        promises.pocketable = false
+        mod.promises.pocketable = false
     end
     if (self._player_weapons.slot_device == nil) then
-        promises.device = false
+        mod.promises.device = false
     end
 end)
 
@@ -139,11 +139,11 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
             can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
 
             if can_wield_grenade ~= true then
-                promises.grenade = false
+                mod.promises.grenade = false
             end
 
             if equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
-                promises.grenade = false
+                mod.promises.grenade = false
             end
 		end
 	end
