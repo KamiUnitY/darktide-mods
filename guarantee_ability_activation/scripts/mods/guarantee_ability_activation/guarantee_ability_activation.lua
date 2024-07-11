@@ -105,8 +105,8 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt,
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-	local wielded_slot = inventory_component.wielded_slot
-    if wielded_slot ~= nil then
+    local wielded_slot = inventory_component.wielded_slot
+    if wielded_slot ~= nil and weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
         weapon_template = weapons[wielded_slot].weapon_template.name
     end
 end)
