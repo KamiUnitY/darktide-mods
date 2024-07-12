@@ -8,6 +8,9 @@ return {
 	enable_combat_ability_hold = {
 		en = "Hold action",
 	},
+	enable_prevent_double_dashing = {
+		en = "Prevent double dashing",
+	},
 	debug_group = {
 		en = "Debug",
 	},

@@ -1,4 +1,4 @@
--- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.1.2
+-- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.1.3
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -56,7 +56,9 @@ local ability_num_charges = 0
 local combat_ability
 local weapon_template
 
-local DELAY_DASH = 0.2 --second
+local DELAY_DASH = 0.2
+-- local DELAY_ABILITY_PRESS = 0.15
+
 local last_set_promise = os.clock()
 
 mod.on_all_mods_loaded = function()
@@ -81,12 +83,7 @@ end
 
 local function isPromised()
     local result
-    -- local unit = Managers.player:local_player(1).player_unit
-    -- if unit then
-    --     local ability_system = ScriptUnit.extension(unit, "ability_system")
-    --     debug:print(ability_system:can_use_ability("combat_ability"))
-    -- end
-    if IS_DASH_ABILITY[combat_ability] then 
+    if IS_DASH_ABILITY[combat_ability] then
         result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name]
             and os.clock() - last_set_promise > DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
     else
@@ -104,16 +101,10 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt,
     character_state.name = self._state_current.name
 end)
 
-mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-    local wielded_slot = inventory_component.wielded_slot
-    if wielded_slot ~= nil and weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
-        weapon_template = weapons[wielded_slot].weapon_template.name
+mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function (self)
+    if self._equipped_abilities.combat_ability ~= nil then
+        combat_ability = self._equipped_abilities.combat_ability.name
     end
-end)
-
-mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
-    local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-    combat_ability = unit_data._components.equipped_abilities[1].combat_ability
 end)
 
 mod:hook_safe("HudElementPlayerAbility", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -168,6 +159,12 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "combat_ability_pressed" then
+        if IS_DASH_ABILITY[combat_ability] and character_state.name == "lunging" and mod:get("enable_prevent_double_dashing") then
+            return false
+        end
+        -- if IS_DASH_ABILITY[combat_ability] and os.clock() - last_set_promise <= DELAY_ABILITY_PRESS then
+        --     return false
+        -- end
         return out or isPromised()
     end
 
@@ -187,6 +184,10 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
+    local weapons = self._weapons
+    if weapons[slot_name] ~= nil and weapons[slot_name].weapon_template ~= nil then
+        weapon_template = weapons[slot_name].weapon_template.name
+    end
     if slot_name == "slot_combat_ability" then
         clearPromise("on_slot_wielded")
         if debug:is_enabled() then
@@ -227,7 +228,8 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
                 end
             else
                 if IS_AIM_DASH[action_settings.kind] then
-                    if CHARACTER_STATE_PROMISE_MAP[character_state.name] and current_slot ~= "slot_unarmed" then
+                    if CHARACTER_STATE_PROMISE_MAP[character_state.name] and current_slot ~= "slot_unarmed"
+                        and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
                         setPromise("finishaction")
                     end
                 end
