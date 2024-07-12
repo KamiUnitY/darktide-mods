@@ -62,6 +62,7 @@ local DELAY_DASH = 0.2
 local last_set_promise = os.clock()
 
 mod.on_all_mods_loaded = function()
+    -- modding_tools:watch("promise_ability",mod,"promise_ability")
     -- modding_tools:watch("character_state",character_state,"name")
 end
 
@@ -123,7 +124,6 @@ local function isWieldBugCombo()
     return contains(weapon_template, "combatsword_p2") and contains(combat_ability, "zealot_relic")
 end
 
-local is_human_pressed = false
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
@@ -135,12 +135,9 @@ local _input_hook = function(func, self, action_name)
             end
         end
         -- slot_unarmed means player is netted or pounced
-        if action_name == "combat_ability_pressed" and current_slot ~= "slot_unarmed" and ability_num_charges > 0 and not IS_DASH_ABILITY[combat_ability] then
+        if action_name == "combat_ability_pressed" and current_slot ~= "slot_unarmed" and ability_num_charges > 0
+            and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
             setPromise("pressed")
-        end
-
-        if action_name == "combat_ability_hold" then
-            is_human_pressed = true
         end
 
         if action_name == "combat_ability_hold" and not mod:get("enable_combat_ability_hold") then
@@ -198,7 +195,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
 end)
 
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
-    if action_settings.ability_type == "combat_ability" and not IS_DASH_ABILITY[combat_ability] then
+    if action_settings.ability_type == "combat_ability" then
         clearPromise("ability_base_start")
         if debug:is_enabled() then
             debug:print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
@@ -216,22 +213,17 @@ local IS_AIM_DASH = {
 }
 
 local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
-    local _is_human_pressed = is_human_pressed
-    is_human_pressed = false
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
-        -- debug:print("is_human_pressed: " .. tostring(_is_human_pressed))
-        if _is_human_pressed then
-            if (reason == AIM_CANCEL) then
-                if debug:is_enabled() then
-                    debug:print("Guarantee Ability Activation: " .. "AIM_CANCEL")
-                end
-            else
-                if IS_AIM_DASH[action_settings.kind] then
-                    if CHARACTER_STATE_PROMISE_MAP[character_state.name] and current_slot ~= "slot_unarmed"
-                        and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
-                        setPromise("finishaction")
-                    end
+        if (reason == AIM_CANCEL) then
+            if debug:is_enabled() then
+                debug:print("Guarantee Ability Activation: " .. "AIM_CANCEL")
+            end
+        else
+            if IS_AIM_DASH[action_settings.kind] then
+                if CHARACTER_STATE_PROMISE_MAP[character_state.name] and current_slot ~= "slot_unarmed"
+                    and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
+                    setPromise("finishaction")
                 end
             end
         end
