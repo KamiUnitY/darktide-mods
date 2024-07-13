@@ -32,6 +32,8 @@ local CHARACTER_STATE_PROMISE_MAP = {
 	sprinting = true,
 	stunned = true,
 	walking = true,
+    jumping = true,
+    falling = true,
 }
 
 local ALLOWED_DASH_STATE = {
