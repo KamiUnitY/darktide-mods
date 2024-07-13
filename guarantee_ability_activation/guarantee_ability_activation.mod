@@ -10,6 +10,7 @@ return {
 	end,
 	load_after = {
 		"modding_tools",
+		"MultiBind",
 	},
 	packages = {},
 }
