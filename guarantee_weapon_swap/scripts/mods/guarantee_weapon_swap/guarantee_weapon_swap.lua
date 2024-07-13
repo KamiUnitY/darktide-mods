@@ -95,9 +95,10 @@ end)
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
+    local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out == 1)
 
     if PROMISE_ACTION_MAP[action_name] then
-        if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
+        if pressed then
             clearAllPromises()
             if current_slot ~= ACTION_SLOT_MAP[action_name] and current_slot ~= "slot_unarmed" then
                 if action_name ~= "grenade_ability_pressed" or grenade_ability ~= "zealot_throwing_knives" or (mod:get("enable_zealot_throwing_knives") and current_slot ~= "slot_luggable") then
