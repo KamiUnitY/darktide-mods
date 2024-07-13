@@ -57,9 +57,12 @@ local combat_ability
 local weapon_template
 
 local DELAY_DASH = 0.2
--- local DELAY_ABILITY_PRESS = 0.15
 
 local last_set_promise = os.clock()
+
+local elapsed = function (time)
+    return os.clock() - time
+end
 
 mod.on_all_mods_loaded = function()
     -- modding_tools:watch("promise_ability",mod,"promise_ability")
@@ -86,7 +89,7 @@ local function isPromised()
     local result
     if IS_DASH_ABILITY[combat_ability] then
         result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name]
-            and os.clock() - last_set_promise > DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
+            and elapsed(last_set_promise) > DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
     else
         result = mod.promise_ability
     end
@@ -127,8 +130,9 @@ end
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
+    local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out == 1)
 
-    if (type_str == "boolean" and out == true) or (type_str == "number" and out == 1) then
+    if pressed then
         if action_name == "combat_ability_pressed" or action_name == "combat_ability_release" then
             if debug:is_enabled() then
                 debug:print("Guarantee Ability Activation: Player pressed " .. action_name)
@@ -140,7 +144,7 @@ local _input_hook = function(func, self, action_name)
             setPromise("pressed")
         end
 
-        if action_name == "combat_ability_hold" and not mod:get("enable_combat_ability_hold") then
+        if action_name == "combat_ability_hold" and mod:get("enable_prevent_ability_aiming") then
             return false
         end
 
@@ -148,6 +152,11 @@ local _input_hook = function(func, self, action_name)
             if debug:is_enabled() then
                 debug:print_separator()
             end
+        end
+
+        -- preventing sprinting press on lunging since it could cancel ability
+        if action_name == "sprinting" and character_state.name == "lunging" then
+            return false
         end
     end
 
@@ -159,9 +168,6 @@ local _input_hook = function(func, self, action_name)
         if IS_DASH_ABILITY[combat_ability] and character_state.name == "lunging" and mod:get("enable_prevent_double_dashing") then
             return false
         end
-        -- if IS_DASH_ABILITY[combat_ability] and os.clock() - last_set_promise <= DELAY_ABILITY_PRESS then
-        --     return false
-        -- end
         return out or isPromised()
     end
 
@@ -204,30 +210,48 @@ local _action_ability_base_start_hook = function(self, action_settings, t, time_
 end
 
 local AIM_CANCEL = "hold_input_released"
+local AIM_CANCEL_WITH_SPRINT = "started_sprint"
 local AIM_RELASE = "new_interrupting_action"
-local AIM_RELASE_WHILE_DASH = "started_sprint"
+
+local IS_AIM_CANCEL = {
+    [AIM_CANCEL] = true,
+    [AIM_CANCEL_WITH_SPRINT] = true
+}
 
 local IS_AIM_DASH = {
     targeted_dash_aim = true,
     directional_dash_aim = true,
 }
 
+local PREVENT_CANCEL_DURATION = 0.2
+
+local tryPromiseDash = function ()
+    if CHARACTER_STATE_PROMISE_MAP[character_state.name] and current_slot ~= "slot_unarmed" then
+        setPromise("promise_dash")
+    end
+end
+
 local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
-        if (reason == AIM_CANCEL) then
+        if IS_AIM_CANCEL[reason] then
+            if current_slot ~= "slot_unarmed" then
+                if reason == AIM_CANCEL_WITH_SPRINT and mod:get("enable_prevent_cancel_on_start_sprinting") then
+                    return setPromise("AIM_CANCEL_WITH_SPRINT")
+                end
+                if mod:get("enable_prevent_cancel_on_short_ability_press") and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
+                    return setPromise("AIM_CANCEL")
+                end
+            end
             if debug:is_enabled() then
-                debug:print("Guarantee Ability Activation: " .. "AIM_CANCEL")
+                debug:print("Guarantee Ability Activation: Player pressed AIM_CANCEL by " .. reason)
             end
         else
             if IS_AIM_DASH[action_settings.kind] then
-                if CHARACTER_STATE_PROMISE_MAP[character_state.name] and current_slot ~= "slot_unarmed"
-                    and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
-                    setPromise("finishaction")
-                end
+                return tryPromiseDash()
             end
         end
-    end
+    end 
 end
 
 mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(instance)
