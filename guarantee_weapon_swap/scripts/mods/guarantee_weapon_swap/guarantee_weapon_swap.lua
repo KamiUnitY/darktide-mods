@@ -47,6 +47,20 @@ local ACTION_SLOT_MAP = {
     wield_5 = "slot_device"
 }
 
+mod.character_state = nil
+
+local ALLOWED_CHARACTER_STATE = {
+	dodging = true,
+	ledge_vaulting = true,
+    lunging = true,
+	sliding = true,
+	sprinting = true,
+	stunned = true,
+	walking = true,
+    jumping = true,
+    falling = true,
+}
+
 local debug = {
     is_enabled = function(self)
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
@@ -83,11 +97,19 @@ end)
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     mod.promises.quick = false
     mod.promises[PROMISE_SLOT_MAP[slot_name] or ""] = false
-    previous_slot = current_slot
-    current_slot = slot_name
-    if current_slot ~= "" and previous_slot ~= "" then
-        if debug:is_enabled() then
-            debug:print("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot)
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
+    local wielded_slot = inventory_component.wielded_slot
+    if wielded_slot ~= nil then
+        if wielded_slot ~= current_slot then
+            previous_slot = current_slot
+            current_slot = wielded_slot
+            if current_slot ~= "" and previous_slot ~= "" then
+                if debug:is_enabled() then
+                    debug:print("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot)
+                end
+            end
         end
     end
 end)
@@ -100,7 +122,7 @@ local _input_hook = function(func, self, action_name)
     if PROMISE_ACTION_MAP[action_name] then
         if pressed then
             clearAllPromises()
-            if current_slot ~= ACTION_SLOT_MAP[action_name] and current_slot ~= "slot_unarmed" then
+            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
                 if action_name ~= "grenade_ability_pressed" or grenade_ability ~= "zealot_throwing_knives" or (mod:get("enable_zealot_throwing_knives") and current_slot ~= "slot_luggable") then
                     setPromise(action_name)
                 end
@@ -147,4 +169,10 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
             end
 		end
 	end
+end)
+
+mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.character_state = self._state_current.name
+    end
 end)
