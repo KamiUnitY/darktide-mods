@@ -23,9 +23,8 @@ local function contains(str, substr)
     return string.find(str, substr) ~= nil
 end
 
-local CHARACTER_STATE_PROMISE_MAP = {
+local ALLOWED_CHARACTER_STATE = {
 	dodging = true,
-	ladder_top_leaving = true,
 	ledge_vaulting = true,
     lunging = true,
 	sliding = true,
@@ -73,11 +72,16 @@ end
 
 
 local function setPromise(from)
-    if debug:is_enabled() then
-        debug:print("Guarantee Ability Activation: setPromiseFrom: " .. from)
+    -- slot_unarmed means player is netted or pounced
+    if ALLOWED_CHARACTER_STATE[character_state.name] and current_slot ~= "slot_unarmed"
+        and ability_num_charges > 0
+        and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
+        if debug:is_enabled() then
+            debug:print("Guarantee Ability Activation: setPromiseFrom: " .. from)
+        end
+        mod.promise_ability = true
+        last_set_promise = os.clock()
     end
-    mod.promise_ability = true
-    last_set_promise = os.clock()
 end
 
 local function clearPromise(from)
@@ -104,7 +108,9 @@ local function isPromised()
 end
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
-    character_state.name = self._state_current.name
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        character_state.name = self._state_current.name
+    end
 end)
 
 mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function (self)
@@ -140,9 +146,7 @@ local _input_hook = function(func, self, action_name)
                 debug:print("Guarantee Ability Activation: Player pressed " .. action_name)
             end
         end
-        -- slot_unarmed means player is netted or pounced
-        if action_name == "combat_ability_pressed" and current_slot ~= "slot_unarmed" and ability_num_charges > 0
-            and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
+        if action_name == "combat_ability_pressed" then
             setPromise("pressed")
         end
 
@@ -188,18 +192,19 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
     end
 end)
 
-mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
-    local weapons = self._weapons
-    if weapons[slot_name] ~= nil and weapons[slot_name].weapon_template ~= nil then
-        weapon_template = weapons[slot_name].weapon_template.name
-    end
-    if slot_name == "slot_combat_ability" then
-        clearPromise("on_slot_wielded")
-        if debug:is_enabled() then
-            debug:print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitWeaponExtension:on_slot_wielded(slot_combat_ability)")
+mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
+    local wielded_slot = inventory_component.wielded_slot
+    if wielded_slot ~= nil then
+        if wielded_slot ~= current_slot then
+            current_slot = wielded_slot
+            if wielded_slot == "slot_combat_ability" then
+                clearPromise("on_slot_wielded")
+            end
+            if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
+                weapon_template = weapons[wielded_slot].weapon_template.name
+            end
         end
     end
-    current_slot = slot_name
 end)
 
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
@@ -227,12 +232,6 @@ local IS_AIM_DASH = {
 
 local PREVENT_CANCEL_DURATION = 0.2
 
-local tryPromiseDash = function ()
-    if CHARACTER_STATE_PROMISE_MAP[character_state.name] and current_slot ~= "slot_unarmed" then
-        setPromise("promise_dash")
-    end
-end
-
 local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
@@ -250,10 +249,10 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
             end
         else
             if IS_AIM_DASH[action_settings.kind] then
-                return tryPromiseDash()
+                return setPromise("promise_dash")
             end
         end
-    end 
+    end
 end
 
 mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(instance)
