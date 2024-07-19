@@ -55,7 +55,7 @@ local ability_num_charges = 0
 local combat_ability
 local weapon_template
 
-local DELAY_DASH = 0.2
+local DELAY_DASH = 0.3
 
 local last_set_promise = os.clock()
 
@@ -228,7 +228,7 @@ local IS_AIM_DASH = {
     directional_dash_aim = true,
 }
 
-local PREVENT_CANCEL_DURATION = 0.2
+local PREVENT_CANCEL_DURATION = 0.3
 
 local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
