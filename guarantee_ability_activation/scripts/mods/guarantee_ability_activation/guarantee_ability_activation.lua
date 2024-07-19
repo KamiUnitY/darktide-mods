@@ -48,9 +48,7 @@ local IS_DASH_ABILITY = {
     ogryn_charge_increased_distance = true,
 }
 
-local character_state = {
-    name = nil,
-}
+mod.character_state = nil
 
 local current_slot = ""
 local ability_num_charges = 0
@@ -67,15 +65,15 @@ end
 
 mod.on_all_mods_loaded = function()
     -- modding_tools:watch("promise_ability",mod,"promise_ability")
-    -- modding_tools:watch("character_state",character_state,"name")
+    -- modding_tools:watch("character_state",mod,"character_state")
 end
 
 
 local function setPromise(from)
     -- slot_unarmed means player is netted or pounced
-    if ALLOWED_CHARACTER_STATE[character_state.name] and current_slot ~= "slot_unarmed"
+    if ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed"
         and ability_num_charges > 0
-        and (character_state.name ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
+        and (mod.character_state ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
         if debug:is_enabled() then
             debug:print("Guarantee Ability Activation: setPromiseFrom: " .. from)
         end
@@ -94,7 +92,7 @@ end
 local function isPromised()
     local result
     if IS_DASH_ABILITY[combat_ability] then
-        result = mod.promise_ability and ALLOWED_DASH_STATE[character_state.name]
+        result = mod.promise_ability and ALLOWED_DASH_STATE[mod.character_state]
             and elapsed(last_set_promise) > DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
     else
         result = mod.promise_ability
@@ -109,7 +107,7 @@ end
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        character_state.name = self._state_current.name
+        mod.character_state = self._state_current.name
     end
 end)
 
@@ -161,7 +159,7 @@ local _input_hook = function(func, self, action_name)
         end
 
         -- preventing sprinting press on lunging since it could cancel ability
-        if action_name == "sprinting" and character_state.name == "lunging" then
+        if action_name == "sprinting" and mod.character_state == "lunging" then
             return false
         end
     end
@@ -171,7 +169,7 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "combat_ability_pressed" then
-        if IS_DASH_ABILITY[combat_ability] and character_state.name == "lunging" and mod:get("enable_prevent_double_dashing") then
+        if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod:get("enable_prevent_double_dashing") then
             return false
         end
         return out or isPromised()
