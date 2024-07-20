@@ -10,7 +10,7 @@ return {
 	end,
 	load_after = {
 		-- "ChatBlock", -- Already ordered by alphabetical order
-		"better_toggle_sprint",
+		"hybrid_sprint",
 		"modding_tools",
 		"MultiBind",
 	},

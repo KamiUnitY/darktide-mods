@@ -1,6 +1,6 @@
 -- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.0.0
 
-local mod = get_mod("better_toggle_sprint")
+local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
 
 mod.promise_sprint = false
@@ -64,7 +64,7 @@ local INTERRUPTED_INPUT = {
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
         if debug:is_enabled() then
-            debug:print("better_toggle_sprint: setPromiseFrom: " .. from)
+            debug:print("hybrid_sprint: setPromiseFrom: " .. from)
         end
         mod.promise_sprint = true
     end
@@ -73,7 +73,7 @@ end
 local function clearPromise(from)
     if mod.promise_sprint then
         if debug:is_enabled() then
-            debug:print("better_toggle_sprint: clearPromiseFrom: " .. from)
+            debug:print("hybrid_sprint: clearPromiseFrom: " .. from)
         end
         mod.promise_sprint = false
     end
@@ -83,7 +83,7 @@ local function isPromised()
     local result = mod.promise_sprint and mod.pressed_forward
     if result then
         if debug:is_enabled() then
-            debug:print("better_toggle_sprint: Attempting to sprint for you !!!")
+            debug:print("hybrid_sprint: Attempting to sprint for you !!!")
         end
     end
     return result
