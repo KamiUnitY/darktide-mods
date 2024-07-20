@@ -13,8 +13,8 @@ return {
 		"guarantee_ability_activation",
 	},
 	load_after = {
-		"modding_tools",
 		-- "ChatBlock", -- Already ordered by alphabetical order
+		"modding_tools",
 		"MultiBind",
 	},
 	packages = {},
