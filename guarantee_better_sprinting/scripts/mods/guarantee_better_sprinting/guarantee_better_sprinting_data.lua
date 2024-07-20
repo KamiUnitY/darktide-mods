@@ -1,4 +1,4 @@
-local mod = get_mod("guarantee_sprinting")
+local mod = get_mod("guarantee_better_sprinting")
 
 return {
 	name = mod:localize("mod_name"),
@@ -6,6 +6,11 @@ return {
 	is_togglable = true,
 	options = {
 		widgets = {
+			{
+				setting_id = "enable_hold_to_sprint",
+				type = "checkbox",
+				default_value = false,
+			},
 			{
 				setting_id  = "debug_group",
 				type        = "group",

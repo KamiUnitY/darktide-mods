@@ -1,4 +1,4 @@
-local mod = get_mod("guarantee_sprinting")
+local mod = get_mod("guarantee_better_sprinting")
 local modding_tools = get_mod("modding_tools")
 local Sprint = require("scripts/extension_systems/character_state_machine/character_states/utilities/sprint")
 
@@ -22,6 +22,18 @@ mod.on_game_state_changed = function(status, state_name)
     local input_settings = Managers.save:account_data().input_settings
     input_settings.hold_to_sprint = true
 end
+
+mod:hook_require("scripts/settings/options/input_settings", function(instance)
+    -- Filter out the hold_to_sprint setting from the settings array
+    local filtered_settings = {}
+    for i, setting in ipairs(instance.settings) do
+        if setting.id ~= "hold_to_sprint" then
+            table.insert(filtered_settings, setting)
+        end
+    end
+    -- Update the settings array with the filtered settings
+    instance.settings = filtered_settings
+end)
 
 local ALLOWED_CHARACTER_STATE = {
     dodging = true,
@@ -89,7 +101,7 @@ local _input_hook = function(func, self, action_name)
         mod.pressed_forward = pressed
     end
 
-    if action_name == "sprint" and pressed then
+    if action_name == "sprint" and pressed and not mod:get("enable_hold_to_sprint") then
         setPromise("Pressed Sprint");
     end
 
