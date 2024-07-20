@@ -10,8 +10,5 @@
 !guarantee_ability_activation
 !guarantee_ability_activation/**
 
-!guarantee_better_sprinting
-!guarantee_better_sprinting/**
-
-!guarantee_sprinting
-!guarantee_sprinting/**
+!guarantee_better_sprint
+!guarantee_better_sprint/**

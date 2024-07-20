@@ -1,4 +1,4 @@
-local mod = get_mod("guarantee_better_sprinting")
+local mod = get_mod("guarantee_better_sprint")
 local modding_tools = get_mod("modding_tools")
 local Sprint = require("scripts/extension_systems/character_state_machine/character_states/utilities/sprint")
 

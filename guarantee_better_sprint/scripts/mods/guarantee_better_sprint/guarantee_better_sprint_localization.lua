@@ -1,9 +1,9 @@
 return {
 	mod_name = {
-		en = "Guarantee Better Sprinting",
+		en = "Guarantee Better Sprint",
 	},
 	mod_description = {
-		en = "Guarantee better sprinting experience for Toggle Sprint Player by allowing them to hold sprint. Sprint can only be canceled by releasing forward key and weapon actions.",
+		en = "Guarantee better sprint experience for Toggle Sprint Player by allowing them to hold sprint. Sprint can only be canceled by releasing forward key and weapon actions.",
 	},
 	enable_hold_to_sprint = {
 		en = "Hold to Sprint",

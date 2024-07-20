@@ -1,4 +1,4 @@
-local mod = get_mod("guarantee_better_sprinting")
+local mod = get_mod("guarantee_better_sprint")
 
 return {
 	name = mod:localize("mod_name"),
