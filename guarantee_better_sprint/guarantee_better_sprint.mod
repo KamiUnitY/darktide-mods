@@ -8,6 +8,10 @@ return {
 			mod_localization = "guarantee_better_sprint/scripts/mods/guarantee_better_sprint/guarantee_better_sprint_localization",
 		})
 	end,
+	load_before = {
+		"guarantee_weapon_swap",
+		"guarantee_ability_activation",
+	},
 	load_after = {
 		"modding_tools",
 		-- "ChatBlock", -- Already ordered by alphabetical order
