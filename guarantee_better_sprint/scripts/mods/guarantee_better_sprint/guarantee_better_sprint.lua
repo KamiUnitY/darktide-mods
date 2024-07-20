@@ -1,6 +1,7 @@
+-- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.0.0
+
 local mod = get_mod("guarantee_better_sprint")
 local modding_tools = get_mod("modding_tools")
-local Sprint = require("scripts/extension_systems/character_state_machine/character_states/utilities/sprint")
 
 mod.promise_sprint = false
 mod.pressed_forward = false
@@ -63,7 +64,7 @@ local INTERRUPTED_INPUT = {
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
         if debug:is_enabled() then
-            debug:print("Guarantee Sprinting: setPromiseFrom: " .. from)
+            debug:print("Guarantee Better Sprint: setPromiseFrom: " .. from)
         end
         mod.promise_sprint = true
     end
@@ -72,7 +73,7 @@ end
 local function clearPromise(from)
     if mod.promise_sprint then
         if debug:is_enabled() then
-            debug:print("Guarantee Sprinting: clearPromiseFrom: " .. from)
+            debug:print("Guarantee Better Sprint: clearPromiseFrom: " .. from)
         end
         mod.promise_sprint = false
     end
@@ -82,7 +83,7 @@ local function isPromised()
     local result = mod.promise_sprint and mod.pressed_forward
     if result then
         if debug:is_enabled() then
-            debug:print("Guarantee Sprinting: Attempting to sprint for you !!!")
+            debug:print("Guarantee Better Sprint: Attempting to sprint for you !!!")
         end
     end
     return result
