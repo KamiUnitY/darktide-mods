@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap mod by KamiUnitY. Ver. 1.1.6
+-- Guarantee Weapon Swap mod by KamiUnitY. Ver. 1.1.7
 
 local mod = get_mod("guarantee_weapon_swap")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
