@@ -3,7 +3,7 @@ return {
 		en = "Guarantee Better Sprinting",
 	},
 	mod_description = {
-		en = "Guarantee sprinting until action key is pressed or forward key is released. It's a mix between Holding and Pressing the sprint key.",
+		en = "Guarantee better sprinting experience for Toggle Sprint player. Sprint can be canceled by releasing forward key and weapon actions. It's a mix between Holding and Pressing the key.",
 	},
 	enable_hold_to_sprint = {
 		en = "Hold to Sprint",
