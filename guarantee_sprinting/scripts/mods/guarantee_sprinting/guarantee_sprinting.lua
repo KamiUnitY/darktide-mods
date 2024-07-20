@@ -15,6 +15,8 @@ local debug = {
 }
 
 mod.on_all_mods_loaded = function()
+    local input_settings = Managers.save:account_data().input_settings
+    input_settings.hold_to_sprint = true
     -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
 end
 
