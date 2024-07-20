@@ -1,9 +1,9 @@
 return {
 	mod_name = {
-		en = "Better Toggle Sprint",
+		en = "Hybrid Sprint",
 	},
 	mod_description = {
-		en = "Better toggle sprint experience for Toggle Sprint Player by allowing them to hold sprinting. Sprint can only be canceled by releasing forward key and weapon actions.",
+		en = "Provide better sprinting experience by combining Toggle and Hold sprinting mechanic together. Sprint can only be canceled by releasing forward key and weapon actions.",
 	},
 	enable_hold_to_sprint = {
 		en = "Hold to Sprint",
