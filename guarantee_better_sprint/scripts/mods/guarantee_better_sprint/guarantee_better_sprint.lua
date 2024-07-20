@@ -124,7 +124,7 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.character_state = self._state_current.name
         if not ALLOWED_CHARACTER_STATE[mod.character_state] then
-            mod.promise_sprint = false
+            clearPromise("Unallowed Character State")
         end
     end
 end)
