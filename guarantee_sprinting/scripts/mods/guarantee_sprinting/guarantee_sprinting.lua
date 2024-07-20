@@ -15,9 +15,12 @@ local debug = {
 }
 
 mod.on_all_mods_loaded = function()
+    -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
+end
+
+mod.on_game_state_changed = function(status, state_name)
     local input_settings = Managers.save:account_data().input_settings
     input_settings.hold_to_sprint = true
-    -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
 end
 
 local ALLOWED_CHARACTER_STATE = {
