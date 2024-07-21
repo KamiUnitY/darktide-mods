@@ -1,4 +1,4 @@
--- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.0.1
+-- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.0.2
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
@@ -100,6 +100,10 @@ local _input_hook = function(func, self, action_name)
             clearPromise("Realeased Forward")
         end
         mod.pressed_forward = pressed
+    end
+
+    if action_name == "move_backward" and pressed then
+        clearPromise("Pressed Backward")
     end
 
     if action_name == "sprint" and pressed then
