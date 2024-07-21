@@ -12,6 +12,11 @@ return {
 				default_value = false,
 			},
 			{
+				setting_id = "enable_keep_sprint_after_weapon_action",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
 				setting_id  = "debug_group",
 				type        = "group",
 				sub_widgets = {

@@ -102,12 +102,16 @@ local _input_hook = function(func, self, action_name)
         mod.pressed_forward = pressed
     end
 
-    if action_name == "sprint" and pressed and not mod:get("enable_hold_to_sprint") then
-        setPromise("Pressed Sprint");
+    if action_name == "sprint" and pressed then
+        if not mod:get("enable_hold_to_sprint") then
+            setPromise("Pressed Sprint");
+        end
     end
 
     if INTERRUPTED_INPUT[action_name] and pressed then
-        clearPromise("Pressed INTERRUPTED_INPUT: " .. action_name)
+        if not mod:get("enable_keep_sprint_after_weapon_action") then
+            clearPromise("Pressed INTERRUPTED_INPUT: " .. action_name)
+        end
     end
 
     if action_name == "sprinting" then
