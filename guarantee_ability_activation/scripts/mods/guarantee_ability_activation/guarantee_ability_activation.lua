@@ -3,6 +3,11 @@
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
 
+mod.settings = {
+    enable_prevent_cancel_on_short_ability_press = true, -- mod:get("enable_prevent_cancel_on_short_ability_press")
+    enable_prevent_cancel_on_start_sprinting = true, -- mod:get("enable_prevent_cancel_on_start_sprinting")
+}
+
 mod.promise_ability = false
 
 local debug = {
@@ -233,10 +238,10 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
     if action_settings and action_settings.ability_type == "combat_ability" then
         if IS_AIM_CANCEL[reason] then
             if mod.current_slot ~= "slot_unarmed" then
-                if reason == AIM_CANCEL_WITH_SPRINT and mod:get("enable_prevent_cancel_on_start_sprinting") then
+                if reason == AIM_CANCEL_WITH_SPRINT and mod.settings["enable_prevent_cancel_on_start_sprinting"] then
                     return setPromise("AIM_CANCEL_WITH_SPRINT")
                 end
-                if mod:get("enable_prevent_cancel_on_short_ability_press") and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
+                if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
                     return setPromise("AIM_CANCEL")
                 end
             end
