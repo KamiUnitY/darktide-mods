@@ -1,4 +1,4 @@
--- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.0.3
+-- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.0.4
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
@@ -19,6 +19,7 @@ local debug = {
 mod.on_all_mods_loaded = function()
     -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
     -- modding_tools:watch("interrupt_sprint", mod, "interrupt_sprint")
+    -- modding_tools:watch("character_state", mod, "character_state")
 end
 
 mod.on_game_state_changed = function(status, state_name)
@@ -133,10 +134,31 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
     end
 end)
 
-mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, ...)
-    local out = func(...)
+local function check_weapon_want_to_stop(keywords)
+    local keyword_map = {}
+    for _, keyword in ipairs(keywords) do
+        keyword_map[keyword] = true
+    end
+    if keyword_map["melee"] and keyword_map["combat_knife"] then
+        return false
+    elseif keyword_map["melee"] then
+        return true
+    elseif keyword_map["ranged"] and keyword_map["heavystubber"] then
+        return true
+    elseif keyword_map["ranged"] then
+        return false
+    else
+        return false
+    end
+end
+
+local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
+mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
+    local out = func(self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     if out == "walking" then
-        if not mod:get("enable_keep_sprint_after_weapon_actions") then
+        local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
+        local weapon_want_to_stop = check_weapon_want_to_stop(weapon_template.keywords)
+        if not mod:get("enable_keep_sprint_after_weapon_actions") or weapon_want_to_stop then
             clearPromise("wants_to_stop")
         end
     end
@@ -146,5 +168,11 @@ end)
 -- mod:hook_require("scripts/extension_systems/character_state_machine/character_states/utilities/sprint", function(instance)
 --     mod:hook_safe(instance, "sprint_input", function(input_source, is_sprinting, sprint_requires_press_to_interrupt)
 --         mod.interrupt_sprint = not not sprint_requires_press_to_interrupt
+--     end)
+-- end)
+
+-- mod:hook_require("scripts/utilities/attack/interrupt", function(instance)
+--     mod:hook_safe(instance, "action", function(t, unit, reason, reason_data_or_nil, ignore_immunity)
+--         debug:print("Interrupt reason: " .. reason)
 --     end)
 -- end)

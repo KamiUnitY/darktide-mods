@@ -16,12 +16,16 @@ return {
 		["zh-cn"] = "仅在长按时疾跑，相当于禁用此模组。",
 	},
 	enable_keep_sprint_after_weapon_actions = {
-		en = "Keep Sprint after Weapon Action (WIP)",
-		["zh-cn"] = "武器操作后继续疾跑 (工作进行中)",
+		en = "Keep Sprint after Weapon Action",
+		["zh-cn"] = "武器操作后继续疾跑",
+	},
+	experimental_group = {
+		en = "Experimental",
+		["zh-cn"] = "实验",
 	},
 	enable_keep_sprint_after_weapon_actions_description = {
-		en = "Sprint will be continued after weapon action is finished, given that you still holding forward key",
-		["zh-cn"] = "只要你仍然按住前进键，武器操作结束后就会继续疾跑",
+		en = "Sprint will be continued after weapon action is finished, given that you still holding forward key, This doesn't work on all weapons so it belongs here. Works on knife and all ranged weapon except heavystubber",
+		["zh-cn"] = "只要你仍然按住前进键，武器操作结束后就会继续疾跑, This doesn't work on all weapons so it belongs here. Work only on knife and all ranged weapon except heavystubber",
 	},
 	debug_group = {
 		en = "Debug",
