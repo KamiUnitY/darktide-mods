@@ -24,7 +24,7 @@ return {
 		["zh-cn"] = "实验",
 	},
 	enable_keep_sprint_after_weapon_actions_description = {
-		en = "Sprint will be continued after weapon action is finished, given that you still holding forward key, This doesn't work on all weapons so it belongs here, Works on knife and all ranged weapon except heavystubber",
+		en = "Sprint will be continued after weapon action is finished, given that you still holding forward key, This doesn't work on all weapons so it belongs here, Works on knives and all ranged weapons except heavystubbers",
 		["zh-cn"] = "只要你仍然按住前进键，武器操作结束后就会继续疾跑, 这并不适用于所有武器，所以它属于这里。仅适用于刀具和除重机枪外的所有远程武器。",
 	},
 	debug_group = {
