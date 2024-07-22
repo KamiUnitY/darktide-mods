@@ -107,13 +107,10 @@ local _input_hook = function(func, self, action_name)
         clearPromise("Pressed Backward")
     end
 
-    if (action_name == "sprinting") and pressed then
-        if not mod:get("enable_hold_to_sprint") then
-            setPromise("Pressed Sprint");
-        end
-    end
-
     if action_name == "sprinting" then
+        if pressed and not mod:get("enable_hold_to_sprint") then
+            setPromise("Pressed Sprint")
+        end
         return out or isPromised()
     end
 
