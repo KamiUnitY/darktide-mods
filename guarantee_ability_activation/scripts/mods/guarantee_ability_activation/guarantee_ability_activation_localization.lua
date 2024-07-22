@@ -17,11 +17,11 @@ return {
 	},
 	enable_prevent_cancel_on_start_sprinting = {
 		en = "Prevent cancel on start sprinting",
-		["zh-cn"] = "防止开始冲刺时取消激活",
+		["zh-cn"] = "防止开始疾跑时取消激活",
 	},
 	enable_prevent_cancel_on_start_sprinting_description = {
 		en = "Promise ability key press when start sprinting while holding ability key",
-		["zh-cn"] = "如果在按住技能键的情况下开始冲刺，则保证技能键被触发",
+		["zh-cn"] = "如果在按住技能键的情况下开始疾跑，则保证技能键被触发",
 	},
 	enable_prevent_double_dashing = {
 		en = "Prevent double dashing",
