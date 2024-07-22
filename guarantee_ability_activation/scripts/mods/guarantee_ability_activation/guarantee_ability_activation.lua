@@ -12,9 +12,12 @@ local debug = {
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
     end,
-    print_separator = function(self)
-        self:print("________________________________")
-    end}
+    print_if_enabled = function(self, text)
+        if self:is_enabled() then
+            self:print(text)
+        end
+    end,
+}
 
 local function contains(str, substr)
     if type(str) ~= "string" or type(substr) ~= "string" then
@@ -24,20 +27,20 @@ local function contains(str, substr)
 end
 
 local ALLOWED_CHARACTER_STATE = {
-	dodging = true,
-	ledge_vaulting = true,
+    dodging = true,
+    ledge_vaulting = true,
     lunging = true,
-	sliding = true,
-	sprinting = true,
-	stunned = true,
-	walking = true,
+    sliding = true,
+    sprinting = true,
+    stunned = true,
+    walking = true,
     jumping = true,
     falling = true,
 }
 
 local ALLOWED_DASH_STATE = {
-	sprinting = true,
-	walking = true,
+    sprinting = true,
+    walking = true,
 }
 
 local IS_DASH_ABILITY = {
@@ -68,16 +71,13 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("character_state",mod,"character_state")
 end
 
-
 local function setPromise(from)
     if not mod.promise_ability then
         -- slot_unarmed means player is netted or pounced
         if ALLOWED_CHARACTER_STATE[mod.character_state] and mod.current_slot ~= "slot_unarmed"
             and ability_num_charges > 0
             and (mod.character_state ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
-            if debug:is_enabled() then
-                debug:print("Guarantee Ability Activation: setPromiseFrom: " .. from)
-            end
+            debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from)
             mod.promise_ability = true
             last_set_promise = os.clock()
         end
@@ -86,9 +86,7 @@ end
 
 local function clearPromise(from)
     if mod.promise_ability then
-        if debug:is_enabled() then
-            debug:print("Guarantee Ability Activation: clearPromiseFrom: " .. from)
-        end
+        debug:print_if_enabled("Guarantee Ability Activation: clearPromiseFrom: " .. from)
         mod.promise_ability = false
     end
 end
@@ -102,9 +100,7 @@ local function isPromised()
         result = mod.promise_ability
     end
     if result then
-        if debug:is_enabled() then
-            debug:print("Guarantee Ability Activation: " .. "Attempting to activate combat ability for you")
-        end
+        debug:print_if_enabled("Guarantee Ability Activation: Attempting to activate combat ability for you")
     end
     return result
 end
@@ -125,8 +121,8 @@ mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function (self
 end)
 
 mod:hook_safe("HudElementPlayerAbility", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
-	local player = self._data.player
-	local parent = self._parent
+    local player = self._data.player
+    local parent = self._parent
     local ability_extension = parent:get_player_extension(player, "ability_system")
     local ability_id = self._ability_id
     local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_id)
@@ -147,9 +143,7 @@ local _input_hook = function(func, self, action_name)
 
     if pressed then
         if action_name == "combat_ability_pressed" or action_name == "combat_ability_release" then
-            if debug:is_enabled() then
-                debug:print("Guarantee Ability Activation: Player pressed " .. action_name)
-            end
+            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
         end
         if action_name == "combat_ability_pressed" then
             setPromise("pressed")
@@ -160,9 +154,7 @@ local _input_hook = function(func, self, action_name)
         end
 
         if action_name == "combat_ability_release" then
-            if debug:is_enabled() then
-                debug:print_separator()
-            end
+            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
         end
 
         -- preventing sprinting press on lunging since it could cancel ability
@@ -191,9 +183,7 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
     if ability_type == "combat_ability" then
         clearPromise("use_ability_charge")
-        if debug:is_enabled() then
-            debug:print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
-        end
+        debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
     end
 end)
 
@@ -218,9 +208,7 @@ end)
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
         clearPromise("ability_base_start")
-        if debug:is_enabled() then
-            debug:print("Guarantee Ability Activation: " .. "Game has successfully initiated the execution of ActionAbilityBase:Start")
-        end
+        debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start")
     end
 end
 
@@ -252,9 +240,7 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
                     return setPromise("AIM_CANCEL")
                 end
             end
-            if debug:is_enabled() then
-                debug:print("Guarantee Ability Activation: Player pressed AIM_CANCEL by " .. reason)
-            end
+            debug:print_if_enabled("Guarantee Ability Activation: Player pressed AIM_CANCEL by " .. reason)
         else
             if IS_AIM_DASH[action_settings.kind] then
                 return setPromise("promise_dash")

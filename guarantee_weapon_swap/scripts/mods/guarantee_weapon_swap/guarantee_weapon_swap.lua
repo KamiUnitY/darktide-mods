@@ -50,13 +50,13 @@ local ACTION_SLOT_MAP = {
 mod.character_state = nil
 
 local ALLOWED_CHARACTER_STATE = {
-	dodging = true,
-	ledge_vaulting = true,
+    dodging = true,
+    ledge_vaulting = true,
     lunging = true,
-	sliding = true,
-	sprinting = true,
-	stunned = true,
-	walking = true,
+    sliding = true,
+    sprinting = true,
+    stunned = true,
+    walking = true,
     jumping = true,
     falling = true,
 }
@@ -67,14 +67,17 @@ local debug = {
     end,
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
-    end
+    end,
+    print_if_enabled = function(self, text)
+        if self:is_enabled() then
+            self:print(text)
+        end
+    end,
 }
 
 local function isPromised(action)
     if mod.promises[action] and current_slot ~= "" then
-        if debug:is_enabled() then
-            debug:print("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action)
-        end
+        debug:print_if_enabled("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action)
     end
     return mod.promises[action]
 end
@@ -106,9 +109,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
             previous_slot = current_slot
             current_slot = wielded_slot
             if current_slot ~= "" and previous_slot ~= "" then
-                if debug:is_enabled() then
-                    debug:print("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot)
-                end
+                debug:print_if_enabled("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot)
             end
         end
     end
@@ -150,13 +151,13 @@ mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, e
 end)
 
 mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_name, previous_check)
-	for ability_type, ability_slot_name in pairs(ability_configuration) do
-            if ability_slot_name == slot_name then
-			local equipped_abilities = self._equipped_abilities
-			local ability = equipped_abilities[ability_type]
-			local can_be_wielded_when_depleted = ability.can_be_wielded_when_depleted
-			local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
-			local can_use_ability = self:can_use_ability(ability_type)
+    for ability_type, ability_slot_name in pairs(ability_configuration) do
+        if ability_slot_name == slot_name then
+            local equipped_abilities = self._equipped_abilities
+            local ability = equipped_abilities[ability_type]
+            local can_be_wielded_when_depleted = ability.can_be_wielded_when_depleted
+            local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
+            local can_use_ability = self:can_use_ability(ability_type)
 
             local can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
 
@@ -167,8 +168,8 @@ mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_na
             if equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
                 mod.promises.grenade = false
             end
-		end
-	end
+        end
+    end
 end)
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
