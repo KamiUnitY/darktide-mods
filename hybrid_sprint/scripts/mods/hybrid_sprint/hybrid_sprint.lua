@@ -28,14 +28,12 @@ mod.on_game_state_changed = function(status, state_name)
 end
 
 mod:hook_require("scripts/settings/options/input_settings", function(instance)
-    -- Filter out the hold_to_sprint setting from the settings array
     local filtered_settings = {}
     for i, setting in ipairs(instance.settings) do
         if setting.id ~= "hold_to_sprint" then
             table.insert(filtered_settings, setting)
         end
     end
-    -- Update the settings array with the filtered settings
     instance.settings = filtered_settings
 end)
 
@@ -156,9 +154,12 @@ local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadou
 mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     local out = func(self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     if out == "walking" then
-        local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
-        local weapon_want_to_stop = check_weapon_want_to_stop(weapon_template.keywords)
-        if not mod:get("enable_keep_sprint_after_weapon_actions") or weapon_want_to_stop then
+        if mod:get("enable_keep_sprint_after_weapon_actions") then
+            local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
+            if check_weapon_want_to_stop(weapon_template.keywords) then
+                clearPromise("wants_to_stop")
+            end
+        else
             clearPromise("wants_to_stop")
         end
     end
