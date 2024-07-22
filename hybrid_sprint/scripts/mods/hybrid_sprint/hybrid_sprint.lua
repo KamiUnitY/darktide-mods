@@ -13,7 +13,12 @@ local debug = {
     end,
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
-    end
+    end,
+    print_if_enabled = function(self, text)
+        if self:is_enabled() then
+            self:print(text)
+        end
+    end,
 }
 
 mod.on_all_mods_loaded = function()
@@ -64,18 +69,14 @@ local INTERRUPTED_INPUT = {
 
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
-        if debug:is_enabled() then
-            debug:print("hybrid_sprint: setPromiseFrom: " .. from)
-        end
+        debug:print_if_enabled("hybrid_sprint: setPromiseFrom: " .. from)
         mod.promise_sprint = true
     end
 end
 
 local function clearPromise(from)
     if mod.promise_sprint then
-        if debug:is_enabled() then
-            debug:print("hybrid_sprint: clearPromiseFrom: " .. from)
-        end
+        debug:print_if_enabled("hybrid_sprint: clearPromiseFrom: " .. from)
         mod.promise_sprint = false
     end
 end
@@ -83,9 +84,7 @@ end
 local function isPromised()
     local result = mod.promise_sprint and mod.pressed_forward
     if result then
-        if debug:is_enabled() then
-            debug:print("hybrid_sprint: Attempting to sprint for you !!!")
-        end
+        debug:print_if_enabled("hybrid_sprint: Attempting to sprint for you !!!")
     end
     return result
 end
@@ -160,7 +159,7 @@ end)
 
 -- mod:hook_require("scripts/extension_systems/character_state_machine/character_states/utilities/sprint", function(instance)
 --     mod:hook_safe(instance, "sprint_input", function(input_source, is_sprinting, sprint_requires_press_to_interrupt)
---         mod.interrupt_sprint = not not sprint_requires_press_to_interrupt
+--         mod.interrupt_sprint = sprint_requires_press_to_interrupt
 --     end)
 -- end)
 
