@@ -1,4 +1,4 @@
--- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.1.7
+-- Guarantee Ability Activation mod by KamiUnitY. Ver. 1.1.8
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -49,8 +49,8 @@ local IS_DASH_ABILITY = {
 }
 
 mod.character_state = nil
+mod.current_slot = ""
 
-local current_slot = ""
 local ability_num_charges = 0
 local combat_ability
 local weapon_template
@@ -70,23 +70,27 @@ end
 
 
 local function setPromise(from)
-    -- slot_unarmed means player is netted or pounced
-    if ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed"
-        and ability_num_charges > 0
-        and (mod.character_state ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
-        if debug:is_enabled() then
-            debug:print("Guarantee Ability Activation: setPromiseFrom: " .. from)
+    if not mod.promise_ability then
+        -- slot_unarmed means player is netted or pounced
+        if ALLOWED_CHARACTER_STATE[mod.character_state] and mod.current_slot ~= "slot_unarmed"
+            and ability_num_charges > 0
+            and (mod.character_state ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
+            if debug:is_enabled() then
+                debug:print("Guarantee Ability Activation: setPromiseFrom: " .. from)
+            end
+            mod.promise_ability = true
+            last_set_promise = os.clock()
         end
-        mod.promise_ability = true
-        last_set_promise = os.clock()
     end
 end
 
 local function clearPromise(from)
-    if debug:is_enabled() then
-        debug:print("Guarantee Ability Activation: clearPromiseFrom: " .. from)
+    if mod.promise_ability then
+        if debug:is_enabled() then
+            debug:print("Guarantee Ability Activation: clearPromiseFrom: " .. from)
+        end
+        mod.promise_ability = false
     end
-    mod.promise_ability = false
 end
 
 local function isPromised()
@@ -108,6 +112,9 @@ end
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.character_state = self._state_current.name
+        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+            clearPromise("UNALLOWED_CHARACTER_STATE")
+        end
     end
 end)
 
@@ -193,9 +200,12 @@ end)
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     local wielded_slot = inventory_component.wielded_slot
     if wielded_slot ~= nil then
-        if wielded_slot ~= current_slot then
-            current_slot = wielded_slot
-            if wielded_slot == "slot_combat_ability" then
+        if wielded_slot ~= mod.current_slot then
+            mod.current_slot = wielded_slot
+            if mod.current_slot == "slot_unarmed" then
+                clearPromise("on_slot_unarmed")
+            end
+            if mod.current_slot == "slot_combat_ability" then
                 clearPromise("on_slot_wielded")
             end
             if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
@@ -234,7 +244,7 @@ local _action_ability_base_finish_hook = function (self, reason, data, t, time_i
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
         if IS_AIM_CANCEL[reason] then
-            if current_slot ~= "slot_unarmed" then
+            if mod.current_slot ~= "slot_unarmed" then
                 if reason == AIM_CANCEL_WITH_SPRINT and mod:get("enable_prevent_cancel_on_start_sprinting") then
                     return setPromise("AIM_CANCEL_WITH_SPRINT")
                 end
