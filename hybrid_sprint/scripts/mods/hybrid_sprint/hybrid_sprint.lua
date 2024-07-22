@@ -5,6 +5,7 @@ local modding_tools = get_mod("modding_tools")
 
 mod.promise_sprint = false
 mod.pressed_forward = false
+mod.interrupt_sprint = false
 
 local debug = {
     is_enabled = function(self)
@@ -17,6 +18,7 @@ local debug = {
 
 mod.on_all_mods_loaded = function()
     -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
+    -- modding_tools:watch("interrupt_sprint", mod, "interrupt_sprint")
 end
 
 mod.on_game_state_changed = function(status, state_name)
@@ -106,15 +108,9 @@ local _input_hook = function(func, self, action_name)
         clearPromise("Pressed Backward")
     end
 
-    if action_name == "sprint" and pressed then
+    if (action_name == "sprinting") and pressed then
         if not mod:get("enable_hold_to_sprint") then
             setPromise("Pressed Sprint");
-        end
-    end
-
-    if INTERRUPTED_INPUT[action_name] and pressed then
-        if not mod:get("enable_keep_sprint_after_weapon_action") then
-            clearPromise("Pressed INTERRUPTED_INPUT: " .. action_name)
         end
     end
 
@@ -136,3 +132,19 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
         end
     end
 end)
+
+mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, ...)
+    local out = func(...)
+    if out == "walking" then
+        if not mod:get("enable_keep_sprint_after_weapon_actions") then
+            clearPromise("wants_to_stop")
+        end
+    end
+    return out
+end)
+
+-- mod:hook_require("scripts/extension_systems/character_state_machine/character_states/utilities/sprint", function(instance)
+--     mod:hook_safe(instance, "sprint_input", function(input_source, is_sprinting, sprint_requires_press_to_interrupt)
+--         mod.interrupt_sprint = not not sprint_requires_press_to_interrupt
+--     end)
+-- end)

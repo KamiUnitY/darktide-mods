@@ -15,11 +15,11 @@ return {
 		en = "Only Sprint while holding the button, Basically disable this mod.",
 		["zh-cn"] = "仅在长按时疾跑，相当于禁用此模组。",
 	},
-	enable_keep_sprint_after_weapon_action = {
-		en = "Keep Sprint after Weapon Action",
-		["zh-cn"] = "武器操作后继续疾跑",
+	enable_keep_sprint_after_weapon_actions = {
+		en = "Keep Sprint after Weapon Action (WIP)",
+		["zh-cn"] = "武器操作后继续疾跑 (工作进行中)",
 	},
-	enable_keep_sprint_after_weapon_action_description = {
+	enable_keep_sprint_after_weapon_actions_description = {
 		en = "Sprint will be continued after weapon action is finished, given that you still holding forward key",
 		["zh-cn"] = "只要你仍然按住前进键，武器操作结束后就会继续疾跑",
 	},
