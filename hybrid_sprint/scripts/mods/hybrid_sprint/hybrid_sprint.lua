@@ -133,21 +133,14 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
 end)
 
 local function check_weapon_want_to_stop(keywords)
-    local keyword_map = {}
+    local has = {}
     for _, keyword in ipairs(keywords) do
-        keyword_map[keyword] = true
+        has[keyword] = true
     end
-    if keyword_map["melee"] and keyword_map["combat_knife"] then
-        return false
-    elseif keyword_map["melee"] then
-        return true
-    elseif keyword_map["ranged"] and keyword_map["heavystubber"] then
-        return true
-    elseif keyword_map["ranged"] then
-        return false
-    else
-        return false
-    end
+    local melee = has["melee"]
+    local ranged = has["ranged"]
+    local want_to_stop = (melee and not has["combat_knife"]) or (ranged and has["heavystubber"])
+    return want_to_stop
 end
 
 local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
