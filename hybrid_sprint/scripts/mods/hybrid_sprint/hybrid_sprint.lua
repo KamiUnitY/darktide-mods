@@ -101,10 +101,12 @@ local _input_hook = function(func, self, action_name)
             clearPromise("Realeased Forward")
         end
         mod.pressed_forward = pressed
+        return out
     end
 
     if action_name == "move_backward" and pressed then
         clearPromise("Pressed Backward")
+        return out
     end
 
     if action_name == "sprinting" then
