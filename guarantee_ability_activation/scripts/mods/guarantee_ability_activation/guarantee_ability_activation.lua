@@ -146,37 +146,39 @@ local _input_hook = function(func, self, action_name)
     local type_str = type(out)
     local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out == 1)
 
-    if pressed then
-        if action_name == "combat_ability_pressed" or action_name == "combat_ability_release" then
+    if action_name == "combat_ability_pressed" then
+        if pressed then
             debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
-        end
-        if action_name == "combat_ability_pressed" then
             setPromise("pressed")
         end
-
-        if action_name == "combat_ability_hold" and mod:get("enable_prevent_ability_aiming") then
-            return false
-        end
-
-        if action_name == "combat_ability_release" then
-            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
-        end
-
-        -- preventing sprinting press on lunging since it could cancel ability
-        if action_name == "sprinting" and mod.character_state == "lunging" then
-            return false
-        end
-    end
-
-    if mod.promise_ability and (action_name == "action_two_pressed" or action_name == "action_two_hold") and isWieldBugCombo() then
-        return true
-    end
-
-    if action_name == "combat_ability_pressed" then
         if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod:get("enable_prevent_double_dashing") then
             return false
         end
         return out or isPromised()
+    end
+
+    if action_name == "combat_ability_release" then
+        if pressed then
+            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
+        end
+    end
+
+    if action_name == "combat_ability_hold" then
+        if pressed and mod:get("enable_prevent_ability_aiming") then
+            return false
+        end
+    end
+
+    if action_name == "sprinting" then
+        if pressed and mod.character_state == "lunging" then
+            return false
+        end
+    end
+
+    if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+        if mod.promise_ability and isWieldBugCombo() then
+            return true
+        end
     end
 
     return out
