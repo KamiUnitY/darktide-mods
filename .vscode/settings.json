@@ -2,7 +2,8 @@
     "Lua.diagnostics.globals": [
         "get_mod",
         "ScriptUnit",
-        "Managers"
+        "Managers",
+        "CLASS"
     ],
     "explorer.excludeGitIgnore": true
 }
