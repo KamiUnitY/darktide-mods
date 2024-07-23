@@ -1,4 +1,4 @@
--- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.0.5
+-- Guarantee Better Sprint mod by KamiUnitY. Ver. 1.1.0
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
