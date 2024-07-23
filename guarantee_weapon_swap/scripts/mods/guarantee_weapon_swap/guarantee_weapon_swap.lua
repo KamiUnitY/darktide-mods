@@ -12,6 +12,10 @@ mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
 end
 
+mod.on_all_mods_loaded = function()
+    -- modding_tools:watch("character_state",mod,"character_state")
+end
+
 local debug = {
     is_enabled = function(self)
         return modding_tools and modding_tools:is_enabled() and mod.settings["enable_debug_modding_tools"]
