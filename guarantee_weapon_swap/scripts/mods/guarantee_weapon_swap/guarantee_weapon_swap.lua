@@ -3,6 +3,29 @@
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
 
+mod.settings = {
+    enable_zealot_throwing_knives = mod:get("enable_zealot_throwing_knives"),
+    enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
+}
+
+mod.on_setting_changed = function(setting_id)
+    mod.settings[setting_id] = mod:get(setting_id)
+end
+
+local debug = {
+    is_enabled = function(self)
+        return modding_tools and modding_tools:is_enabled() and mod.settings["enable_debug_modding_tools"]
+    end,
+    print = function(self, text)
+        pcall(function() modding_tools:console_print(text) end)
+    end,
+    print_if_enabled = function(self, text)
+        if self:is_enabled() then
+            self:print(text)
+        end
+    end,
+}
+
 local grenade_ability = nil
 
 local current_slot = ""
@@ -60,20 +83,6 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
-local debug = {
-    is_enabled = function(self)
-        return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
-    end,
-    print = function(self, text)
-        pcall(function() modding_tools:console_print(text) end)
-    end,
-    print_if_enabled = function(self, text)
-        if self:is_enabled() then
-            self:print(text)
-        end
-    end,
-}
-
 local function isPromised(action)
     if mod.promises[action] and current_slot ~= "" then
         debug:print_if_enabled("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action)
@@ -123,7 +132,7 @@ local _input_hook = function(func, self, action_name)
         if pressed then
             clearAllPromises()
             if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
-                if action_name ~= "grenade_ability_pressed" or grenade_ability ~= "zealot_throwing_knives" or (mod:get("enable_zealot_throwing_knives") and current_slot ~= "slot_luggable") then
+                if action_name ~= "grenade_ability_pressed" or grenade_ability ~= "zealot_throwing_knives" or (mod.settings["enable_zealot_throwing_knives"] and current_slot ~= "slot_luggable") then
                     setPromise(action_name)
                 end
             end
