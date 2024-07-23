@@ -23,9 +23,9 @@ local debug = {
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
     end,
-    print_if_enabled = function(self, text)
+    print_mod = function(self, text)
         if self:is_enabled() then
-            self:print(text)
+            self:print(mod:localize("mod_name") .. ": " .. text)
         end
     end,
 }
@@ -89,7 +89,7 @@ local ALLOWED_CHARACTER_STATE = {
 
 local function isPromised(action)
     if mod.promises[action] and current_slot ~= "" then
-        if modding_tools then debug:print_if_enabled("Guarantee Weapon Swap: Attempting to switch weapon: " .. current_slot .. " -> " .. action) end
+        if modding_tools then debug:print_mod("Attempting to switch weapon: " .. current_slot .. " -> " .. action) end
     end
     return mod.promises[action]
 end
@@ -119,7 +119,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
         previous_slot = current_slot
         current_slot = wielded_slot
         if current_slot ~= "" and previous_slot ~= "" then
-            if modding_tools then debug:print_if_enabled("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot) end
+            if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
         end
     end
 end)

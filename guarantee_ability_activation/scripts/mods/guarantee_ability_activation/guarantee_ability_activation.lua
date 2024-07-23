@@ -27,9 +27,9 @@ local debug = {
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
     end,
-    print_if_enabled = function(self, text)
+    print_mod = function(self, text)
         if self:is_enabled() then
-            self:print(text)
+            self:print(mod:localize("mod_name") .. ": " .. text)
         end
     end,
 }
@@ -94,7 +94,7 @@ local function setPromise(from)
             then
             mod.promise_ability = true
             last_set_promise = os.clock()
-            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from) end
+            if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
         end
     end
 end
@@ -102,7 +102,7 @@ end
 local function clearPromise(from)
     if mod.promise_ability then
         mod.promise_ability = false
-        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: clearPromiseFrom: " .. from) end
+        if modding_tools then debug:print_mod("clearPromiseFrom: " .. from) end
     end
 end
 
@@ -115,7 +115,7 @@ local function isPromised()
         result = mod.promise_ability
     end
     if result then
-        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Attempting to activate combat ability for you") end
+        if modding_tools then debug:print_mod("Attempting to activate combat ability for you") end
     end
     return result
 end
@@ -156,7 +156,7 @@ local _input_hook = function(func, self, action_name)
     if action_name == "combat_ability_pressed" then
         if pressed then
             setPromise("pressed")
-            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name) end
+            if modding_tools then debug:print_mod("Player pressed " .. action_name) end
         end
         if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
             return false
@@ -166,7 +166,7 @@ local _input_hook = function(func, self, action_name)
 
     if action_name == "combat_ability_release" then
         if pressed then
-            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name) end
+            if modding_tools then debug:print_mod("Player pressed " .. action_name) end
         end
         return out
     end
@@ -201,7 +201,7 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
     if ability_type == "combat_ability" then
         clearPromise("use_ability_charge")
-        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of use_ability_charge") end
+        if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
     end
 end)
 
@@ -240,7 +240,7 @@ local PREVENT_CANCEL_DURATION = 0.3
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
         clearPromise("ability_base_start")
-        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start") end
+        if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
     end
 end
 
@@ -256,7 +256,7 @@ local _action_ability_base_finish_hook = function(self, reason, data, t, time_in
                     return setPromise("AIM_CANCEL_NORMAL")
                 end
             end
-            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Player pressed AIM_CANCEL by " .. reason) end
+            if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
         else
             if IS_AIM_DASH[action_settings.kind] then
                 return setPromise("promise_dash")

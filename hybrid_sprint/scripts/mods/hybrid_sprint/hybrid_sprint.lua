@@ -26,9 +26,9 @@ local debug = {
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
     end,
-    print_if_enabled = function(self, text)
+    print_mod = function(self, text)
         if self:is_enabled() then
-            self:print(text)
+            self:print(mod:localize("mod_name") .. ": " .. text)
         end
     end,
 }
@@ -81,21 +81,21 @@ end)
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
         mod.promise_sprint = true
-        if modding_tools then debug:print_if_enabled("hybrid_sprint: setPromiseFrom: " .. from) end
+        if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
     end
 end
 
 local function clearPromise(from)
     if mod.promise_sprint then
         mod.promise_sprint = false
-        if modding_tools then debug:print_if_enabled("hybrid_sprint: clearPromiseFrom: " .. from) end
+        if modding_tools then debug:print_mod("clearPromiseFrom: " .. from) end
     end
 end
 
 local function isPromised()
     local result = mod.promise_sprint and mod.pressed_forward
     if result then
-        if modding_tools then debug:print_if_enabled("hybrid_sprint: Attempting to sprint for you !!!") end
+        if modding_tools then debug:print_mod("Attempting to sprint for you !!!") end
     end
     return result
 end
