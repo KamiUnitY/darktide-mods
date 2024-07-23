@@ -15,8 +15,6 @@ mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
 end
 
-mod.promise_ability = false
-
 local debug = {
     is_enabled = function(self)
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
@@ -63,12 +61,14 @@ local IS_DASH_ABILITY = {
     ogryn_charge_increased_distance      = true,
 }
 
+mod.promise_ability = false
 mod.character_state = nil
-mod.current_slot = ""
+mod.current_slot    = ""
 
 local remaining_ability_charges = 0
-local combat_ability
-local weapon_template
+
+local combat_ability  = nil
+local weapon_template = nil
 
 local DELAY_DASH = 0.3
 
@@ -221,17 +221,17 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
     end
 end)
 
-local AIM_CANCEL = "hold_input_released"
+local AIM_CANCEL_NORMAL      = "hold_input_released"
 local AIM_CANCEL_WITH_SPRINT = "started_sprint"
-local AIM_RELASE = "new_interrupting_action"
+local AIM_RELASE             = "new_interrupting_action"
 
 local IS_AIM_CANCEL = {
-    [AIM_CANCEL] = true,
+    [AIM_CANCEL_NORMAL]      = true,
     [AIM_CANCEL_WITH_SPRINT] = true
 }
 
 local IS_AIM_DASH = {
-    targeted_dash_aim = true,
+    targeted_dash_aim    = true,
     directional_dash_aim = true,
 }
 
@@ -254,7 +254,7 @@ local _action_ability_base_finish_hook = function(self, reason, data, t, time_in
                     return setPromise("AIM_CANCEL_WITH_SPRINT")
                 end
                 if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
-                    return setPromise("AIM_CANCEL")
+                    return setPromise("AIM_CANCEL_NORMAL")
                 end
             end
             debug:print_if_enabled("Guarantee Ability Activation: Player pressed AIM_CANCEL by " .. reason)
