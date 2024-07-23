@@ -158,24 +158,28 @@ local _input_hook = function(func, self, action_name)
         if pressed then
             debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
         end
+        return out
     end
 
     if action_name == "combat_ability_hold" then
         if pressed and mod:get("enable_prevent_ability_aiming") then
             return false
         end
+        return out
     end
 
     if action_name == "sprinting" then
         if pressed and mod.character_state == "lunging" then
             return false
         end
+        return out
     end
 
     if action_name == "action_two_pressed" or action_name == "action_two_hold" then
         if mod.promise_ability and isWieldBugCombo() then
             return true
         end
+        return out
     end
 
     return out
