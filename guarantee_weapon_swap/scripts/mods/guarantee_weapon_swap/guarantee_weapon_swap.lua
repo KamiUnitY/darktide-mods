@@ -3,60 +3,60 @@
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
 
-local grenade_ability
-local current_slot = ""
-local previous_slot = ""
-
-mod.promises = {
-    quick = false,
-    primary = false,
-    secondary = false,
-    grenade = false,
-    pocketable = false,
-    pocketable_small = false,
-    device = false
-}
-
-local PROMISE_SLOT_MAP = {
-    slot_primary = "primary",
-    slot_secondary = "secondary",
-    slot_grenade_ability = "grenade",
-    slot_pocketable = "pocketable",
-    slot_pocketable_small = "pocketable_small",
-    slot_device = "device",
-}
-
-local PROMISE_ACTION_MAP = {
-    quick_wield = "quick",
-    wield_1 = "primary",
-    wield_2 = "secondary",
-    grenade_ability_pressed = "grenade",
-    wield_3 = "pocketable",
-    wield_4 = "pocketable_small",
-    wield_5 = "device"
-}
-
-local ACTION_SLOT_MAP = {
-    wield_1 = "slot_primary",
-    wield_2 = "slot_secondary",
-    grenade_ability_pressed = "slot_grenade_ability",
-    wield_3 = "slot_pocketable",
-    wield_4 = "slot_pocketable_small",
-    wield_5 = "slot_device"
-}
+local grenade_ability = nil
+local current_slot    = ""
+local previous_slot   = ""
 
 mod.character_state = nil
 
+mod.promises = {
+    quick            = false,
+    primary          = false,
+    secondary        = false,
+    grenade          = false,
+    pocketable       = false,
+    pocketable_small = false,
+    device           = false
+}
+
+local PROMISE_SLOT_MAP = {
+    slot_primary          = "primary",
+    slot_secondary        = "secondary",
+    slot_grenade_ability  = "grenade",
+    slot_pocketable       = "pocketable",
+    slot_pocketable_small = "pocketable_small",
+    slot_device           = "device",
+}
+
+local PROMISE_ACTION_MAP = {
+    quick_wield             = "quick",
+    wield_1                 = "primary",
+    wield_2                 = "secondary",
+    grenade_ability_pressed = "grenade",
+    wield_3                 = "pocketable",
+    wield_4                 = "pocketable_small",
+    wield_5                 = "device"
+}
+
+local ACTION_SLOT_MAP = {
+    wield_1                 = "slot_primary",
+    wield_2                 = "slot_secondary",
+    grenade_ability_pressed = "slot_grenade_ability",
+    wield_3                 = "slot_pocketable",
+    wield_4                 = "slot_pocketable_small",
+    wield_5                 = "slot_device"
+}
+
 local ALLOWED_CHARACTER_STATE = {
-    dodging = true,
+    dodging        = true,
     ledge_vaulting = true,
-    lunging = true,
-    sliding = true,
-    sprinting = true,
-    stunned = true,
-    walking = true,
-    jumping = true,
-    falling = true,
+    lunging        = true,
+    sliding        = true,
+    sprinting      = true,
+    stunned        = true,
+    walking        = true,
+    jumping        = true,
+    falling        = true,
 }
 
 local debug = {
