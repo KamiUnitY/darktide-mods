@@ -148,13 +148,13 @@ mod:hook("InputService", "_get", _input_hook)
 mod:hook("InputService", "_get_simulate", _input_hook)
 
 mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
-    if (self._player_weapons.slot_pocketable_small == nil) then
+    if self._player_weapons.slot_pocketable_small == nil then
         mod.promises.pocketable_small = false
     end
-    if (self._player_weapons.slot_pocketable == nil) then
+    if self._player_weapons.slot_pocketable == nil then
         mod.promises.pocketable = false
     end
-    if (self._player_weapons.slot_device == nil) then
+    if self._player_weapons.slot_device == nil then
         mod.promises.device = false
     end
 end)
