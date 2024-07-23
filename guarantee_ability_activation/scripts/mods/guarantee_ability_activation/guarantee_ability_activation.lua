@@ -22,7 +22,7 @@ end
 
 local debug = {
     is_enabled = function(self)
-        return modding_tools and modding_tools:is_enabled() and mod.settings["enable_debug_modding_tools"]
+        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
     end,
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
@@ -92,7 +92,7 @@ local function setPromise(from)
             and remaining_ability_charges > 0
             and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
             then
-            debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from)
+            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from) end
             mod.promise_ability = true
             last_set_promise = os.clock()
         end
@@ -101,7 +101,7 @@ end
 
 local function clearPromise(from)
     if mod.promise_ability then
-        debug:print_if_enabled("Guarantee Ability Activation: clearPromiseFrom: " .. from)
+        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: clearPromiseFrom: " .. from) end
         mod.promise_ability = false
     end
 end
@@ -115,7 +115,7 @@ local function isPromised()
         result = mod.promise_ability
     end
     if result then
-        debug:print_if_enabled("Guarantee Ability Activation: Attempting to activate combat ability for you")
+        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Attempting to activate combat ability for you") end
     end
     return result
 end
@@ -156,7 +156,7 @@ local _input_hook = function(func, self, action_name)
     if action_name == "combat_ability_pressed" then
         if pressed then
             setPromise("pressed")
-            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
+            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name) end
         end
         if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
             return false
@@ -166,7 +166,7 @@ local _input_hook = function(func, self, action_name)
 
     if action_name == "combat_ability_release" then
         if pressed then
-            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
+            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name) end
         end
         return out
     end
@@ -201,8 +201,7 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
     if ability_type == "combat_ability" then
         clearPromise("use_ability_charge")
-        debug:print_if_enabled(
-            "Guarantee Ability Activation: Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
+        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of use_ability_charge") end
     end
 end)
 
@@ -241,8 +240,7 @@ local PREVENT_CANCEL_DURATION = 0.3
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
         clearPromise("ability_base_start")
-        debug:print_if_enabled(
-            "Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start")
+        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start") end
     end
 end
 
@@ -258,7 +256,7 @@ local _action_ability_base_finish_hook = function(self, reason, data, t, time_in
                     return setPromise("AIM_CANCEL_NORMAL")
                 end
             end
-            debug:print_if_enabled("Guarantee Ability Activation: Player pressed AIM_CANCEL by " .. reason)
+            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: Player pressed AIM_CANCEL by " .. reason) end
         else
             if IS_AIM_DASH[action_settings.kind] then
                 return setPromise("promise_dash")
