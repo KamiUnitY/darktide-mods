@@ -115,13 +115,11 @@ end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     local wielded_slot = inventory_component.wielded_slot
-    if wielded_slot ~= nil then
-        if wielded_slot ~= current_slot then
-            previous_slot = current_slot
-            current_slot = wielded_slot
-            if current_slot ~= "" and previous_slot ~= "" then
-                if modding_tools then debug:print_if_enabled("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot) end
-            end
+    if wielded_slot ~= nil and wielded_slot ~= current_slot then
+        previous_slot = current_slot
+        current_slot = wielded_slot
+        if current_slot ~= "" and previous_slot ~= "" then
+            if modding_tools then debug:print_if_enabled("Guarantee Weapon Swap: " .. previous_slot .. " -> " .. current_slot) end
         end
     end
 end)
