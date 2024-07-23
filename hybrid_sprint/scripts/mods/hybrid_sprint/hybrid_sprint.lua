@@ -34,7 +34,7 @@ end
 
 mod:hook_require("scripts/settings/options/input_settings", function(instance)
     local filtered_settings = {}
-    for i, setting in ipairs(instance.settings) do
+    for _, setting in ipairs(instance.settings) do
         if setting.id ~= "hold_to_sprint" then
             table.insert(filtered_settings, setting)
         end
