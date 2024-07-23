@@ -105,8 +105,7 @@ local function clearAllPromises()
 end
 
 mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
-    local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-    grenade_ability = unit_data._components.equipped_abilities[1].grenade_ability
+    grenade_ability = self._components.equipped_abilities[1].grenade_ability
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
