@@ -92,17 +92,17 @@ local function setPromise(from)
             and remaining_ability_charges > 0
             and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
             then
-            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from) end
             mod.promise_ability = true
             last_set_promise = os.clock()
+            if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from) end
         end
     end
 end
 
 local function clearPromise(from)
     if mod.promise_ability then
-        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: clearPromiseFrom: " .. from) end
         mod.promise_ability = false
+        if modding_tools then debug:print_if_enabled("Guarantee Ability Activation: clearPromiseFrom: " .. from) end
     end
 end
 
