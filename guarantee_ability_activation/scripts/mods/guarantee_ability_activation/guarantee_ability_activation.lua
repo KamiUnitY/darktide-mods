@@ -209,13 +209,6 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
     end
 end)
 
-local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
-    if action_settings.ability_type == "combat_ability" then
-        clearPromise("ability_base_start")
-        debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start")
-    end
-end
-
 local AIM_CANCEL = "hold_input_released"
 local AIM_CANCEL_WITH_SPRINT = "started_sprint"
 local AIM_RELASE = "new_interrupting_action"
@@ -231,6 +224,13 @@ local IS_AIM_DASH = {
 }
 
 local PREVENT_CANCEL_DURATION = 0.3
+
+local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
+    if action_settings.ability_type == "combat_ability" then
+        clearPromise("ability_base_start")
+        debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start")
+    end
+end
 
 local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
