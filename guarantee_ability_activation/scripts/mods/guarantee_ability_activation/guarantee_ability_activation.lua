@@ -69,6 +69,7 @@ local IS_DASH_ABILITY = {
 local DELAY_DASH = 0.3
 
 mod.promise_ability = false
+
 mod.character_state = nil
 
 local current_slot = ""
