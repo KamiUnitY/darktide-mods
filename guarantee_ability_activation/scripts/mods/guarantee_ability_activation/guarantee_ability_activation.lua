@@ -146,8 +146,8 @@ local _input_hook = function(func, self, action_name)
 
     if action_name == "combat_ability_pressed" then
         if pressed then
-            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
             setPromise("pressed")
+            debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
         end
         if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod:get("enable_prevent_double_dashing") then
             return false
