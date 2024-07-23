@@ -127,10 +127,8 @@ end)
 
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function (func, self, ability_type)
     local out = func(self, ability_type)
-    if ability_type == "combat_ability" then
-        if out == 0 then
-            clearPromise("empty_ability_charges")
-        end
+    if ability_type == "combat_ability" and out == 0 then
+        clearPromise("empty_ability_charges")
     end
     return out
 end)
