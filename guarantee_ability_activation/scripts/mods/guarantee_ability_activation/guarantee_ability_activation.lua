@@ -17,7 +17,7 @@ end
 
 local debug = {
     is_enabled = function(self)
-        return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
+        return modding_tools and modding_tools:is_enabled() and mod.settings["enable_debug_modding_tools"]
     end,
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
@@ -88,7 +88,7 @@ local function setPromise(from)
         -- slot_unarmed means player is netted or pounced
         if ALLOWED_CHARACTER_STATE[mod.character_state] and mod.current_slot ~= "slot_unarmed"
             and remaining_ability_charges > 0
-            and (mod.character_state ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
+            and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"]) then
             debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from)
             mod.promise_ability = true
             last_set_promise = os.clock()
@@ -155,7 +155,7 @@ local _input_hook = function(func, self, action_name)
             setPromise("pressed")
             debug:print_if_enabled("Guarantee Ability Activation: Player pressed " .. action_name)
         end
-        if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod:get("enable_prevent_double_dashing") then
+        if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
             return false
         end
         return out or isPromised()
@@ -169,7 +169,7 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "combat_ability_hold" then
-        if pressed and mod:get("enable_prevent_ability_aiming") then
+        if pressed and mod.settings["enable_prevent_ability_aiming"] then
             return false
         end
         return out
