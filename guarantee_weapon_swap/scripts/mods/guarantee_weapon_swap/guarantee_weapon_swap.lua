@@ -163,8 +163,8 @@ mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_n
     local out = func(self, slot_name, previous_check)
     if slot_name == "slot_grenade_ability" then
         if out ~= true then
-           mod.promises.grenade = false
-           return out
+            mod.promises.grenade = false
+            return out
         end
         if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
             mod.promises.grenade = false
