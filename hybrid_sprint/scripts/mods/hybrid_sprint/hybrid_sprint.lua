@@ -33,13 +33,12 @@ mod.on_game_state_changed = function(status, state_name)
 end
 
 mod:hook_require("scripts/settings/options/input_settings", function(instance)
-    local filtered_settings = {}
-    for _, setting in ipairs(instance.settings) do
-        if setting.id ~= "hold_to_sprint" then
-            table.insert(filtered_settings, setting)
+    for i, setting in ipairs(instance.settings) do
+        if setting.id == "hold_to_sprint" then
+            table.remove(instance.settings, i)
+            break
         end
     end
-    instance.settings = filtered_settings
 end)
 
 local ALLOWED_CHARACTER_STATE = {
