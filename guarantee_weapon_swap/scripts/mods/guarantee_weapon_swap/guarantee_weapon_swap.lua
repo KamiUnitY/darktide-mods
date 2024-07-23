@@ -1,8 +1,6 @@
 -- Guarantee Weapon Swap mod by KamiUnitY. Ver. 1.1.8
 
 local mod = get_mod("guarantee_weapon_swap")
-local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
-local ability_configuration = PlayerCharacterConstants.ability_configuration
 local modding_tools = get_mod("modding_tools")
 
 local grenade_ability
@@ -150,26 +148,19 @@ mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, e
     end
 end)
 
-mod:hook_safe("PlayerUnitAbilityExtension", "can_wield", function (self, slot_name, previous_check)
-    for ability_type, ability_slot_name in pairs(ability_configuration) do
-        if ability_slot_name == slot_name then
-            local equipped_abilities = self._equipped_abilities
-            local ability = equipped_abilities[ability_type]
-            local can_be_wielded_when_depleted = ability.can_be_wielded_when_depleted
-            local can_be_previously_wielded_to = not previous_check or ability.can_be_previously_wielded_to
-            local can_use_ability = self:can_use_ability(ability_type)
-
-            local can_wield_grenade = not not (can_use_ability and can_be_previously_wielded_to or can_be_wielded_when_depleted and can_be_previously_wielded_to)
-
-            if can_wield_grenade ~= true then
-                mod.promises.grenade = false
-            end
-
-            if equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
-                mod.promises.grenade = false
-            end
+mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_name, previous_check)
+    local out = func(self, slot_name, previous_check)
+    if slot_name == "slot_grenade_ability" then
+        if out ~= true then
+           mod.promises.grenade = false
+           return out
+        end
+        if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
+            mod.promises.grenade = false
+            return out
         end
     end
+    return out
 end)
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
