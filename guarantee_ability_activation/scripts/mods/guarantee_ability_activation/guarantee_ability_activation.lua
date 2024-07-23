@@ -209,14 +209,14 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
     local wielded_slot = inventory_component.wielded_slot
     if wielded_slot ~= nil and wielded_slot ~= current_slot then
         current_slot = wielded_slot
-        if current_slot == "slot_unarmed" then
-            clearPromise("on_slot_unarmed")
-        end
-        if current_slot == "slot_combat_ability" then
-            clearPromise("on_slot_wielded")
-        end
         if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
             weapon_template = weapons[wielded_slot].weapon_template.name
+        end
+        if wielded_slot == "slot_combat_ability" then
+            return clearPromise("on_slot_combat_ability")
+        end
+        if wielded_slot == "slot_unarmed" then
+            return clearPromise("on_slot_unarmed")
         end
     end
 end)
