@@ -227,7 +227,7 @@ local AIM_RELASE             = "new_interrupting_action"
 
 local IS_AIM_CANCEL = {
     [AIM_CANCEL_NORMAL]      = true,
-    [AIM_CANCEL_WITH_SPRINT] = true
+    [AIM_CANCEL_WITH_SPRINT] = true,
 }
 
 local IS_AIM_DASH = {
