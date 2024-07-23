@@ -40,7 +40,7 @@ mod.promises = {
     grenade          = false,
     pocketable       = false,
     pocketable_small = false,
-    device           = false
+    device           = false,
 }
 
 local PROMISE_SLOT_MAP = {
