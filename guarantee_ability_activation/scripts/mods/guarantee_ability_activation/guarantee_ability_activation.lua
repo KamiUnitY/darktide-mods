@@ -5,8 +5,15 @@ local modding_tools = get_mod("modding_tools")
 
 mod.settings = {
     enable_prevent_cancel_on_short_ability_press = true, -- mod:get("enable_prevent_cancel_on_short_ability_press")
-    enable_prevent_cancel_on_start_sprinting = true, -- mod:get("enable_prevent_cancel_on_start_sprinting")
+    enable_prevent_cancel_on_start_sprinting     = true, -- mod:get("enable_prevent_cancel_on_start_sprinting")
+    enable_prevent_double_dashing                = mod:get("enable_prevent_double_dashing"),
+    enable_prevent_ability_aiming                = mod:get("enable_prevent_ability_aiming"),
+    enable_debug_modding_tools                   = mod:get("enable_debug_modding_tools"),
 }
+
+mod.on_setting_changed = function(setting_id)
+    mod.settings[setting_id] = mod:get(setting_id)
+end
 
 mod.promise_ability = false
 
@@ -32,28 +39,28 @@ local function contains(str, substr)
 end
 
 local ALLOWED_CHARACTER_STATE = {
-    dodging = true,
+    dodging        = true,
     ledge_vaulting = true,
-    lunging = true,
-    sliding = true,
-    sprinting = true,
-    stunned = true,
-    walking = true,
-    jumping = true,
-    falling = true,
+    lunging        = true,
+    sliding        = true,
+    sprinting      = true,
+    stunned        = true,
+    walking        = true,
+    jumping        = true,
+    falling        = true,
 }
 
 local ALLOWED_DASH_STATE = {
     sprinting = true,
-    walking = true,
+    walking   = true,
 }
 
 local IS_DASH_ABILITY = {
-    zealot_targeted_dash = true,
-    zealot_targeted_dash_improved = true,
+    zealot_targeted_dash                 = true,
+    zealot_targeted_dash_improved        = true,
     zealot_targeted_dash_improved_double = true,
-    ogryn_charge = true,
-    ogryn_charge_increased_distance = true,
+    ogryn_charge                         = true,
+    ogryn_charge_increased_distance      = true,
 }
 
 mod.character_state = nil
@@ -67,7 +74,7 @@ local DELAY_DASH = 0.3
 
 local last_set_promise = os.clock()
 
-local elapsed = function (time)
+local elapsed = function(time)
     return os.clock() - time
 end
 
@@ -100,7 +107,9 @@ local function isPromised()
     local result
     if IS_DASH_ABILITY[combat_ability] then
         result = mod.promise_ability and ALLOWED_DASH_STATE[mod.character_state]
-            and elapsed(last_set_promise) > DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
+            and
+            elapsed(last_set_promise) >
+            DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
     else
         result = mod.promise_ability
     end
@@ -110,7 +119,7 @@ local function isPromised()
     return result
 end
 
-mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
+mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.character_state = self._state_current.name
         if not ALLOWED_CHARACTER_STATE[mod.character_state] then
@@ -119,13 +128,13 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt,
     end
 end)
 
-mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function (self)
+mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function(self)
     if self._equipped_abilities.combat_ability ~= nil then
         combat_ability = self._equipped_abilities.combat_ability.name
     end
 end)
 
-mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function (func, self, ability_type)
+mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
     local out = func(self, ability_type)
     remaining_ability_charges = out
     if ability_type == "combat_ability" and remaining_ability_charges == 0 then
@@ -191,7 +200,8 @@ mod:hook("InputService", "_get_simulate", _input_hook)
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
     if ability_type == "combat_ability" then
         clearPromise("use_ability_charge")
-        debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
+        debug:print_if_enabled(
+            "Guarantee Ability Activation: Game has successfully initiated the execution of PlayerUnitAbilityExtension:use_ability_charge")
     end
 end)
 
@@ -230,11 +240,12 @@ local PREVENT_CANCEL_DURATION = 0.3
 local _action_ability_base_start_hook = function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
         clearPromise("ability_base_start")
-        debug:print_if_enabled("Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start")
+        debug:print_if_enabled(
+            "Guarantee Ability Activation: Game has successfully initiated the execution of ActionAbilityBase:Start")
     end
 end
 
-local _action_ability_base_finish_hook = function (self, reason, data, t, time_in_action)
+local _action_ability_base_finish_hook = function(self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
         if IS_AIM_CANCEL[reason] then
