@@ -59,7 +59,7 @@ local IS_DASH_ABILITY = {
 mod.character_state = nil
 mod.current_slot = ""
 
-local ability_num_charges = 0
+local remaining_ability_charges = 0
 local combat_ability
 local weapon_template
 
@@ -80,7 +80,7 @@ local function setPromise(from)
     if not mod.promise_ability then
         -- slot_unarmed means player is netted or pounced
         if ALLOWED_CHARACTER_STATE[mod.character_state] and mod.current_slot ~= "slot_unarmed"
-            and ability_num_charges > 0
+            and remaining_ability_charges > 0
             and (mod.character_state ~= "lunging" or not mod:get("enable_prevent_double_dashing")) then
             debug:print_if_enabled("Guarantee Ability Activation: setPromiseFrom: " .. from)
             mod.promise_ability = true
@@ -127,7 +127,8 @@ end)
 
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function (func, self, ability_type)
     local out = func(self, ability_type)
-    if ability_type == "combat_ability" and out == 0 then
+    remaining_ability_charges = out
+    if ability_type == "combat_ability" and remaining_ability_charges == 0 then
         clearPromise("empty_ability_charges")
     end
     return out
