@@ -125,16 +125,14 @@ mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function (self
     end
 end)
 
-mod:hook_safe("HudElementPlayerAbility", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
-    local player = self._data.player
-    local parent = self._parent
-    local ability_extension = parent:get_player_extension(player, "ability_system")
-    local ability_id = self._ability_id
-    local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_id)
-    ability_num_charges = remaining_ability_charges
-    if ability_num_charges == 0 then
-        mod.promise_ability = false
+mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function (func, self, ability_type)
+    local out = func(self, ability_type)
+    if ability_type == "combat_ability" then
+        if out == 0 then
+            clearPromise("empty_ability_charges")
+        end
     end
+    return out
 end)
 
 local function isWieldBugCombo()
