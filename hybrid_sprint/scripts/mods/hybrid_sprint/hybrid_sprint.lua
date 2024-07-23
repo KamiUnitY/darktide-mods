@@ -3,8 +3,8 @@
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
 
-mod.promise_sprint   = false
-mod.pressed_forward  = false
+mod.promise_sprint = false
+mod.pressed_forward = false
 mod.interrupt_sprint = false
 
 local ALLOWED_CHARACTER_STATE = {

@@ -61,16 +61,16 @@ local IS_DASH_ABILITY = {
     ogryn_charge_increased_distance      = true,
 }
 
+local DELAY_DASH = 0.3
+
 mod.promise_ability = false
 mod.character_state = nil
-mod.current_slot    = ""
+mod.current_slot = ""
 
 local remaining_ability_charges = 0
 
-local combat_ability  = nil
+local combat_ability = nil
 local weapon_template = nil
-
-local DELAY_DASH = 0.3
 
 local last_set_promise = os.clock()
 
@@ -106,10 +106,7 @@ end
 local function isPromised()
     local result
     if IS_DASH_ABILITY[combat_ability] then
-        result = mod.promise_ability and ALLOWED_DASH_STATE[mod.character_state]
-            and
-            elapsed(last_set_promise) >
-            DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
+        result = mod.promise_ability and ALLOWED_DASH_STATE[mod.character_state] and elapsed(last_set_promise) > DELAY_DASH -- preventing pressing too early which sometimes could result in double dashing (hacky solution, need can_use_ability function so I can replace this)
     else
         result = mod.promise_ability
     end

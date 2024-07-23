@@ -4,8 +4,9 @@ local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
 
 local grenade_ability = nil
-local current_slot    = ""
-local previous_slot   = ""
+
+local current_slot = ""
+local previous_slot = ""
 
 mod.character_state = nil
 
