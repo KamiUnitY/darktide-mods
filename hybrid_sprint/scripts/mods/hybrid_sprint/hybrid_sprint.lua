@@ -7,6 +7,31 @@ mod.promise_sprint = false
 mod.pressed_forward = false
 mod.interrupt_sprint = false
 
+local ALLOWED_CHARACTER_STATE = {
+    dodging        = true,
+    ledge_vaulting = true,
+    lunging        = true,
+    sliding        = true,
+    sprinting      = true,
+    stunned        = true,
+    walking        = true,
+    jumping        = true,
+    falling        = true,
+}
+
+local INTERRUPTED_INPUT = {
+    action_one_pressed   = true,
+    action_one_hold      = true,
+    action_one_release   = true,
+    action_two_pressed   = true,
+    action_two_hold      = true,
+    action_two_release   = true,
+    weapon_extra_pressed = true,
+    weapon_extra_hold    = true,
+    weapon_extra_release = true,
+    weapon_reload        = true,
+}
+
 local debug = {
     is_enabled = function(self)
         return modding_tools and modding_tools:is_enabled() and mod:get("enable_debug_modding_tools")
@@ -40,31 +65,6 @@ mod:hook_require("scripts/settings/options/input_settings", function(instance)
         end
     end
 end)
-
-local ALLOWED_CHARACTER_STATE = {
-    dodging = true,
-    ledge_vaulting = true,
-    lunging = true,
-    sliding = true,
-    sprinting = true,
-    stunned = true,
-    walking = true,
-    jumping = true,
-    falling = true,
-}
-
-local INTERRUPTED_INPUT = {
-    action_one_pressed = true,
-    action_one_hold = true,
-    action_one_release = true,
-    action_two_pressed = true,
-    action_two_hold = true,
-    action_two_release = true,
-    weapon_extra_pressed = true,
-    weapon_extra_hold = true,
-    weapon_extra_release = true,
-    weapon_reload = true,
-}
 
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
