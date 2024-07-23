@@ -37,6 +37,8 @@ mod.promise_sprint = false
 mod.pressed_forward = false
 -- mod.interrupt_sprint = false
 
+mod.character_state = nil
+
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
     ledge_vaulting = true,
