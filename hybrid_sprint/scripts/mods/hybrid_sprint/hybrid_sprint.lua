@@ -69,15 +69,15 @@ local INTERRUPTED_INPUT = {
 
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
-        debug:print_if_enabled("hybrid_sprint: setPromiseFrom: " .. from)
         mod.promise_sprint = true
+        debug:print_if_enabled("hybrid_sprint: setPromiseFrom: " .. from)
     end
 end
 
 local function clearPromise(from)
     if mod.promise_sprint then
-        debug:print_if_enabled("hybrid_sprint: clearPromiseFrom: " .. from)
         mod.promise_sprint = false
+        debug:print_if_enabled("hybrid_sprint: clearPromiseFrom: " .. from)
     end
 end
 
