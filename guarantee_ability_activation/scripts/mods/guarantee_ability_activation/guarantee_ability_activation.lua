@@ -84,7 +84,7 @@ local function setPromise(from)
         if ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed"
             and remaining_ability_charges > 0
             and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
-            then
+        then
             mod.promise_ability = true
             last_set_promise = os.clock()
             if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
