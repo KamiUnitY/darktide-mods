@@ -34,13 +34,6 @@ local debug = {
     end,
 }
 
-local function contains(str, substr)
-    if type(str) ~= "string" or type(substr) ~= "string" then
-        return false
-    end
-    return string.find(str, substr) ~= nil
-end
-
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
     ledge_vaulting = true,
@@ -76,8 +69,8 @@ local current_slot = ""
 
 local remaining_ability_charges = 0
 
-local combat_ability = nil
-local weapon_template = nil
+local combat_ability = ""
+local weapon_template = ""
 
 local last_set_promise = os.clock()
 
@@ -144,10 +137,6 @@ mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(fun
     return out
 end)
 
-local function isWieldBugCombo()
-    return contains(weapon_template, "combatsword_p2") and contains(combat_ability, "zealot_relic")
-end
-
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
@@ -185,8 +174,9 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
+    -- Fixing Heavy Sword + Relic Bug
     if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-        if mod.promise_ability and isWieldBugCombo() then
+        if mod.promise_ability and string.find(weapon_template, "combatsword_p2") and string.find(combat_ability, "zealot_relic") then
             return true
         end
         return out
