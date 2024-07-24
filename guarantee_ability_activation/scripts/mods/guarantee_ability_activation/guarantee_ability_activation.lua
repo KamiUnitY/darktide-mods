@@ -151,7 +151,7 @@ end
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local type_str = type(out)
-    local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out == 1)
+    local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out > 0)
 
     if action_name == "combat_ability_pressed" then
         if pressed then
