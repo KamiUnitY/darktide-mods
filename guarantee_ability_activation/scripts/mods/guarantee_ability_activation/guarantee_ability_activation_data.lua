@@ -6,16 +6,6 @@ return {
 	is_togglable = true,
 	options = {
 		widgets = {
-			-- {
-			-- 	setting_id = "enable_prevent_cancel_on_short_ability_press",
-			-- 	type = "checkbox",
-			-- 	default_value = true,
-			-- },
-			-- {
-			-- 	setting_id = "enable_prevent_cancel_on_start_sprinting",
-			-- 	type = "checkbox",
-			-- 	default_value = true,
-			-- },
 			{
 				setting_id = "enable_prevent_double_dashing",
 				type = "checkbox",

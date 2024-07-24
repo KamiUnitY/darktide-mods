@@ -7,14 +7,6 @@ return {
 		en = "Guarantee combat ability activation when player try to activate them in middle of animation",
 		["zh-cn"] = "确保玩家在动画中途能成功激活主动技能",
 	},
-	enable_prevent_cancel_on_short_ability_press = {
-		en = "Prevent cancel on short ability press",
-		["zh-cn"] = "防止短按时取消激活",
-	},
-	enable_prevent_cancel_on_short_ability_press_description = {
-		en = "Basically preventing ability cancel on freshly hold ability",
-		["zh-cn"] = "防止需要按住的技能被短按取消",
-	},
 	enable_prevent_cancel_on_start_sprinting = {
 		en = "Prevent cancel on start sprinting",
 		["zh-cn"] = "防止开始疾跑时取消激活",
