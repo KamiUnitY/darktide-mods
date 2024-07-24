@@ -103,7 +103,7 @@ local function isPromised()
     local result
     if IS_DASH_ABILITY[combat_ability] then
         result = mod.promise_ability and ALLOWED_DASH_STATE[mod.character_state]
-            and elapsed(last_set_promise) > DELAY_DASH -- hacky solution for double dashing, need can_use_ability function so I can replace this
+            and elapsed(last_set_promise) > DELAY_DASH -- hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
     else
         result = mod.promise_ability
     end
