@@ -182,7 +182,7 @@ local _input_hook = function(func, self, action_name)
             if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
                 if action_name ~= "grenade_ability_pressed"
                     or grenade_ability ~= "zealot_throwing_knives"
-                    or (mod.settings["enable_zealot_throwing_knives"] and current_slot ~= "slot_luggable")
+                    or (current_slot ~= "slot_luggable" and mod.settings["enable_zealot_throwing_knives"])
                 then
                     setPromise(action_name)
                 end
