@@ -104,9 +104,10 @@ local function clearAllPromises()
     end
 end
 
-mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
-    if self._player.viewport_name == "player1" then
-        grenade_ability = self._components.equipped_abilities[1].grenade_ability
+mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
+    local _grenade_ability = self._equipped_abilities.grenade_ability
+    if self._player.viewport_name == "player1" and _grenade_ability then
+        grenade_ability = _grenade_ability.name
     end
 end)
 
