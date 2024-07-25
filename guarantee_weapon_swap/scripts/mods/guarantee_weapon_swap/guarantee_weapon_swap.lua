@@ -41,38 +41,38 @@ mod.promises = {
     quick            = false,
     primary          = false,
     secondary        = false,
-    grenade          = false,
     pocketable       = false,
     pocketable_small = false,
     device           = false,
+    grenade          = false,
 }
 
 local PROMISE_SLOT_MAP = {
     slot_primary          = "primary",
     slot_secondary        = "secondary",
-    slot_grenade_ability  = "grenade",
     slot_pocketable       = "pocketable",
     slot_pocketable_small = "pocketable_small",
     slot_device           = "device",
+    slot_grenade_ability  = "grenade",
 }
 
 local PROMISE_ACTION_MAP = {
     quick_wield             = "quick",
     wield_1                 = "primary",
     wield_2                 = "secondary",
-    grenade_ability_pressed = "grenade",
     wield_3                 = "pocketable",
     wield_4                 = "pocketable_small",
-    wield_5                 = "device"
+    wield_5                 = "device",
+    grenade_ability_pressed = "grenade",
 }
 
 local ACTION_SLOT_MAP = {
     wield_1                 = "slot_primary",
     wield_2                 = "slot_secondary",
-    grenade_ability_pressed = "slot_grenade_ability",
     wield_3                 = "slot_pocketable",
     wield_4                 = "slot_pocketable_small",
-    wield_5                 = "slot_device"
+    wield_5                 = "slot_device",
+    grenade_ability_pressed = "slot_grenade_ability",
 }
 
 local ALLOWED_CHARACTER_STATE = {
