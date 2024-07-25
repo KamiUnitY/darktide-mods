@@ -34,7 +34,15 @@ local debug = {
 }
 
 mod.promise_sprint = false
-mod.pressed_forward = false
+mod.promise_dodge = false
+
+local action_pressed = {
+    move_forward = false,
+    move_backward = false,
+    move_left = false,
+    move_right = false
+}
+
 -- mod.interrupt_sprint = false
 
 mod.character_state = nil
@@ -93,7 +101,7 @@ local function clearPromise(from)
 end
 
 local function isPromised()
-    local result = mod.promise_sprint and mod.pressed_forward
+    local result = mod.promise_sprint and action_pressed["move_forward"]
     if result then
         if modding_tools then debug:print_mod("Attempting to sprint for you !!!") end
     end
@@ -105,17 +113,22 @@ local _input_hook = function(func, self, action_name)
     local type_str = type(out)
     local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out > 0)
 
+    if action_pressed[action_name] ~= nil then
+        action_pressed[action_name] = pressed
+    end
+
+    if action_name == "move_left" then
+        if pressed then
+            -- debug:print(out)
+        end
+    end
+
     if action_name == "move_forward" then
-        local released_forward = mod.pressed_forward and not pressed
+        action_pressed["move_forward"] = pressed
+        local released_forward = action_pressed["move_forward"] and not pressed
         if released_forward then
             clearPromise("Realeased Forward")
         end
-        mod.pressed_forward = pressed
-        return out
-    end
-
-    if action_name == "move_backward" and pressed then
-        clearPromise("Pressed Backward")
         return out
     end
 
@@ -123,11 +136,38 @@ local _input_hook = function(func, self, action_name)
         if pressed and not mod.settings["enable_hold_to_sprint"] then
             setPromise("Pressed Sprint")
         end
-        return out or isPromised()
+        return (out or isPromised()) and not mod.promise_dodge
+    end
+
+    if action_name == "jump" then
+        return out and not (mod.character_state == "sprinting" and (action_pressed["move_left"] or action_pressed["move_right"]))
+    end
+    if action_name == "dodge" then
+        if pressed and (action_pressed["move_left"] or action_pressed["move_right"]) and mod.character_state == "sprinting" then
+            mod.promise_dodge = true
+            clearPromise("Pressed Dodge")
+        end
+        return out or mod.promise_dodge
     end
 
     return out
 end
+
+mod:hook_require("scripts/extension_systems/character_state_machine/character_states/utilities/dodge", function(instance)
+    debug:print(instance)
+    --hook not working
+    mod:hook_safe(instance, "check", function(t, unit_data_extension, base_dodge_template, input_source)
+        debug.print(t)
+    end)
+end)
+
+mod:hook_safe("PlayerCharacterStateDodging", "on_enter", function(self, unit, dt, t, previous_state, params)
+    mod.promise_dodge = false
+end)
+
+mod:hook_safe("PlayerCharacterStateJumping", "on_enter", function(self, unit, dt, t, previous_state, params)
+    mod.promise_dodge = false
+end)
 
 mod:hook("InputService", "_get", _input_hook)
 mod:hook("InputService", "_get_simulate", _input_hook)
