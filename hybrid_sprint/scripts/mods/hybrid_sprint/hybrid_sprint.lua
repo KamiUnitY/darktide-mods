@@ -52,19 +52,6 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
-local INTERRUPTED_INPUT = {
-    action_one_pressed   = true,
-    action_one_hold      = true,
-    action_one_release   = true,
-    action_two_pressed   = true,
-    action_two_hold      = true,
-    action_two_release   = true,
-    weapon_extra_pressed = true,
-    weapon_extra_hold    = true,
-    weapon_extra_release = true,
-    weapon_reload        = true,
-}
-
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
         mod.promise_sprint = true
