@@ -38,7 +38,7 @@ local debug = {
 mod.promise_sprint = false
 mod.pressed_forward = false
 
-mod.character_state = nil
+mod.character_state = ""
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,

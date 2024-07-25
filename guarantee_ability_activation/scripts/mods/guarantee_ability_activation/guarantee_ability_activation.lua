@@ -63,7 +63,7 @@ local DELAY_ABILITY = 0.3
 
 mod.promise_ability = false
 
-mod.character_state = nil
+mod.character_state = ""
 
 local current_slot = ""
 

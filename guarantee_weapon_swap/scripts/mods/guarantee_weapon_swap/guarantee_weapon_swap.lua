@@ -30,12 +30,12 @@ local debug = {
     end,
 }
 
-local grenade_ability = nil
+local grenade_ability = ""
 
 local current_slot = ""
 local previous_slot = ""
 
-mod.character_state = nil
+mod.character_state = ""
 
 mod.promises = {
     quick            = false,
