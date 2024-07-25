@@ -113,11 +113,85 @@ local function isPromised()
     return result
 end
 
-mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.character_state = self._state_current.name
-        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
-            clearPromise("UNALLOWED_CHARACTER_STATE")
+local AIM_CANCEL_NORMAL      = "hold_input_released"
+local AIM_CANCEL_WITH_SPRINT = "started_sprint"
+local AIM_RELASE             = "new_interrupting_action"
+
+local IS_AIM_CANCEL = {
+    [AIM_CANCEL_NORMAL]      = true,
+    [AIM_CANCEL_WITH_SPRINT] = true,
+}
+
+local IS_AIM_DASH = {
+    targeted_dash_aim    = true,
+    directional_dash_aim = true,
+}
+
+local PREVENT_CANCEL_DURATION = 0.3
+
+-- ON TRIGGER --
+
+mod:hook_safe("ActionBase","start", function(self, action_settings, t, time_scale, action_start_params)
+    if action_settings.ability_type == "combat_ability" then
+        clearPromise("ability_base_start")
+        if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
+    end
+end)
+
+mod:hook_safe("ActionBase","finish", function(self, reason, data, t, time_in_action)
+    local action_settings = self._action_settings
+    if action_settings and action_settings.ability_type == "combat_ability" then
+        if IS_AIM_CANCEL[reason] then
+            if current_slot ~= "slot_unarmed" then
+                if reason == AIM_CANCEL_WITH_SPRINT and mod.settings["enable_prevent_cancel_on_start_sprinting"] then
+                    setPromise("AIM_CANCEL_WITH_SPRINT")
+                    return
+                end
+                if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
+                    setPromise("AIM_CANCEL_NORMAL")
+                    return
+                end
+            end
+            if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
+        else
+            if IS_AIM_DASH[action_settings.kind] then
+                setPromise("promise_dash")
+                return
+            end
+        end
+    end
+end)
+
+mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
+    if ability_type == "combat_ability" then
+        clearPromise("use_ability_charge")
+        if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
+    end
+end)
+
+-- ON EVERY FRAME --
+
+mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
+    local out = func(self, ability_type)
+    remaining_ability_charges = out
+    if ability_type == "combat_ability" and remaining_ability_charges == 0 then
+        clearPromise("empty_ability_charges")
+    end
+    return out
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
+    local wielded_slot = inventory_component.wielded_slot
+    if wielded_slot ~= nil and wielded_slot ~= current_slot then
+        current_slot = wielded_slot
+        if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
+            weapon_template = weapons[wielded_slot].weapon_template.name
+        end
+        if wielded_slot == "slot_combat_ability" then
+            return clearPromise("on_slot_combat_ability")
+        end
+        if wielded_slot == "slot_unarmed" then
+            return clearPromise("on_slot_unarmed")
         end
     end
 end)
@@ -128,14 +202,16 @@ mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function(self)
     end
 end)
 
-mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
-    local out = func(self, ability_type)
-    remaining_ability_charges = out
-    if ability_type == "combat_ability" and remaining_ability_charges == 0 then
-        clearPromise("empty_ability_charges")
+mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.character_state = self._state_current.name
+        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+            clearPromise("UNALLOWED_CHARACTER_STATE")
+        end
     end
-    return out
 end)
+
+-- INPUT HOOK --
 
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
@@ -187,73 +263,3 @@ end
 
 mod:hook("InputService", "_get", _input_hook)
 mod:hook("InputService", "_get_simulate", _input_hook)
-
-mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
-    if ability_type == "combat_ability" then
-        clearPromise("use_ability_charge")
-        if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
-    end
-end)
-
-mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-    local wielded_slot = inventory_component.wielded_slot
-    if wielded_slot ~= nil and wielded_slot ~= current_slot then
-        current_slot = wielded_slot
-        if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
-            weapon_template = weapons[wielded_slot].weapon_template.name
-        end
-        if wielded_slot == "slot_combat_ability" then
-            return clearPromise("on_slot_combat_ability")
-        end
-        if wielded_slot == "slot_unarmed" then
-            return clearPromise("on_slot_unarmed")
-        end
-    end
-end)
-
-local AIM_CANCEL_NORMAL      = "hold_input_released"
-local AIM_CANCEL_WITH_SPRINT = "started_sprint"
-local AIM_RELASE             = "new_interrupting_action"
-
-local IS_AIM_CANCEL = {
-    [AIM_CANCEL_NORMAL]      = true,
-    [AIM_CANCEL_WITH_SPRINT] = true,
-}
-
-local IS_AIM_DASH = {
-    targeted_dash_aim    = true,
-    directional_dash_aim = true,
-}
-
-local PREVENT_CANCEL_DURATION = 0.3
-
-mod:hook_safe("ActionBase","start", function(self, action_settings, t, time_scale, action_start_params)
-    if action_settings.ability_type == "combat_ability" then
-        clearPromise("ability_base_start")
-        if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
-    end
-end)
-
-mod:hook_safe("ActionBase","finish", function(self, reason, data, t, time_in_action)
-    local action_settings = self._action_settings
-    if action_settings and action_settings.ability_type == "combat_ability" then
-        if IS_AIM_CANCEL[reason] then
-            if current_slot ~= "slot_unarmed" then
-                if reason == AIM_CANCEL_WITH_SPRINT and mod.settings["enable_prevent_cancel_on_start_sprinting"] then
-                    setPromise("AIM_CANCEL_WITH_SPRINT")
-                    return
-                end
-                if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
-                    setPromise("AIM_CANCEL_NORMAL")
-                    return
-                end
-            end
-            if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
-        else
-            if IS_AIM_DASH[action_settings.kind] then
-                setPromise("promise_dash")
-                return
-            end
-        end
-    end
-end)
