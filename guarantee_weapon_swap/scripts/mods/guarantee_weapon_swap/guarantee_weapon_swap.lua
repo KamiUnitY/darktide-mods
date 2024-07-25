@@ -127,29 +127,6 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
     end
 end)
 
-local _input_hook = function(func, self, action_name)
-    local out = func(self, action_name)
-    local type_str = type(out)
-    local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out > 0)
-
-    if PROMISE_ACTION_MAP[action_name] then
-        if pressed then
-            clearAllPromises()
-            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
-                if action_name ~= "grenade_ability_pressed" or grenade_ability ~= "zealot_throwing_knives" or (mod.settings["enable_zealot_throwing_knives"] and current_slot ~= "slot_luggable") then
-                    setPromise(action_name)
-                end
-            end
-        end
-        return out or isPromised(PROMISE_ACTION_MAP[action_name])
-    end
-
-    return out
-end
-
-mod:hook("InputService", "_get", _input_hook)
-mod:hook("InputService", "_get_simulate", _input_hook)
-
 mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
     if self._player_weapons.slot_pocketable_small == nil then
         mod.promises.pocketable_small = false
@@ -182,3 +159,26 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt,
         mod.character_state = self._state_current.name
     end
 end)
+
+local _input_hook = function(func, self, action_name)
+    local out = func(self, action_name)
+    local type_str = type(out)
+    local pressed = (type_str == "boolean" and out == true) or (type_str == "number" and out > 0)
+
+    if PROMISE_ACTION_MAP[action_name] then
+        if pressed then
+            clearAllPromises()
+            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
+                if action_name ~= "grenade_ability_pressed" or grenade_ability ~= "zealot_throwing_knives" or (mod.settings["enable_zealot_throwing_knives"] and current_slot ~= "slot_luggable") then
+                    setPromise(action_name)
+                end
+            end
+        end
+        return out or isPromised(PROMISE_ACTION_MAP[action_name])
+    end
+
+    return out
+end
+
+mod:hook("InputService", "_get", _input_hook)
+mod:hook("InputService", "_get_simulate", _input_hook)
