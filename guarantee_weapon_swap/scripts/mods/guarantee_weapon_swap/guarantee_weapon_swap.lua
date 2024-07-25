@@ -104,7 +104,9 @@ local function isPromised(action)
     return mod.promises[action]
 end
 
+----------------
 -- ON TRIGGER --
+----------------
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     mod.promises.quick = false
@@ -126,7 +128,9 @@ mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_n
     return out
 end)
 
+--------------------
 -- ON EVERY FRAME --
+--------------------
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     local wielded_slot = inventory_component.wielded_slot
@@ -164,7 +168,9 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt,
     end
 end)
 
+----------------
 -- INPUT HOOK --
+----------------
 
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)

@@ -129,7 +129,9 @@ local IS_AIM_DASH = {
 
 local PREVENT_CANCEL_DURATION = 0.3
 
+----------------
 -- ON TRIGGER --
+----------------
 
 mod:hook_safe("ActionBase","start", function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
@@ -169,7 +171,9 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
     end
 end)
 
+--------------------
 -- ON EVERY FRAME --
+--------------------
 
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
     local out = func(self, ability_type)
@@ -211,7 +215,9 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
     end
 end)
 
+----------------
 -- INPUT HOOK --
+----------------
 
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)

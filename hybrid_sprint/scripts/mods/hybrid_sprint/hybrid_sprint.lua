@@ -74,6 +74,10 @@ local function isPromised()
     return result
 end
 
+----------------
+-- ON TRIGGER --
+----------------
+
 -- FORCE HOLD SPRINT IN VANILLA SETTINGS --
 
 mod.on_game_state_changed = function(status, state_name)
@@ -92,7 +96,9 @@ mod:hook_require("scripts/settings/options/input_settings", function(instance)
     end
 end)
 
+--------------------
 -- ON EVERY FRAME --
+--------------------
 
 local function check_weapon_want_to_stop(keywords)
     local has = {}
@@ -129,7 +135,9 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
     end
 end)
 
+----------------
 -- INPUT HOOK --
+----------------
 
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
