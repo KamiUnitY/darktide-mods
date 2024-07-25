@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap mod by KamiUnitY. Ver. 1.2.0
+-- Guarantee Weapon Swap mod by KamiUnitY. Ver. 1.2.1
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -105,7 +105,9 @@ local function clearAllPromises()
 end
 
 mod:hook_safe("PlayerUnitDataExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
-    grenade_ability = self._components.equipped_abilities[1].grenade_ability
+    if self._player.viewport_name == "player1" then
+        grenade_ability = self._components.equipped_abilities[1].grenade_ability
+    end
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
