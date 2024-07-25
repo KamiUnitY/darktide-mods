@@ -104,17 +104,29 @@ local function clearAllPromises()
     end
 end
 
-mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
-    local _grenade_ability = self._equipped_abilities.grenade_ability
-    if self._player.viewport_name == "player1" and _grenade_ability ~= nil then
-        grenade_ability = _grenade_ability.name
-    end
-end)
+-- ON TRIGGER --
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     mod.promises.quick = false
     mod.promises[PROMISE_SLOT_MAP[slot_name] or ""] = false
 end)
+
+mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_name, previous_check)
+    local out = func(self, slot_name, previous_check)
+    if slot_name == "slot_grenade_ability" then
+        if out ~= true then
+            mod.promises.grenade = false
+            return out
+        end
+        if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
+            mod.promises.grenade = false
+            return out
+        end
+    end
+    return out
+end)
+
+-- ON EVERY FRAME --
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     local wielded_slot = inventory_component.wielded_slot
@@ -139,19 +151,11 @@ mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, e
     end
 end)
 
-mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_name, previous_check)
-    local out = func(self, slot_name, previous_check)
-    if slot_name == "slot_grenade_ability" then
-        if out ~= true then
-            mod.promises.grenade = false
-            return out
-        end
-        if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
-            mod.promises.grenade = false
-            return out
-        end
+mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
+    local _grenade_ability = self._equipped_abilities.grenade_ability
+    if self._player.viewport_name == "player1" and _grenade_ability ~= nil then
+        grenade_ability = _grenade_ability.name
     end
-    return out
 end)
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
@@ -159,6 +163,8 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt,
         mod.character_state = self._state_current.name
     end
 end)
+
+-- INPUT HOOK --
 
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
