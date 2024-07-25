@@ -17,7 +17,6 @@ end
 
 mod.on_all_mods_loaded = function()
     -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
-    -- modding_tools:watch("interrupt_sprint", mod, "interrupt_sprint")
     -- modding_tools:watch("character_state", mod, "character_state")
 end
 
