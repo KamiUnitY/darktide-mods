@@ -106,7 +106,7 @@ end
 
 mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
     local _grenade_ability = self._equipped_abilities.grenade_ability
-    if self._player.viewport_name == "player1" and _grenade_ability then
+    if self._player.viewport_name == "player1" and _grenade_ability  ~= nil then
         grenade_ability = _grenade_ability.name
     end
 end)
