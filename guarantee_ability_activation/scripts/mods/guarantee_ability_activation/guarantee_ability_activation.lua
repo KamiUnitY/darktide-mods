@@ -228,30 +228,33 @@ local IS_AIM_DASH = {
 local PREVENT_CANCEL_DURATION = 0.3
 
 mod:hook_require("scripts/extension_systems/weapon/actions/action_base", function(instance)
-    mod:hook_safe(instance, "start", function(self, action_settings, t, time_scale, action_start_params)
+    instance.start = function(self, action_settings, t, time_scale, action_start_params)
         if action_settings.ability_type == "combat_ability" then
             clearPromise("ability_base_start")
             if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
         end
-    end)
-    mod:hook_safe(instance, "finish",  function(self, reason, data, t, time_in_action)
+    end
+    instance.finish = function(self, reason, data, t, time_in_action)
         local action_settings = self._action_settings
         if action_settings and action_settings.ability_type == "combat_ability" then
             if IS_AIM_CANCEL[reason] then
                 if current_slot ~= "slot_unarmed" then
                     if reason == AIM_CANCEL_WITH_SPRINT and mod.settings["enable_prevent_cancel_on_start_sprinting"] then
-                        return setPromise("AIM_CANCEL_WITH_SPRINT")
+                        setPromise("AIM_CANCEL_WITH_SPRINT")
+                        return
                     end
                     if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
-                        return setPromise("AIM_CANCEL_NORMAL")
+                        setPromise("AIM_CANCEL_NORMAL")
+                        return
                     end
                 end
                 if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
             else
                 if IS_AIM_DASH[action_settings.kind] then
-                    return setPromise("promise_dash")
+                    setPromise("promise_dash")
+                    return
                 end
             end
         end
-    end)
+    end
 end)
