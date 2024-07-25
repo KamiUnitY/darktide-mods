@@ -113,6 +113,21 @@ local function isPromised()
     return result
 end
 
+----------------
+-- ON TRIGGER --
+----------------
+
+-- CLEAR PROMISE ON ABILITY USED
+
+mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
+    if ability_type == "combat_ability" then
+        clearPromise("use_ability_charge")
+        if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
+    end
+end)
+
+-- HANDLE PROMISE ON HOLDING ABILITY
+
 local AIM_CANCEL_NORMAL      = "hold_input_released"
 local AIM_CANCEL_WITH_SPRINT = "started_sprint"
 local AIM_RELASE             = "new_interrupting_action"
@@ -128,10 +143,6 @@ local IS_AIM_DASH = {
 }
 
 local PREVENT_CANCEL_DURATION = 0.3
-
-----------------
--- ON TRIGGER --
-----------------
 
 mod:hook_safe("ActionBase","start", function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
@@ -161,13 +172,6 @@ mod:hook_safe("ActionBase","finish", function(self, reason, data, t, time_in_act
                 return
             end
         end
-    end
-end)
-
-mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
-    if ability_type == "combat_ability" then
-        clearPromise("use_ability_charge")
-        if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
     end
 end)
 
