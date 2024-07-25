@@ -37,7 +37,6 @@ local debug = {
 
 mod.promise_sprint = false
 mod.pressed_forward = false
--- mod.interrupt_sprint = false
 
 mod.character_state = nil
 
