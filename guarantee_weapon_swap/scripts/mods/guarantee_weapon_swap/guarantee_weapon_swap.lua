@@ -210,7 +210,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit
     end
 end)
 
--- REALTIME REMAINING GRENADE CHARGES VARIABLE
+-- REALTIME REMAINING GRENADE CHARGES VARIABLE & CLEAR PROMISE ON EMPTY CHARGE
 
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
     local out = func(self, ability_type)
