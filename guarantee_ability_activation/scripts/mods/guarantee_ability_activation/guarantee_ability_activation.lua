@@ -8,8 +8,8 @@ local modding_tools = get_mod("modding_tools")
 --------------------------
 
 mod.settings = {
-    enable_prevent_cancel_on_short_ability_press = true, -- mod:get("enable_prevent_cancel_on_short_ability_press")
-    enable_prevent_cancel_on_start_sprinting     = true, -- mod:get("enable_prevent_cancel_on_start_sprinting")
+    enable_prevent_cancel_on_short_ability_press = true,
+    enable_prevent_cancel_on_start_sprinting     = true,
     enable_prevent_double_dashing                = mod:get("enable_prevent_double_dashing"),
     enable_prevent_ability_aiming                = mod:get("enable_prevent_ability_aiming"),
     enable_debug_modding_tools                   = mod:get("enable_debug_modding_tools"),
