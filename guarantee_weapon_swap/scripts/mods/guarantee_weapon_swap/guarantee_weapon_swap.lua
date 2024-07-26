@@ -210,14 +210,6 @@ mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit
     end
 end)
 
--- REALTIME REMAINING GRENADE CHARGES VARIABLE & CLEAR PROMISE ON EMPTY CHARGE
-
-mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
-    local out = func(self, ability_type)
-    remaining_grenade_charges = out
-    return out
-end)
-
 -- REALTIME CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
@@ -244,7 +236,6 @@ local _input_hook = function(func, self, action_name)
                 if action_name ~= "grenade_ability_pressed"
                     or (
                         (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"])
-                        and (remaining_grenade_charges > 0 or string.find(grenade_ability, "psyker"))
                         and current_slot ~= "slot_luggable"
                     )
                 then
