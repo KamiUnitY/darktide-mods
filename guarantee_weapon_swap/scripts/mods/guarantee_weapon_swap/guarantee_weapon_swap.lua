@@ -233,8 +233,8 @@ local _input_hook = function(func, self, action_name)
             clearAllPromises()
             if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
                 if action_name ~= "grenade_ability_pressed"
-                    or (grenade_ability ~= "zealot_throwing_knives")
-                    or (grenade_ability == "zealot_throwing_knives" and mod.settings["enable_zealot_throwing_knives"])
+                    or grenade_ability ~= "zealot_throwing_knives"
+                    or mod.settings["enable_zealot_throwing_knives"]
                 then
                     setPromise(PROMISE_ACTION_MAP[action_name])
                     if action_name == "grenade_ability_pressed" and current_slot == "slot_luggable" then
