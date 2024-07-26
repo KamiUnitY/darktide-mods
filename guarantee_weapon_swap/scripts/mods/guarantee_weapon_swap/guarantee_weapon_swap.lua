@@ -214,12 +214,7 @@ end)
 
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
     local out = func(self, ability_type)
-    if ability_type == "grenade_ability" and remaining_grenade_charges ~= out then
-        remaining_grenade_charges = out
-        if remaining_grenade_charges == 0 then
-            clearPromise("grenade")
-        end
-    end
+    remaining_grenade_charges = out
     return out
 end)
 
