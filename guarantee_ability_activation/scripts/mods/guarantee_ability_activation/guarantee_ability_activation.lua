@@ -3,6 +3,10 @@
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
 
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
 mod.settings = {
     enable_prevent_cancel_on_short_ability_press = true, -- mod:get("enable_prevent_cancel_on_short_ability_press")
     enable_prevent_cancel_on_start_sprinting     = true, -- mod:get("enable_prevent_cancel_on_start_sprinting")
@@ -15,10 +19,19 @@ mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
 end
 
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
 mod.on_all_mods_loaded = function()
+    -- WATCHER
     -- modding_tools:watch("promise_ability",mod,"promise_ability")
     -- modding_tools:watch("character_state",mod,"character_state")
 end
+
+-------------------------
+-- MODDING TOOLS DEBUG --
+-------------------------
 
 local debug = {
     is_enabled = function(self)
@@ -33,6 +46,10 @@ local debug = {
         end
     end,
 }
+
+---------------
+-- VARIABLES --
+---------------
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
@@ -77,6 +94,10 @@ local last_set_promise = os.clock()
 local elapsed = function(time)
     return os.clock() - time
 end
+
+-----------------------
+-- PROMISE FUNCTIONS --
+-----------------------
 
 local function setPromise(from)
     if not mod.promise_ability then

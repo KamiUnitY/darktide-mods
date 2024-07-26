@@ -3,6 +3,10 @@
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
 
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
 mod.settings = {
     enable_zealot_throwing_knives = mod:get("enable_zealot_throwing_knives"),
     enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
@@ -12,9 +16,18 @@ mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
 end
 
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
 mod.on_all_mods_loaded = function()
+    -- WATCHER
     -- modding_tools:watch("character_state",mod,"character_state")
 end
+
+-------------------------
+-- MODDING TOOLS DEBUG --
+-------------------------
 
 local debug = {
     is_enabled = function(self)
@@ -29,6 +42,10 @@ local debug = {
         end
     end,
 }
+
+---------------
+-- VARIABLES --
+---------------
 
 local grenade_ability = ""
 
@@ -86,6 +103,10 @@ local ALLOWED_CHARACTER_STATE = {
     jumping        = true,
     falling        = true,
 }
+
+-----------------------
+-- PROMISE FUNCTIONS --
+-----------------------
 
 local function setPromise(action_name)
     mod.promises[PROMISE_ACTION_MAP[action_name]] = true

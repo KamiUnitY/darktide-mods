@@ -5,6 +5,10 @@ local modding_tools = get_mod("modding_tools")
 
 local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
 
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
 mod.settings = {
     enable_hold_to_sprint                   = mod:get("enable_hold_to_sprint"),
     enable_keep_sprint_after_weapon_actions = mod:get("enable_keep_sprint_after_weapon_actions"),
@@ -15,10 +19,19 @@ mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
 end
 
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
 mod.on_all_mods_loaded = function()
+    -- WATCHER
     -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
     -- modding_tools:watch("character_state", mod, "character_state")
 end
+
+-------------------------
+-- MODDING TOOLS DEBUG --
+-------------------------
 
 local debug = {
     is_enabled = function(self)
@@ -33,6 +46,10 @@ local debug = {
         end
     end,
 }
+
+---------------
+-- VARIABLES --
+---------------
 
 mod.promise_sprint = false
 mod.pressed_forward = false
@@ -50,6 +67,10 @@ local ALLOWED_CHARACTER_STATE = {
     jumping        = true,
     falling        = true,
 }
+
+-----------------------
+-- PROMISE FUNCTIONS --
+-----------------------
 
 local function setPromise(from)
     if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
