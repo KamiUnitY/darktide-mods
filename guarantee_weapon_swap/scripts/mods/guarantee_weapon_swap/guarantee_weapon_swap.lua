@@ -22,6 +22,7 @@ end
 
 mod.on_all_mods_loaded = function()
     -- WATCHER
+    -- modding_tools:watch("promise_exist",mod,"promise_exist")
     -- modding_tools:watch("character_state",mod,"character_state")
 end
 
@@ -53,6 +54,8 @@ local current_slot = ""
 local previous_slot = ""
 
 mod.character_state = ""
+
+mod.promise_exist = false
 
 mod.promises = {
     quick            = false,
@@ -110,12 +113,24 @@ local ALLOWED_CHARACTER_STATE = {
 
 local function setPromise(action_name)
     mod.promises[PROMISE_ACTION_MAP[action_name]] = true
+    mod.promise_exist = true
+    debug:print("set " .. PROMISE_ACTION_MAP[action_name])
+end
+
+local function clearPromise(promise)
+    mod.promises[promise] = false
+    mod.promise_exist = false
+    debug:print("clear " .. promise)
 end
 
 local function clearAllPromises()
-    for key in pairs(mod.promises) do
-        mod.promises[key] = false
+    if mod.promise_exist then
+        for key in pairs(mod.promises) do
+            mod.promises[key] = false
+        end
     end
+    mod.promise_exist = false
+
 end
 
 local function isPromised(action)
@@ -132,8 +147,8 @@ end
 -- CLEAR PROMISE ON SUCCESSFULLY CHANGE WEAPON
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
-    mod.promises.quick = false
-    mod.promises[PROMISE_SLOT_MAP[slot_name] or ""] = false
+    clearPromise("quick")
+    clearPromise(PROMISE_SLOT_MAP[slot_name] or "")
 end)
 
 -- CLEAR PROMISE ON FAILING TO WIELD GRENADE
@@ -142,11 +157,11 @@ mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_n
     local out = func(self, slot_name, previous_check)
     if slot_name == "slot_grenade_ability" then
         if out ~= true then
-            mod.promises.grenade = false
+            clearPromise("grenade")
             return out
         end
         if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
-            mod.promises.grenade = false
+            clearPromise("grenade")
             return out
         end
     end
@@ -173,14 +188,14 @@ end)
 -- CLEARING PROMISE FOR NOT AVAILABLE ITEMS
 
 mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
-    if self._player_weapons.slot_pocketable_small == nil then
-        mod.promises.pocketable_small = false
+    if mod.promises.pocketable_small and self._player_weapons.slot_pocketable_small == nil then
+        clearPromise("pocketable_small")
     end
-    if self._player_weapons.slot_pocketable == nil then
-        mod.promises.pocketable = false
+    if mod.promises.pocketable and self._player_weapons.slot_pocketable == nil then
+        clearPromise("pocketable")
     end
-    if self._player_weapons.slot_device == nil then
-        mod.promises.device = false
+    if mod.promises.device and self._player_weapons.slot_device == nil then
+        clearPromise("device")
     end
 end)
 
@@ -198,6 +213,9 @@ end)
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.character_state = self._state_current.name
+        if mod.promise_exist and not ALLOWED_CHARACTER_STATE[mod.character_state] then
+            clearAllPromises()
+        end
     end
 end)
 
