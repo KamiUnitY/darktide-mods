@@ -49,7 +49,6 @@ local debug = {
 ---------------
 
 local grenade_ability = ""
-local remaining_grenade_charges = 0
 
 local current_slot = ""
 local previous_slot = ""
