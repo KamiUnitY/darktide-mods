@@ -99,6 +99,8 @@ end)
 -- ON EVERY FRAME --
 --------------------
 
+-- FUNCTION FOR CLEARING PROMISE ON WEAPON ACTION
+
 local function check_weapon_want_to_stop(keywords)
     local has = {}
     for _, keyword in ipairs(keywords) do
@@ -109,6 +111,8 @@ local function check_weapon_want_to_stop(keywords)
     local want_to_stop = (melee and not has["combat_knife"]) or (ranged and has["heavystubber"])
     return want_to_stop
 end
+
+-- CLEARING PROMISE ON WEAPON ACTION
 
 mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, self, ...)
     local out = func(self, ...)
@@ -124,6 +128,8 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
     end
     return out
 end)
+
+-- REALTIME CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then

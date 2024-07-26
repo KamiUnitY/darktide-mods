@@ -126,7 +126,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
     end
 end)
 
--- HANDLE PROMISE ON HOLDING ABILITY
+-- VARIABLES FOR HANDLE PROMISE ON HOLDING ABILITY
 
 local AIM_CANCEL_NORMAL      = "hold_input_released"
 local AIM_CANCEL_WITH_SPRINT = "started_sprint"
@@ -144,12 +144,16 @@ local IS_AIM_DASH = {
 
 local PREVENT_CANCEL_DURATION = 0.3
 
+-- HANDLE PROMISE ON START HOLDING ABILITY
+
 mod:hook_safe("ActionBase","start", function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
         clearPromise("ability_base_start")
         if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
     end
 end)
+
+-- HANDLE PROMISE ON FINISH HOLDING ABILITY
 
 mod:hook_safe("ActionBase","finish", function(self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
@@ -179,6 +183,8 @@ end)
 -- ON EVERY FRAME --
 --------------------
 
+-- REALTIME REMAINING ABILITY CHARGE VARIABLE & CLEAR PROMISE ON EMPTY CHARGE
+
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
     local out = func(self, ability_type)
     remaining_ability_charges = out
@@ -188,6 +194,8 @@ mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(fun
     return out
 end)
 
+-- REALTIME WEAPON TEMPLATE VARIABLE & CLEAR PROMISE ON UNARMED AND WIELD ABILITY
+
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     local wielded_slot = inventory_component.wielded_slot
     if wielded_slot ~= nil and wielded_slot ~= current_slot then
@@ -196,19 +204,25 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
             weapon_template = weapons[wielded_slot].weapon_template.name
         end
         if wielded_slot == "slot_combat_ability" then
-            return clearPromise("on_slot_combat_ability")
+            clearPromise("on_slot_combat_ability")
+            return
         end
         if wielded_slot == "slot_unarmed" then
-            return clearPromise("on_slot_unarmed")
+            clearPromise("on_slot_unarmed")
+            return
         end
     end
 end)
+
+-- REALTIME COMBAT ABILITY VARIABLE
 
 mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function(self)
     if self._equipped_abilities.combat_ability ~= nil then
         combat_ability = self._equipped_abilities.combat_ability.name
     end
 end)
+
+-- REALTIME CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
