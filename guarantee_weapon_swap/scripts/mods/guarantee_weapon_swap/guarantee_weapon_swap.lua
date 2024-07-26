@@ -108,10 +108,14 @@ end
 -- ON TRIGGER --
 ----------------
 
+-- CLEAR PROMISE ON SUCCESSFULLY CHANGE WEAPON
+
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     mod.promises.quick = false
     mod.promises[PROMISE_SLOT_MAP[slot_name] or ""] = false
 end)
+
+-- CLEAR PROMISE ON FAILING TO WIELD GRENADE
 
 mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_name, previous_check)
     local out = func(self, slot_name, previous_check)
@@ -132,6 +136,8 @@ end)
 -- ON EVERY FRAME --
 --------------------
 
+-- REAL TIME SLOT VARIABLE
+
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     local wielded_slot = inventory_component.wielded_slot
     if wielded_slot ~= nil and wielded_slot ~= current_slot then
@@ -142,6 +148,8 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
         end
     end
 end)
+
+-- CLEARING PROMISE FOR NOT AVAILABLE WEAPON
 
 mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
     if self._player_weapons.slot_pocketable_small == nil then
@@ -155,12 +163,16 @@ mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, e
     end
 end)
 
+-- REALTIME GRENADE ABILITY VARIABLE
+
 mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
     local _grenade_ability = self._equipped_abilities.grenade_ability
     if self._player.viewport_name == "player1" and _grenade_ability ~= nil then
         grenade_ability = _grenade_ability.name
     end
 end)
+
+-- REALTIME CHARACTER STATE VARIABLE
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
