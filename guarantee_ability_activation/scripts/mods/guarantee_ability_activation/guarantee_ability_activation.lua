@@ -208,9 +208,11 @@ end)
 
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
     local out = func(self, ability_type)
-    remaining_ability_charges = out
-    if ability_type == "combat_ability" and remaining_ability_charges == 0 then
-        clearPromise("empty_ability_charges")
+    if remaining_ability_charges ~= out then
+        remaining_ability_charges = out
+        if ability_type == "combat_ability" and remaining_ability_charges == 0 then
+            clearPromise("empty_ability_charges")
+        end
     end
     return out
 end)
@@ -248,7 +250,7 @@ end)
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.character_state = self._state_current.name
-        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+        if mod.promise_ability and not ALLOWED_CHARACTER_STATE[mod.character_state] then
             clearPromise("UNALLOWED_CHARACTER_STATE")
         end
     end
