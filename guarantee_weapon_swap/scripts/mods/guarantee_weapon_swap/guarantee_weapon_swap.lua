@@ -111,16 +111,14 @@ local ALLOWED_CHARACTER_STATE = {
 -- PROMISE FUNCTIONS --
 -----------------------
 
-local function setPromise(action_name)
-    mod.promises[PROMISE_ACTION_MAP[action_name]] = true
+local function setPromise(action)
+    mod.promises[action] = true
     mod.promise_exist = true
-    debug:print("set " .. PROMISE_ACTION_MAP[action_name])
 end
 
-local function clearPromise(promise)
-    mod.promises[promise] = false
+local function clearPromise(action)
+    mod.promises[action] = false
     mod.promise_exist = false
-    debug:print("clear " .. promise)
 end
 
 local function clearAllPromises()
@@ -235,7 +233,7 @@ local _input_hook = function(func, self, action_name)
                     or grenade_ability ~= "zealot_throwing_knives"
                     or (mod.settings["enable_zealot_throwing_knives"] and current_slot ~= "slot_luggable")
                 then
-                    setPromise(action_name)
+                    setPromise(PROMISE_ACTION_MAP[action_name])
                 end
             end
         end
