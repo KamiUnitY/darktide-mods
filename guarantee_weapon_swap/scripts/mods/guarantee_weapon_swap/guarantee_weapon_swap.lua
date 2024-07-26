@@ -173,7 +173,7 @@ end)
 -- ON EVERY FRAME --
 --------------------
 
--- REAL TIME SLOT VARIABLE
+-- REALTIME SLOT VARIABLE
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     local wielded_slot = inventory_component.wielded_slot
