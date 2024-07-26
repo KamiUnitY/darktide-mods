@@ -170,7 +170,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
     end
 end)
 
--- CLEARING PROMISE FOR NOT AVAILABLE WEAPON
+-- CLEARING PROMISE FOR NOT AVAILABLE ITEMS
 
 mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
     if self._player_weapons.slot_pocketable_small == nil then
