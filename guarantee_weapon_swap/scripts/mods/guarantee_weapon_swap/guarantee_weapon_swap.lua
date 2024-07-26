@@ -149,7 +149,7 @@ end
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     clearPromise("quick")
-    clearPromise(PROMISE_SLOT_MAP[slot_name] or "")
+    clearPromise(PROMISE_SLOT_MAP[slot_name])
 end)
 
 -- CLEAR PROMISE ON FAILING TO WIELD GRENADE
