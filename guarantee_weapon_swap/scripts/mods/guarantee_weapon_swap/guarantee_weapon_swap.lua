@@ -209,7 +209,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit
     end
 end)
 
--- REALTIME CHARACTER STATE VARIABLE
+-- REALTIME CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
