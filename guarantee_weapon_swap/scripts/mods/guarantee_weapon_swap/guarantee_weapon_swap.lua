@@ -244,7 +244,6 @@ local _input_hook = function(func, self, action_name)
 
     if PROMISE_ACTION_MAP[action_name] then
         if pressed then
-            debug:print(grenade_ability)
             clearAllPromises()
             if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
                 if action_name ~= "grenade_ability_pressed"
