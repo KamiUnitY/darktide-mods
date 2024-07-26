@@ -112,13 +112,17 @@ local ALLOWED_CHARACTER_STATE = {
 -----------------------
 
 local function setPromise(action)
-    mod.promises[action] = true
-    mod.promise_exist = true
+    if not mod.promises[action] then
+        mod.promises[action] = true
+        mod.promise_exist = true
+    end
 end
 
 local function clearPromise(action)
-    mod.promises[action] = false
-    mod.promise_exist = false
+    if mod.promises[action] then
+        mod.promises[action] = false
+        mod.promise_exist = false
+    end
 end
 
 local function clearAllPromises()
@@ -126,9 +130,8 @@ local function clearAllPromises()
         for key in pairs(mod.promises) do
             mod.promises[key] = false
         end
+        mod.promise_exist = false
     end
-    mod.promise_exist = false
-
 end
 
 local function isPromised(action)
