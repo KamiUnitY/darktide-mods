@@ -227,7 +227,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
             weapon_template = weapons[wielded_slot].weapon_template.name
         end
         if wielded_slot == "slot_combat_ability" or wielded_slot == "slot_unarmed" then
-            clearPromise("On " .. wielded_slot)
+            clearPromise("on " .. wielded_slot)
             return
         end
     end
