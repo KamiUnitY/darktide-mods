@@ -167,7 +167,7 @@ local PREVENT_CANCEL_DURATION = 0.3
 
 -- HANDLE PROMISE ON START HOLDING ABILITY
 
-mod:hook_safe("ActionBase","start", function(self, action_settings, t, time_scale, action_start_params)
+mod:hook_safe("ActionBase", "start", function(self, action_settings, t, time_scale, action_start_params)
     if action_settings.ability_type == "combat_ability" then
         clearPromise("ability_base_start")
         if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
@@ -176,7 +176,7 @@ end)
 
 -- HANDLE PROMISE ON FINISH HOLDING ABILITY
 
-mod:hook_safe("ActionBase","finish", function(self, reason, data, t, time_in_action)
+mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_action)
     local action_settings = self._action_settings
     if action_settings and action_settings.ability_type == "combat_ability" then
         if IS_AIM_CANCEL[reason] then

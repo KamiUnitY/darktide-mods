@@ -154,7 +154,7 @@ end)
 
 -- CLEAR PROMISE ON FAILING TO WIELD GRENADE
 
-mod:hook("PlayerUnitAbilityExtension", "can_wield", function (func, self, slot_name, previous_check)
+mod:hook("PlayerUnitAbilityExtension", "can_wield", function(func, self, slot_name, previous_check)
     local out = func(self, slot_name, previous_check)
     if slot_name == "slot_grenade_ability" then
         if out ~= true then
@@ -188,7 +188,7 @@ end)
 
 -- CLEARING PROMISE FOR NOT AVAILABLE ITEMS
 
-mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function (self, extensions, ui_renderer)
+mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function(self, extensions, ui_renderer)
     if mod.promises.pocketable_small and self._player_weapons.slot_pocketable_small == nil then
         clearPromise("pocketable_small")
     end
@@ -202,10 +202,10 @@ end)
 
 -- REALTIME GRENADE ABILITY VARIABLE
 
-mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function (self, unit, dt, t, fixed_frame)
+mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
     if self._player.viewport_name == "player1" then
         local _grenade_ability = self._equipped_abilities.grenade_ability
-        if _grenade_ability ~= nil  then
+        if _grenade_ability ~= nil then
             grenade_ability = _grenade_ability.name
         end
     end
@@ -213,7 +213,7 @@ end)
 
 -- REALTIME CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
-mod:hook_safe("CharacterStateMachine", "fixed_update", function (self, unit, dt, t, frame, ...)
+mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.character_state = self._state_current.name
         if mod.promise_exist and not ALLOWED_CHARACTER_STATE[mod.character_state] then
