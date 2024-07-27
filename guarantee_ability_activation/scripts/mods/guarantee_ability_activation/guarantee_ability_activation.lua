@@ -48,7 +48,7 @@ local debug = {
 }
 
 ---------------
--- VARIABLES --
+-- CONSTANTS --
 ---------------
 
 local ALLOWED_CHARACTER_STATE = {
@@ -78,6 +78,10 @@ local IS_DASH_ABILITY = {
 
 local DELAY_ABILITY = 0.3
 
+---------------
+-- VARIABLES --
+---------------
+
 mod.promise_ability = false
 
 mod.character_state = ""
@@ -90,6 +94,10 @@ local combat_ability = ""
 local weapon_template = ""
 
 local last_set_promise = os.clock()
+
+---------------
+-- UTILITIES --
+---------------
 
 local elapsed = function(time)
     return os.clock() - time
@@ -147,7 +155,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
     end
 end)
 
--- VARIABLES FOR HANDLE PROMISE ON HOLDING ABILITY
+-- CONSTATNS FOR HANDLE PROMISE ON HOLDING ABILITY
 
 local AIM_CANCEL_NORMAL      = "hold_input_released"
 local AIM_CANCEL_WITH_SPRINT = "started_sprint"

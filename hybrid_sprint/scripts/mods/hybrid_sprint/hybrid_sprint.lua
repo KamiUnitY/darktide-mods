@@ -48,13 +48,8 @@ local debug = {
 }
 
 ---------------
--- VARIABLES --
+-- CONSTANTS --
 ---------------
-
-mod.promise_sprint = false
-mod.pressed_forward = false
-
-mod.character_state = ""
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
@@ -67,6 +62,15 @@ local ALLOWED_CHARACTER_STATE = {
     jumping        = true,
     falling        = true,
 }
+
+---------------
+-- VARIABLES --
+---------------
+
+mod.promise_sprint = false
+mod.pressed_forward = false
+
+mod.character_state = ""
 
 -----------------------
 -- PROMISE FUNCTIONS --

@@ -45,27 +45,8 @@ local debug = {
 }
 
 ---------------
--- VARIABLES --
+-- CONSTANTS --
 ---------------
-
-local grenade_ability = ""
-
-local current_slot = ""
-local previous_slot = ""
-
-mod.character_state = ""
-
-mod.promise_exist = false
-
-mod.promises = {
-    quick            = false,
-    primary          = false,
-    secondary        = false,
-    pocketable       = false,
-    pocketable_small = false,
-    device           = false,
-    grenade          = false,
-}
 
 local PROMISE_SLOT_MAP = {
     slot_primary          = "primary",
@@ -105,6 +86,29 @@ local ALLOWED_CHARACTER_STATE = {
     walking        = true,
     jumping        = true,
     falling        = true,
+}
+
+---------------
+-- VARIABLES --
+---------------
+
+local grenade_ability = ""
+
+local current_slot = ""
+local previous_slot = ""
+
+mod.character_state = ""
+
+mod.promise_exist = false
+
+mod.promises = {
+    quick            = false,
+    primary          = false,
+    secondary        = false,
+    pocketable       = false,
+    pocketable_small = false,
+    device           = false,
+    grenade          = false,
 }
 
 -----------------------
