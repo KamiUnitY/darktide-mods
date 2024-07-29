@@ -93,14 +93,18 @@ local remaining_ability_charges = 0
 local combat_ability = ""
 local weapon_template = ""
 
-local last_set_promise = os.clock()
+local last_set_promise = 0
 
 ---------------
 -- UTILITIES --
 ---------------
 
+local time_now = function ()
+    return Managers.time and Managers.time:time("main")
+end
+
 local elapsed = function(time)
-    return os.clock() - time
+    return time_now() - time
 end
 
 -----------------------
@@ -115,7 +119,7 @@ local function setPromise(from)
             and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
         then
             mod.promise_ability = true
-            last_set_promise = os.clock()
+            last_set_promise = time_now()
             if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
         end
     end
