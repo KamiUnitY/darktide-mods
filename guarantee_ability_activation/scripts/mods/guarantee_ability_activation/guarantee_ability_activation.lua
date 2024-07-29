@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.2.1
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.2.2
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -153,9 +153,11 @@ end
 -- CLEAR PROMISE ON ABILITY USED
 
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
-    if ability_type == "combat_ability" then
-        clearPromise("use_ability_charge")
-        if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
+    if self._player.viewport_name == "player1" then
+        if ability_type == "combat_ability" then
+            clearPromise("use_ability_charge")
+            if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
+        end
     end
 end)
 
@@ -180,33 +182,37 @@ local PREVENT_CANCEL_DURATION = 0.3
 -- HANDLE PROMISE ON START HOLDING ABILITY
 
 mod:hook_safe("ActionBase", "start", function(self, action_settings, t, time_scale, action_start_params)
-    if action_settings.ability_type == "combat_ability" then
-        clearPromise("ability_base_start")
-        if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
+    if self._player.viewport_name == "player1" then
+        if action_settings.ability_type == "combat_ability" then
+            clearPromise("ability_base_start")
+            if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
+        end
     end
 end)
 
 -- HANDLE PROMISE ON FINISH HOLDING ABILITY
 
 mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_action)
-    local action_settings = self._action_settings
-    if action_settings and action_settings.ability_type == "combat_ability" then
-        if IS_AIM_CANCEL[reason] then
-            if current_slot ~= "slot_unarmed" then
-                if reason == AIM_CANCEL_WITH_SPRINT and mod.settings["enable_prevent_cancel_on_start_sprinting"] then
-                    setPromise("AIM_CANCEL_WITH_SPRINT")
+    if self._player.viewport_name == "player1" then
+        local action_settings = self._action_settings
+        if action_settings and action_settings.ability_type == "combat_ability" then
+            if IS_AIM_CANCEL[reason] then
+                if current_slot ~= "slot_unarmed" then
+                    if reason == AIM_CANCEL_WITH_SPRINT and mod.settings["enable_prevent_cancel_on_start_sprinting"] then
+                        setPromise("AIM_CANCEL_WITH_SPRINT")
+                        return
+                    end
+                    if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
+                        setPromise("AIM_CANCEL_NORMAL")
+                        return
+                    end
+                end
+                if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
+            else
+                if IS_AIM_DASH[action_settings.kind] then
+                    setPromise("promise_dash")
                     return
                 end
-                if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
-                    setPromise("AIM_CANCEL_NORMAL")
-                    return
-                end
-            end
-            if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
-        else
-            if IS_AIM_DASH[action_settings.kind] then
-                setPromise("promise_dash")
-                return
             end
         end
     end
@@ -220,10 +226,12 @@ end)
 
 mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
     local out = func(self, ability_type)
-    if ability_type == "combat_ability" then
-        remaining_ability_charges = out
-        if mod.promise_ability and remaining_ability_charges == 0 then
-            clearPromise("empty_ability_charges")
+    if self._player.viewport_name == "player1" then
+        if ability_type == "combat_ability" then
+            remaining_ability_charges = out
+            if mod.promise_ability and remaining_ability_charges == 0 then
+                clearPromise("empty_ability_charges")
+            end
         end
     end
     return out
@@ -232,15 +240,17 @@ end)
 -- REALTIME WEAPON TEMPLATE VARIABLE & CLEAR PROMISE ON UNARMED AND WIELD ABILITY
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-    local wielded_slot = inventory_component.wielded_slot
-    if wielded_slot ~= nil and wielded_slot ~= current_slot then
-        current_slot = wielded_slot
-        if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
-            weapon_template = weapons[wielded_slot].weapon_template.name
-        end
-        if wielded_slot == "slot_combat_ability" or wielded_slot == "slot_unarmed" then
-            clearPromise("on " .. wielded_slot)
-            return
+    if self._player.viewport_name == "player1" then
+        local wielded_slot = inventory_component.wielded_slot
+        if wielded_slot ~= nil and wielded_slot ~= current_slot then
+            current_slot = wielded_slot
+            if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
+                weapon_template = weapons[wielded_slot].weapon_template.name
+            end
+            if wielded_slot == "slot_combat_ability" or wielded_slot == "slot_unarmed" then
+                clearPromise("on " .. wielded_slot)
+                return
+            end
         end
     end
 end)
@@ -248,8 +258,10 @@ end)
 -- REALTIME COMBAT ABILITY VARIABLE
 
 mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function(self)
-    if self._equipped_abilities.combat_ability ~= nil then
-        combat_ability = self._equipped_abilities.combat_ability.name
+    if self._player.viewport_name == "player1" then
+        if self._equipped_abilities.combat_ability ~= nil then
+            combat_ability = self._equipped_abilities.combat_ability.name
+        end
     end
 end)
 

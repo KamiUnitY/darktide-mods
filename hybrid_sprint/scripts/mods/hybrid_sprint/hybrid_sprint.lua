@@ -1,4 +1,4 @@
--- Hybrid Sprint by KamiUnitY. Ver. 1.1.1
+-- Hybrid Sprint by KamiUnitY. Ver. 1.1.2
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
@@ -141,14 +141,16 @@ end
 
 mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, self, ...)
     local out = func(self, ...)
-    if out == "walking" then
-        if mod.settings["enable_keep_sprint_after_weapon_actions"] then
-            local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
-            if check_weapon_want_to_stop(weapon_template.keywords) then
+    if self._player.viewport_name == "player1" then
+        if out == "walking" then
+            if mod.settings["enable_keep_sprint_after_weapon_actions"] then
+                local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
+                if check_weapon_want_to_stop(weapon_template.keywords) then
+                    clearPromise("wants_to_stop")
+                end
+            else
                 clearPromise("wants_to_stop")
             end
-        else
-            clearPromise("wants_to_stop")
         end
     end
     return out

@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.2.1
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.2.2
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -152,22 +152,26 @@ end
 -- CLEAR PROMISE ON SUCCESSFULLY CHANGE WEAPON
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
-    clearPromise("quick")
-    clearPromise(PROMISE_SLOT_MAP[slot_name])
+    if self._player.viewport_name == "player1" then
+        clearPromise("quick")
+        clearPromise(PROMISE_SLOT_MAP[slot_name])
+    end
 end)
 
 -- CLEAR PROMISE ON FAILING TO WIELD GRENADE
 
 mod:hook("PlayerUnitAbilityExtension", "can_wield", function(func, self, slot_name, previous_check)
     local out = func(self, slot_name, previous_check)
-    if slot_name == "slot_grenade_ability" then
-        if out ~= true then
-            clearPromise("grenade")
-            return out
-        end
-        if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
-            clearPromise("grenade")
-            return out
+    if self._player.viewport_name == "player1" then
+        if slot_name == "slot_grenade_ability" then
+            if out ~= true then
+                clearPromise("grenade")
+                return out
+            end
+            if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
+                clearPromise("grenade")
+                return out
+            end
         end
     end
     return out
@@ -180,12 +184,14 @@ end)
 -- REALTIME SLOT VARIABLE
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-    local wielded_slot = inventory_component.wielded_slot
-    if wielded_slot ~= nil and wielded_slot ~= current_slot then
-        previous_slot = current_slot
-        current_slot = wielded_slot
-        if current_slot ~= "" and previous_slot ~= "" then
-            if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
+    if self._player.viewport_name == "player1" then
+        local wielded_slot = inventory_component.wielded_slot
+        if wielded_slot ~= nil and wielded_slot ~= current_slot then
+            previous_slot = current_slot
+            current_slot = wielded_slot
+            if current_slot ~= "" and previous_slot ~= "" then
+                if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
+            end
         end
     end
 end)
