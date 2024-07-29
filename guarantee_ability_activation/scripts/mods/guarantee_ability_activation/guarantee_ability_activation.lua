@@ -76,7 +76,7 @@ local IS_DASH_ABILITY = {
     ogryn_charge_increased_distance      = true,
 }
 
-local DELAY_ABILITY = 0.3
+local DELAY_ABILITY = 0.2
 
 ---------------
 -- VARIABLES --
