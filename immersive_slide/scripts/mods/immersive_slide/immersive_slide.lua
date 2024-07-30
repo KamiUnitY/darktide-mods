@@ -17,7 +17,6 @@ local debug = {
 
 mod.on_all_mods_loaded = function()
     -- WATCHER
-    -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
     modding_tools:watch("look_direction", mod, "look_direction")
     modding_tools:watch("roll_offset", mod, "roll_offset")
 end
@@ -25,7 +24,7 @@ end
 mod.roll_offset = 0
 mod.move_direction = nil
 mod.look_direction = nil
-mod.roll_offset_target = 0  -- Target roll offset for smooth transitions
+mod.roll_offset_target = 0 -- Target roll offset for smooth transitions
 
 local DAMPING_SLIDE = 10
 local DAMPING_RECOVER = 5
@@ -36,7 +35,7 @@ mod.tilt_factor = 0.15
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
 
-mod:hook("PlayerCharacterStateDodging", "_check_transition", function (func, self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
+mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     local out = func(self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     if self._player.viewport_name == "player1" then
         if out == "sliding" then
@@ -52,7 +51,7 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function (func, sel
     return out
 end)
 
-mod:hook("PlayerCharacterStateSprinting", "_check_transition", function (func, self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
+mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     local out = func(self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     if self._player.viewport_name == "player1" then
         if out == "sliding" then
@@ -97,7 +96,7 @@ local calculate_roll_offset = function(look_direction_box, move_direction_box)
     return roll_offset
 end
 
-mod:hook("PlayerCharacterStateSliding", "_check_transition", function (func, self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
+mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
     local out = func(self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
     if self._player.viewport_name == "player1" then
         if move_direction_box and look_direction_box then
@@ -114,7 +113,7 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, 
     mod.roll_offset_target = 0
 end)
 
-mod:hook("CameraManager", "update", function (func, self, dt, t, viewport_name, yaw, pitch, roll)
+mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
     if Managers and Managers.player then
         local unit = Managers.player:local_player(1).player_unit
         if unit then
@@ -127,9 +126,10 @@ mod:hook("CameraManager", "update", function (func, self, dt, t, viewport_name, 
         end
     end
 
-    -- Smoothly roll_offset
+    -- Smoothly interpolate roll_offset
     mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
-
+    mod.roll_offset = 0.15
+    -- Apply roll_offset to the roll component only
     local modified_roll = roll + mod.roll_offset
     local out = func(self, dt, t, viewport_name, yaw, pitch, modified_roll)
     return out
