@@ -17,12 +17,10 @@ local debug = {
 
 mod.on_all_mods_loaded = function()
     -- WATCHER
+    modding_tools:watch("look_rotation", mod, "look_rotation")
     modding_tools:watch("full_direction", mod, "full_direction")
     modding_tools:watch("look_direction", mod, "look_direction")
     modding_tools:watch("roll_offset", mod, "roll_offset")
-    modding_tools:watch("yaw", mod, "yaw")
-    modding_tools:watch("pitch", mod, "pitch")
-    modding_tools:watch("roll", mod, "roll")
 end
 
 mod.roll_offset = 0
@@ -118,26 +116,16 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, 
 end)
 
 mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
-    local out = func(self, dt, t, viewport_name, yaw, pitch, roll)
-    if Managers and Managers.player then
-        local unit = Managers.player:local_player(1).player_unit
-        if unit then
-            local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-            local first_person_component = unit_data:read_component("first_person")
-            mod.look_rotation = first_person_component.rotation
-            mod.look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(mod.look_rotation)))
-            look_direction_box:store(mod.look_direction)
+    mod.look_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
+    mod.look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(mod.look_rotation)))
+    look_direction_box:store(mod.look_direction)
 
-            mod.full_direction = Vector3.normalize(Quaternion.forward(mod.look_rotation))
+    mod.full_direction = Vector3.normalize(Quaternion.forward(mod.look_rotation))
 
-            -- mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
-            mod.roll_offset = 0.15
+    mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
+    -- mod.roll_offset = 0.15
 
-            local modified_roll = roll + mod.roll_offset
+    roll = roll + mod.roll_offset
 
-            out = func(self, dt, t, viewport_name, yaw, pitch, modified_roll)
-            return out
-        end
-    end
-    return out
+    return func(self, dt, t, viewport_name, yaw, pitch, roll)
 end)
