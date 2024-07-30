@@ -3,7 +3,11 @@
         "get_mod",
         "ScriptUnit",
         "Managers",
-        "CLASS"
+        "CLASS",
+        "CameraManager",
+        "Quaternion",
+        "Vector3",
+        "Vector3Box"
     ],
     "explorer.excludeGitIgnore": true
 }
