@@ -105,17 +105,19 @@ end
 
 -- SET ROLL OFFSET WHILE DODGING
 mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, unit, dt, time_in_dodge, has_slide_input)
-	local dodge_character_state_component = self._dodge_character_state_component
-	local unit_rotation = self._first_person_component.rotation
-	local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
-	local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-    local inverted_move_direction = move_direction * -1
-    move_direction_box:store(inverted_move_direction)
-    if modding_tools then debug:print_mod("DODGE!!!  " .. tostring(move_direction)) end
-    if move_direction_box and look_direction_box then
-        -- Calculate roll_offset using the stored vectors
-        mod.roll_offset_damping = DAMPING_MOVE
-        mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
+    if self._player.viewport_name == "player1" then
+        local dodge_character_state_component = self._dodge_character_state_component
+        local unit_rotation = self._first_person_component.rotation
+        local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
+        local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
+        local inverted_move_direction = move_direction * -1
+        move_direction_box:store(inverted_move_direction)
+        if modding_tools then debug:print_mod("DODGE!!!  " .. tostring(move_direction)) end
+        if move_direction_box and look_direction_box then
+            -- Calculate roll_offset using the stored vectors
+            mod.roll_offset_damping = DAMPING_MOVE
+            mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
+        end
     end
 end)
 
