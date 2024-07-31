@@ -17,10 +17,9 @@ local debug = {
 
 mod.on_all_mods_loaded = function()
     -- WATCHER
-    modding_tools:watch("look_rotation", mod, "look_rotation")
-    modding_tools:watch("full_direction", mod, "full_direction")
-    modding_tools:watch("look_direction", mod, "look_direction")
-    modding_tools:watch("roll_offset", mod, "roll_offset")
+    -- modding_tools:watch("look_rotation", mod, "look_rotation")
+    -- modding_tools:watch("look_direction", mod, "look_direction")
+    -- modding_tools:watch("roll_offset", mod, "roll_offset")
 end
 
 mod.roll_offset = 0
@@ -116,25 +115,27 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, 
 end)
 
 mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
-    -- Create the initial rotation quaternion without roll offset
-    local initial_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
+    if viewport_name == "player1" then
+        -- Create the initial rotation quaternion without roll offset
+        local initial_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
 
-    -- Calculate the look direction and full direction without roll offset
-    mod.look_rotation = initial_rotation
-    mod.look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(mod.look_rotation)))
-    look_direction_box:store(mod.look_direction)
-    mod.full_direction = Vector3.normalize(Quaternion.forward(mod.look_rotation))
+        -- Calculate the look direction and full direction without roll offset
+        mod.look_rotation = initial_rotation
+        mod.look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(mod.look_rotation)))
+        look_direction_box:store(mod.look_direction)
 
-    -- Update the roll offset
-    mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
+        -- Update the roll offset
+        mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
 
-    -- Apply the roll offset to the rotation
-    local roll_offset_rotation = Quaternion.from_yaw_pitch_roll(0, 0, mod.roll_offset)
-    local final_rotation = Quaternion.multiply(initial_rotation, roll_offset_rotation)
+        -- Apply the roll offset to the rotation
+        local roll_offset_rotation = Quaternion.from_yaw_pitch_roll(0, 0, mod.roll_offset)
+        local final_rotation = Quaternion.multiply(initial_rotation, roll_offset_rotation)
 
-    -- Extract the adjusted yaw, pitch, and roll from the final rotation quaternion
-    local adjusted_yaw, adjusted_pitch, adjusted_roll = Quaternion.to_yaw_pitch_roll(final_rotation)
+        -- Extract the adjusted yaw, pitch, and roll from the final rotation quaternion
+        local adjusted_yaw, adjusted_pitch, adjusted_roll = Quaternion.to_yaw_pitch_roll(final_rotation)
 
-    -- Return the adjusted values
-    return func(self, dt, t, viewport_name, adjusted_yaw, adjusted_pitch, adjusted_roll)
+        -- Return the adjusted values
+        return func(self, dt, t, viewport_name, adjusted_yaw, adjusted_pitch, adjusted_roll)
+    end
+    return func(self, dt, t, viewport_name, yaw, pitch, roll)
 end)
