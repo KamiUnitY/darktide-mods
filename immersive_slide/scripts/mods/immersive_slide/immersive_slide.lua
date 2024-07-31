@@ -29,7 +29,7 @@ mod.look_direction = nil
 mod.roll_offset_target = 0 -- Target roll offset for smooth transitions
 
 local DAMPING_MOVE = 10
-local DAMPING_RECOVER = 5
+local DAMPING_RECOVER = 8
 mod.roll_offset_damping = DAMPING_MOVE -- Damping factor
 
 mod.tilt_factor_slide = 0.16
