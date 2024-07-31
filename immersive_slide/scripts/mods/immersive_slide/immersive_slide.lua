@@ -69,7 +69,7 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
 	local unit_rotation = self._first_person_component.rotation
 	local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
 	local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-    local inverted_move_direction = Vector3(-move_direction.x, -move_direction.y, -move_direction.z)
+    local inverted_move_direction = move_direction * -1
     move_direction_box:store(inverted_move_direction)
     debug:print_mod("DODGE!!!  " .. tostring(move_direction))
     if move_direction_box and look_direction_box then
