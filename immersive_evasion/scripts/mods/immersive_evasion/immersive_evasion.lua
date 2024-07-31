@@ -164,8 +164,7 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
 end)
 
 -- SET ROLL OFFSET WHILE SLIDING
-mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
-    local out = func(self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
+mod:hook_safe("PlayerCharacterStateSliding", "_check_transition", function(self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
     if self._player.viewport_name == "player1" then
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
@@ -173,7 +172,6 @@ mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self
             mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_slide"])
         end
     end
-    return out
 end)
 
 -- CLEAR ROLL OFFSET WHEN EXITING SLIDE
