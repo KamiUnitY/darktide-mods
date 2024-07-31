@@ -116,16 +116,25 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, 
 end)
 
 mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
-    mod.look_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
+    -- Create the initial rotation quaternion without roll offset
+    local initial_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
+
+    -- Calculate the look direction and full direction without roll offset
+    mod.look_rotation = initial_rotation
     mod.look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(mod.look_rotation)))
     look_direction_box:store(mod.look_direction)
-
     mod.full_direction = Vector3.normalize(Quaternion.forward(mod.look_rotation))
 
+    -- Update the roll offset
     mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
-    -- mod.roll_offset = 0.15
 
-    roll = roll + mod.roll_offset
+    -- Apply the roll offset to the rotation
+    local roll_offset_rotation = Quaternion.from_yaw_pitch_roll(0, 0, mod.roll_offset)
+    local final_rotation = Quaternion.multiply(initial_rotation, roll_offset_rotation)
 
-    return func(self, dt, t, viewport_name, yaw, pitch, roll)
+    -- Extract the adjusted yaw, pitch, and roll from the final rotation quaternion
+    local adjusted_yaw, adjusted_pitch, adjusted_roll = Quaternion.to_yaw_pitch_roll(final_rotation)
+
+    -- Return the adjusted values
+    return func(self, dt, t, viewport_name, adjusted_yaw, adjusted_pitch, adjusted_roll)
 end)
