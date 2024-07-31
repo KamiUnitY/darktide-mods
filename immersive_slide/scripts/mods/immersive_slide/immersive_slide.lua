@@ -45,7 +45,7 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self
             local unit_rotation = self._first_person_component.rotation
             local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
             local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-            
+
             move_direction_box:store(move_direction)
             debug:print_mod("SLIDE!!!  " .. tostring(move_direction))
         end
@@ -76,11 +76,8 @@ local calculate_roll_offset = function(look_direction_box, move_direction_box)
     -- Calculate the perpendicular component
     local perpendicular_component = move_direction - forward_component
 
-    -- Calculate the magnitude of the perpendicular component
-    local magnitude = Vector3.length(perpendicular_component)
-
     -- Determine the roll offset based on the magnitude
-    local roll_offset = magnitude
+    local roll_offset = Vector3.length(perpendicular_component)
 
     -- Determine the direction of the tilt using the cross product
     local cross = Vector3.cross(look_direction, move_direction)
