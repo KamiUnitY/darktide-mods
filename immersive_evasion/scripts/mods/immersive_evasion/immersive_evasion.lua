@@ -1,3 +1,5 @@
+-- Immersive Evasion by KamiUnitY. Ver. 1.0.0
+
 local mod = get_mod("immersive_evasion")
 local modding_tools = get_mod("modding_tools")
 
@@ -50,7 +52,7 @@ local debug = {
 ---------------
 
 local DAMPING_MOVE = 10
-local DAMPING_RECOVER = 8
+local DAMPING_RECOVER = 7
 
 ---------------
 -- VARIABLES --
@@ -66,6 +68,10 @@ mod.look_direction = nil
 
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
+
+--------------------------------------
+-- ROLL OFFSET CALCULATION FUNCTION --
+--------------------------------------
 
 local calculate_roll_offset = function(tilt_factor)
     -- Unbox the vectors and normalize
@@ -93,6 +99,10 @@ local calculate_roll_offset = function(tilt_factor)
     return roll_offset
 end
 
+-------------------------
+-- DODGE RELATED HOOKS --
+-------------------------
+
 mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, unit, dt, time_in_dodge, has_slide_input)
 	local dodge_character_state_component = self._dodge_character_state_component
 	local unit_rotation = self._first_person_component.rotation
@@ -107,6 +117,17 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
         mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
     end
 end)
+
+mod:hook_safe("PlayerCharacterStateDodging", "on_exit", function(self, unit, t, next_state)
+    if self._player.viewport_name == "player1" then
+        mod.roll_offset_damping = DAMPING_RECOVER
+        mod.roll_offset_target = 0
+    end
+end)
+
+-------------------------
+-- SLIDE RELATED HOOKS --
+-------------------------
 
 mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     local out = func(self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
@@ -148,19 +169,16 @@ mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self
     return out
 end)
 
-mod:hook_safe("PlayerCharacterStateDodging", "on_exit", function(self, unit, t, next_state)
-    if self._player.viewport_name == "player1" then
-        mod.roll_offset_damping = DAMPING_RECOVER
-        mod.roll_offset_target = 0
-    end
-end)
-
 mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, next_state)
     if self._player.viewport_name == "player1" then
         mod.roll_offset_damping = DAMPING_RECOVER
         mod.roll_offset_target = 0
     end
 end)
+
+-----------------
+-- CAMERA HOOK --
+-----------------
 
 mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
     if viewport_name == "player1" and (mod.roll_offset ~= 0 or mod.roll_offset_target ~= 0) then
