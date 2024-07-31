@@ -20,6 +20,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("look_rotation", mod, "look_rotation")
     -- modding_tools:watch("look_direction", mod, "look_direction")
     -- modding_tools:watch("roll_offset", mod, "roll_offset")
+    -- modding_tools:watch("roll_offset_target", mod, "roll_offset_target")
 end
 
 mod.roll_offset = 0
@@ -111,7 +112,7 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, 
 end)
 
 mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
-    if viewport_name == "player1" then
+    if viewport_name == "player1" and (mod.roll_offset ~= 0 or mod.roll_offset_target ~= 0) then
         -- Create the initial rotation quaternion without roll offset
         local initial_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
 
@@ -120,8 +121,12 @@ mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, y
         mod.look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(mod.look_rotation)))
         look_direction_box:store(mod.look_direction)
 
-        -- Update the roll offset
+        -- Smoothly update the roll offset
+        local threshold = 0.001
         mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
+        if math.abs(mod.roll_offset_target - mod.roll_offset) < threshold then
+            mod.roll_offset = mod.roll_offset_target
+        end
 
         -- Apply the roll offset to the rotation
         local roll_offset_rotation = Quaternion.from_yaw_pitch_roll(0, 0, mod.roll_offset)
