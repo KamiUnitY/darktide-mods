@@ -37,6 +37,32 @@ mod.tilt_factor = 0.15
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
 
+local calculate_roll_offset = function(look_direction_box, move_direction_box)
+    -- Unbox the vectors and normalize
+    local look_direction = Vector3.normalize(look_direction_box:unbox())
+    local move_direction = Vector3.normalize(move_direction_box:unbox())
+
+    -- Project move_direction onto look_direction to get the forward component
+    local forward_component = Vector3.dot(move_direction, look_direction) * look_direction
+
+    -- Calculate the perpendicular component
+    local perpendicular_component = move_direction - forward_component
+
+    -- Determine the roll offset based on the magnitude
+    local roll_offset = Vector3.length(perpendicular_component)
+
+    -- Determine the direction of the tilt using the cross product
+    local cross = Vector3.cross(look_direction, move_direction)
+    if cross.z < 0 then
+        roll_offset = -roll_offset
+    end
+
+    -- Map the roll_offset to the range
+    roll_offset = roll_offset * mod.tilt_factor
+
+    return roll_offset
+end
+
 mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     local out = func(self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     if self._player.viewport_name == "player1" then
@@ -64,32 +90,6 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
     end
     return out
 end)
-
-local calculate_roll_offset = function(look_direction_box, move_direction_box)
-    -- Unbox the vectors and normalize
-    local look_direction = Vector3.normalize(look_direction_box:unbox())
-    local move_direction = Vector3.normalize(move_direction_box:unbox())
-
-    -- Project move_direction onto look_direction to get the forward component
-    local forward_component = Vector3.dot(move_direction, look_direction) * look_direction
-
-    -- Calculate the perpendicular component
-    local perpendicular_component = move_direction - forward_component
-
-    -- Determine the roll offset based on the magnitude
-    local roll_offset = Vector3.length(perpendicular_component)
-
-    -- Determine the direction of the tilt using the cross product
-    local cross = Vector3.cross(look_direction, move_direction)
-    if cross.z < 0 then
-        roll_offset = -roll_offset
-    end
-
-    -- Map the roll_offset to the range
-    roll_offset = roll_offset * mod.tilt_factor
-
-    return roll_offset
-end
 
 mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
     local out = func(self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
