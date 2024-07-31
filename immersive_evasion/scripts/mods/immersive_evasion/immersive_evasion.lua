@@ -103,6 +103,7 @@ end
 -- DODGE RELATED HOOKS --
 -------------------------
 
+-- SET ROLL OFFSET WHILE DODGING
 mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, unit, dt, time_in_dodge, has_slide_input)
 	local dodge_character_state_component = self._dodge_character_state_component
 	local unit_rotation = self._first_person_component.rotation
@@ -118,6 +119,7 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
     end
 end)
 
+-- CLEAR ROLL OFFSET WHEN EXITING DODGE
 mod:hook_safe("PlayerCharacterStateDodging", "on_exit", function(self, unit, t, next_state)
     if self._player.viewport_name == "player1" then
         mod.roll_offset_damping = DAMPING_RECOVER
@@ -129,6 +131,7 @@ end)
 -- SLIDE RELATED HOOKS --
 -------------------------
 
+-- STORE SLIDE DIRECTION AFTER DODGE
 mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     local out = func(self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     if self._player.viewport_name == "player1" then
@@ -137,7 +140,7 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self
             local unit_rotation = self._first_person_component.rotation
             local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
             local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-
+            -- Store the move_direction in the box
             move_direction_box:store(move_direction)
             if modding_tools then debug:print_mod("SLIDE!!!  " .. tostring(move_direction)) end
         end
@@ -145,6 +148,7 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self
     return out
 end)
 
+-- STORE SLIDE DIRECTION AFTER SPRINT
 mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     local out = func(self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     if self._player.viewport_name == "player1" then
@@ -157,6 +161,7 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
     return out
 end)
 
+-- SET ROLL OFFSET WHILE SLIDING
 mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
     local out = func(self, unit, t, next_state_params, input_source, is_crouching, commit_period_over, max_mass_hit, current_speed)
     if self._player.viewport_name == "player1" then
@@ -169,6 +174,7 @@ mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self
     return out
 end)
 
+-- CLEAR ROLL OFFSET WHEN EXITING SLIDE
 mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, next_state)
     if self._player.viewport_name == "player1" then
         mod.roll_offset_damping = DAMPING_RECOVER
