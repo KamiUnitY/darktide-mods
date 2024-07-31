@@ -1,4 +1,4 @@
-local mod = get_mod("immersive_slide")
+local mod = get_mod("immersive_evasion")
 
 return {
 	name = mod:localize("mod_name"),

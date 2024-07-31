@@ -1,4 +1,4 @@
-local mod = get_mod("immersive_slide")
+local mod = get_mod("immersive_evasion")
 local modding_tools = get_mod("modding_tools")
 
 --------------------------
