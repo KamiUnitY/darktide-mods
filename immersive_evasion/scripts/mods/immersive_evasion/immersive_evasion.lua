@@ -54,6 +54,8 @@ local debug = {
 local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 7
 
+local ROLL_OFFSET_THRESHOLD = 0.001
+
 ---------------
 -- VARIABLES --
 ---------------
@@ -197,9 +199,8 @@ mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, y
         look_direction_box:store(mod.look_direction)
 
         -- Smoothly update the roll offset
-        local threshold = 0.001
         mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
-        if math.abs(mod.roll_offset_target - mod.roll_offset) < threshold then
+        if math.abs(mod.roll_offset_target - mod.roll_offset) < ROLL_OFFSET_THRESHOLD then
             mod.roll_offset = mod.roll_offset_target
         end
 
