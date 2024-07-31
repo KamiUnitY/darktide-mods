@@ -28,16 +28,17 @@ mod.move_direction = nil
 mod.look_direction = nil
 mod.roll_offset_target = 0 -- Target roll offset for smooth transitions
 
-local DAMPING_SLIDE = 8
+local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 5
-mod.roll_offset_damping = DAMPING_SLIDE -- Damping factor
+mod.roll_offset_damping = DAMPING_MOVE -- Damping factor
 
-mod.tilt_factor = 0.15
+mod.tilt_factor = 0.16
+mod.tilt_factor_dodge = 0.06
 
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
 
-local calculate_roll_offset = function(look_direction_box, move_direction_box)
+local calculate_roll_offset = function(tilt_factor)
     -- Unbox the vectors and normalize
     local look_direction = Vector3.normalize(look_direction_box:unbox())
     local move_direction = Vector3.normalize(move_direction_box:unbox())
@@ -58,10 +59,25 @@ local calculate_roll_offset = function(look_direction_box, move_direction_box)
     end
 
     -- Map the roll_offset to the range
-    roll_offset = roll_offset * mod.tilt_factor
+    roll_offset = roll_offset * tilt_factor
 
     return roll_offset
 end
+
+mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, unit, dt, time_in_dodge, has_slide_input)
+	local dodge_character_state_component = self._dodge_character_state_component
+	local unit_rotation = self._first_person_component.rotation
+	local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
+	local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
+    local inverted_move_direction = Vector3(-move_direction.x, -move_direction.y, -move_direction.z)
+    move_direction_box:store(inverted_move_direction)
+    debug:print_mod("DODGE!!!  " .. tostring(move_direction))
+    if move_direction_box and look_direction_box then
+        -- Calculate roll_offset using the stored vectors
+        mod.roll_offset_damping = DAMPING_MOVE
+        mod.roll_offset_target = calculate_roll_offset(mod.tilt_factor_dodge)
+    end
+end)
 
 mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     local out = func(self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
@@ -96,11 +112,18 @@ mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self
     if self._player.viewport_name == "player1" then
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
-            mod.roll_offset_damping = DAMPING_SLIDE
-            mod.roll_offset_target = calculate_roll_offset(look_direction_box, move_direction_box)
+            mod.roll_offset_damping = DAMPING_MOVE
+            mod.roll_offset_target = calculate_roll_offset(mod.tilt_factor)
         end
     end
     return out
+end)
+
+mod:hook_safe("PlayerCharacterStateDodging", "on_exit", function(self, unit, t, next_state)
+    if self._player.viewport_name == "player1" then
+        mod.roll_offset_damping = DAMPING_RECOVER
+        mod.roll_offset_target = 0
+    end
 end)
 
 mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, next_state)
