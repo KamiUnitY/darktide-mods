@@ -65,13 +65,9 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
 end)
 
 local calculate_roll_offset = function(look_direction_box, move_direction_box)
-    -- Unbox the vectors
-    local look_direction = look_direction_box:unbox()
-    local move_direction = move_direction_box:unbox()
-
-    -- Ensure the vectors are normalized
-    look_direction = Vector3.normalize(look_direction)
-    move_direction = Vector3.normalize(move_direction)
+    -- Unbox the vectors and normalize
+    local look_direction = Vector3.normalize(look_direction_box:unbox())
+    local move_direction = Vector3.normalize(move_direction_box:unbox())
 
     -- Project move_direction onto look_direction to get the forward component
     local forward_component = Vector3.dot(move_direction, look_direction) * look_direction
