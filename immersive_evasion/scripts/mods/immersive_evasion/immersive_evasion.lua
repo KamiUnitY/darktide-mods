@@ -33,7 +33,7 @@ end
 
 local debug = {
     is_enabled = function(self)
-        return modding_tools and modding_tools:is_enabled()
+        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
     end,
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
@@ -100,7 +100,7 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
 	local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
     local inverted_move_direction = move_direction * -1
     move_direction_box:store(inverted_move_direction)
-    debug:print_mod("DODGE!!!  " .. tostring(move_direction))
+    if modding_tools then debug:print_mod("DODGE!!!  " .. tostring(move_direction)) end
     if move_direction_box and look_direction_box then
         -- Calculate roll_offset using the stored vectors
         mod.roll_offset_damping = DAMPING_MOVE
@@ -118,7 +118,7 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self
             local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
 
             move_direction_box:store(move_direction)
-            debug:print_mod("SLIDE!!!  " .. tostring(move_direction))
+            if modding_tools then debug:print_mod("SLIDE!!!  " .. tostring(move_direction)) end
         end
     end
     return out
@@ -130,7 +130,7 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
         if out == "sliding" then
             -- Store the move_direction in the box
             move_direction_box:store(move_direction)
-            debug:print_mod("SLIDE!!!  " .. tostring(move_direction))
+            if modding_tools then debug:print_mod("SLIDE!!!  " .. tostring(move_direction)) end
         end
     end
     return out
