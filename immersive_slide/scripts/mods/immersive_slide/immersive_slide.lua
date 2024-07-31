@@ -32,8 +32,8 @@ local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 8
 mod.roll_offset_damping = DAMPING_MOVE -- Damping factor
 
-mod.tilt_factor_slide = 0.16
-mod.tilt_factor_dodge = 0.04
+mod.tilt_factor_slide = 0.15
+mod.tilt_factor_dodge = 0.05
 
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
