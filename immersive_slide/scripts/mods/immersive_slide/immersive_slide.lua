@@ -32,7 +32,7 @@ local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 5
 mod.roll_offset_damping = DAMPING_MOVE -- Damping factor
 
-mod.tilt_factor = 0.16
+mod.tilt_factor_slide = 0.16
 mod.tilt_factor_dodge = 0.04
 
 local look_direction_box = Vector3Box()
@@ -113,7 +113,7 @@ mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
             mod.roll_offset_damping = DAMPING_MOVE
-            mod.roll_offset_target = calculate_roll_offset(mod.tilt_factor)
+            mod.roll_offset_target = calculate_roll_offset(mod.tilt_factor_slide)
         end
     end
     return out
