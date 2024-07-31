@@ -1,9 +1,15 @@
 return {
 	mod_name = {
-		en = "immersive_slide",
+		en = "Immersive Evasion",
 	},
 	mod_description = {
-		en = "immersive_slide description",
+		en = "Makes dodge and slide tilt the camera for immersive evasion experience",
+	},
+	tilt_factor_dodge = {
+		en = "Dodge Strength",
+	},
+	tilt_factor_slide = {
+		en = "Slide Strength",
 	},
 	debug_group = {
 		en = "Debug",
