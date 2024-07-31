@@ -104,8 +104,10 @@ mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self
 end)
 
 mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, next_state)
-    mod.roll_offset_damping = DAMPING_RECOVER
-    mod.roll_offset_target = 0
+    if self._player.viewport_name == "player1" then
+        mod.roll_offset_damping = DAMPING_RECOVER
+        mod.roll_offset_target = 0
+    end
 end)
 
 mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
