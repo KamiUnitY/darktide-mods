@@ -1,6 +1,36 @@
 local mod = get_mod("immersive_slide")
 local modding_tools = get_mod("modding_tools")
 
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
+mod.settings = {
+    tilt_factor_dodge          = mod:get("tilt_factor_dodge"),
+    tilt_factor_slide          = mod:get("tilt_factor_slide"),
+    enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
+}
+
+mod.on_setting_changed = function(setting_id)
+    mod.settings[setting_id] = mod:get(setting_id)
+end
+
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
+mod.on_all_mods_loaded = function()
+    -- WATCHER
+    -- modding_tools:watch("look_rotation", mod, "look_rotation")
+    -- modding_tools:watch("look_direction", mod, "look_direction")
+    -- modding_tools:watch("roll_offset", mod, "roll_offset")
+    -- modding_tools:watch("roll_offset_target", mod, "roll_offset_target")
+end
+
+-------------------------
+-- MODDING TOOLS DEBUG --
+-------------------------
+
 local debug = {
     is_enabled = function(self)
         return modding_tools and modding_tools:is_enabled()
@@ -15,25 +45,24 @@ local debug = {
     end,
 }
 
-mod.on_all_mods_loaded = function()
-    -- WATCHER
-    -- modding_tools:watch("look_rotation", mod, "look_rotation")
-    -- modding_tools:watch("look_direction", mod, "look_direction")
-    -- modding_tools:watch("roll_offset", mod, "roll_offset")
-    -- modding_tools:watch("roll_offset_target", mod, "roll_offset_target")
-end
-
-mod.roll_offset = 0
-mod.move_direction = nil
-mod.look_direction = nil
-mod.roll_offset_target = 0 -- Target roll offset for smooth transitions
+---------------
+-- CONSTANTS --
+---------------
 
 local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 8
-mod.roll_offset_damping = DAMPING_MOVE -- Damping factor
 
-mod.tilt_factor_slide = 0.15
-mod.tilt_factor_dodge = 0.05
+---------------
+-- VARIABLES --
+---------------
+
+mod.roll_offset_damping = DAMPING_MOVE
+
+mod.roll_offset = 0
+mod.roll_offset_target = 0
+
+mod.move_direction = nil
+mod.look_direction = nil
 
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
@@ -75,7 +104,7 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
     if move_direction_box and look_direction_box then
         -- Calculate roll_offset using the stored vectors
         mod.roll_offset_damping = DAMPING_MOVE
-        mod.roll_offset_target = calculate_roll_offset(mod.tilt_factor_dodge)
+        mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
     end
 end)
 
@@ -113,7 +142,7 @@ mod:hook("PlayerCharacterStateSliding", "_check_transition", function(func, self
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
             mod.roll_offset_damping = DAMPING_MOVE
-            mod.roll_offset_target = calculate_roll_offset(mod.tilt_factor_slide)
+            mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_slide"])
         end
     end
     return out
