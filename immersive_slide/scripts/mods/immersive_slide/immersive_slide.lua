@@ -46,7 +46,7 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self
             local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
             
             move_direction_box:store(move_direction)
-            debug:print("SLIDE!!!  " .. tostring(move_direction))
+            debug:print_mod("SLIDE!!!  " .. tostring(move_direction))
         end
     end
     return out
@@ -58,7 +58,7 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
         if out == "sliding" then
             -- Store the move_direction in the box
             move_direction_box:store(move_direction)
-            debug:print("SLIDE!!!  " .. tostring(move_direction))
+            debug:print_mod("SLIDE!!!  " .. tostring(move_direction))
         end
     end
     return out
