@@ -61,6 +61,7 @@ local ALLOWED_CHARACTER_STATE = {
     walking        = true,
     jumping        = true,
     falling        = true,
+    hub_jog        = true,
 }
 
 ---------------
