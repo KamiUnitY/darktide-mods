@@ -51,6 +51,18 @@ local debug = {
 -- CONSTANTS --
 ---------------
 
+local ALLOWED_CHARACTER_STATE = {
+    dodging        = true,
+    ledge_vaulting = true,
+    lunging        = true,
+    sliding        = true,
+    sprinting      = true,
+    stunned        = true,
+    walking        = true,
+    jumping        = true,
+    falling        = true,
+}
+
 local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 7
 
@@ -181,6 +193,22 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_exit", function(self, unit, t, 
     if self._player.viewport_name == "player1" then
         mod.roll_offset_damping = DAMPING_RECOVER
         mod.roll_offset_target = 0
+
+    end
+end)
+
+--------------------------
+-- CHARACTER STATE HOOK --
+--------------------------
+
+-- CLEAR ROLL OFFSET WHEN PLAYER GET DISABLED
+mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        local character_state = self._state_current.name
+        if not ALLOWED_CHARACTER_STATE[character_state] then
+            mod.roll_offset_damping = DAMPING_RECOVER
+            mod.roll_offset_target = 0
+        end
     end
 end)
 
