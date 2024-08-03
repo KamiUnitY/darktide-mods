@@ -64,12 +64,25 @@ local ALLOWED_CHARACTER_STATE = {
     hub_jog        = true,
 }
 
+local MOVEMENT_ACTIONS = {
+    move_forward  = true,
+    move_backward = true,
+    move_left     = true,
+    move_right    = true,
+}
+
 ---------------
 -- VARIABLES --
 ---------------
 
 mod.promise_sprint = false
-mod.pressed_forward = false
+
+local movement_pressed = {
+    move_forward  = false,
+    move_backward = false,
+    move_left     = false,
+    move_right    = false,
+}
 
 mod.character_state = ""
 
@@ -92,7 +105,7 @@ local function clearPromise(from)
 end
 
 local function isPromised()
-    local result = mod.promise_sprint and mod.pressed_forward
+    local result = mod.promise_sprint
     if result then
         if modding_tools then debug:print_mod("Attempting to sprint for you !!!") end
     end
@@ -176,12 +189,30 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
+    if mod.character_state == "hub_jog" and MOVEMENT_ACTIONS[action_name] then
+        local released_action = movement_pressed[action_name] and not pressed
+        local any_movement_pressed = false
+        if released_action then
+            for key, value in pairs(movement_pressed) do
+                if key ~= action_name and value then
+                    any_movement_pressed = true
+                    break
+                end
+            end
+            if not any_movement_pressed then
+                clearPromise("Released All Movement")
+            end
+        end
+        movement_pressed[action_name] = pressed
+        return out
+    end
+
     if action_name == "move_forward" then
-        local released_forward = mod.pressed_forward and not pressed
+        local released_forward = movement_pressed["move_forward"] and not pressed
         if released_forward then
             clearPromise("Realeased Forward")
         end
-        mod.pressed_forward = pressed
+        movement_pressed["move_forward"] = pressed
         return out
     end
 
