@@ -84,6 +84,8 @@ local movement_pressed = {
     move_right    = false,
 }
 
+local is_on_hub = false
+
 mod.character_state = ""
 
 -----------------------
@@ -178,6 +180,7 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
         if mod.promise_sprint and not ALLOWED_CHARACTER_STATE[mod.character_state] then
             clearPromise("Unallowed Character State")
         end
+        is_on_hub = mod.character_state == "hub_jog"
     end
 end)
 
@@ -189,7 +192,7 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
-    if mod.character_state == "hub_jog" and MOVEMENT_ACTIONS[action_name] then
+    if is_on_hub and MOVEMENT_ACTIONS[action_name] then
         local released_action = movement_pressed[action_name] and not pressed
         local any_movement_pressed = false
         if released_action then
