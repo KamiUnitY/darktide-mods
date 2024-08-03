@@ -193,8 +193,8 @@ local _input_hook = function(func, self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
     if is_on_hub and MOVEMENT_ACTIONS[action_name] then
-        local released_action = movement_pressed[action_name] and not pressed
-        if released_action then
+        -- On releasing movement
+        if not pressed and movement_pressed[action_name] then
             local any_movement_pressed = false
             for key, value in pairs(movement_pressed) do
                 if key ~= action_name and value then
@@ -211,8 +211,8 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "move_forward" then
-        local released_forward = movement_pressed["move_forward"] and not pressed
-        if released_forward then
+        -- On releasing forward
+        if not pressed and movement_pressed["move_forward"] then
             clearPromise("Realeased Forward")
         end
         movement_pressed["move_forward"] = pressed
@@ -220,7 +220,10 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "move_backward" and pressed then
-        clearPromise("Pressed Backward")
+        -- On pressing backward
+        if pressed and not movement_pressed["move_backward"] then
+            clearPromise("Pressed Backward")
+        end
         return out
     end
 
