@@ -16,7 +16,6 @@ return {
 		-- "ChatBlock", -- Already ordered by alphabetical order
 		"modding_tools",
 		"MultiBind",
-		"ToggleAltFire",
 	},
 	packages = {},
 }
