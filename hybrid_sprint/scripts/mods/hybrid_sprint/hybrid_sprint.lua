@@ -194,8 +194,8 @@ local _input_hook = function(func, self, action_name)
 
     if is_on_hub and MOVEMENT_ACTIONS[action_name] then
         local released_action = movement_pressed[action_name] and not pressed
-        local any_movement_pressed = false
         if released_action then
+            local any_movement_pressed = false
             for key, value in pairs(movement_pressed) do
                 if key ~= action_name and value then
                     any_movement_pressed = true
