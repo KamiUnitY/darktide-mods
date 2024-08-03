@@ -192,6 +192,7 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
+    -- While on hub
     if is_on_hub and MOVEMENT_ACTIONS[action_name] then
         -- On releasing movement
         if not pressed and movement_pressed[action_name] then
