@@ -235,6 +235,10 @@ mod:hook_safe("PlayerUnitAbilityExtension", "equip_ability", function(self, abil
     end
 end)
 
+--------------------
+-- ON EVERY FRAME --
+--------------------
+
 ----------------
 -- INPUT HOOK --
 ----------------
