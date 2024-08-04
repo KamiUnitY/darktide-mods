@@ -155,6 +155,11 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
     if self._player.viewport_name == "player1" then
         clearPromise("quick")
         clearPromise(PROMISE_SLOT_MAP[slot_name])
+        previous_slot = current_slot
+        current_slot = slot_name
+        if current_slot ~= "" and previous_slot ~= "" then
+            if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
+        end
     end
 end)
 
@@ -212,21 +217,6 @@ end)
 -- ON EVERY FRAME --
 --------------------
 
--- REALTIME SLOT VARIABLE
-
-mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-    if self._player.viewport_name == "player1" then
-        local wielded_slot = inventory_component.wielded_slot
-        if wielded_slot ~= nil and wielded_slot ~= current_slot then
-            previous_slot = current_slot
-            current_slot = wielded_slot
-            if current_slot ~= "" and previous_slot ~= "" then
-                if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
-            end
-        end
-    end
-end)
-
 -- REALTIME GRENADE ABILITY VARIABLE
 
 mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
@@ -249,7 +239,7 @@ local _input_hook = function(func, self, action_name)
     if PROMISE_ACTION_MAP[action_name] then
         if pressed then
             clearAllPromises()
-            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed" then
+            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] then
                 if action_name ~= "grenade_ability_pressed"
                     or (
                         (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"])
