@@ -202,10 +202,9 @@ end)
 --------------------------
 
 -- CLEAR ROLL OFFSET WHEN PLAYER GET DISABLED
-mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
+mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        local character_state = self._state_current.name
-        if not ALLOWED_CHARACTER_STATE[character_state] then
+        if not ALLOWED_CHARACTER_STATE[next_state] then
             mod.roll_offset_damping = DAMPING_RECOVER
             mod.roll_offset_target = 0
         end
