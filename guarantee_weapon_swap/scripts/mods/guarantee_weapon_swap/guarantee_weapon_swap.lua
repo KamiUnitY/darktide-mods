@@ -161,20 +161,29 @@ end)
 -- CLEAR PROMISE ON FAILING TO WIELD GRENADE
 
 mod:hook("PlayerUnitAbilityExtension", "can_wield", function(func, self, slot_name, previous_check)
-    local out = func(self, slot_name, previous_check)
+    local can_wield = func(self, slot_name, previous_check)
     if self._player.viewport_name == "player1" then
         if slot_name == "slot_grenade_ability" then
-            if out ~= true then
+            if not can_wield then
                 clearPromise("grenade")
-                return out
-            end
-            if self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
+            elseif self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
                 clearPromise("grenade")
-                return out
             end
         end
     end
-    return out
+    return can_wield
+end)
+
+-- CLEAR PROMISE FOR NOT AVAILABLE ITEMS
+
+mod:hook("PlayerUnitWeaponExtension", "can_wield", function(func, self, slot_name)
+    local can_wield = func(self, slot_name)
+    if self._player.viewport_name == "player1" then
+        if not can_wield then
+            clearPromise(PROMISE_SLOT_MAP[slot_name])
+        end
+    end
+    return can_wield
 end)
 
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
@@ -215,20 +224,6 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
                 if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
             end
         end
-    end
-end)
-
--- CLEARING PROMISE FOR NOT AVAILABLE ITEMS
-
-mod:hook_safe("HudElementPlayerWeaponHandler", "_weapon_scan", function(self, extensions, ui_renderer)
-    if mod.promises.pocketable_small and self._player_weapons.slot_pocketable_small == nil then
-        clearPromise("pocketable_small")
-    end
-    if mod.promises.pocketable and self._player_weapons.slot_pocketable == nil then
-        clearPromise("pocketable")
-    end
-    if mod.promises.device and self._player_weapons.slot_device == nil then
-        clearPromise("device")
     end
 end)
 
