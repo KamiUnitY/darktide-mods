@@ -159,10 +159,6 @@ mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt,
     _update_character_state(self)
 end)
 
---------------------
--- ON EVERY FRAME --
---------------------
-
 -- FUNCTION FOR CLEARING PROMISE ON WEAPON ACTION
 
 local function check_weapon_want_to_stop(keywords)
@@ -178,22 +174,22 @@ end
 
 -- CLEARING PROMISE ON WEAPON ACTION
 
-mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, self, ...)
-    local out = func(self, ...)
-    if self._player.viewport_name == "player1" then
-        if out == "walking" then
-            if mod.settings["enable_keep_sprint_after_weapon_actions"] then
-                local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
-                if check_weapon_want_to_stop(weapon_template.keywords) then
-                    clearPromise("wants_to_stop")
-                end
-            else
+mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
+    if previous_state == "sprinting" then
+        if mod.settings["enable_keep_sprint_after_weapon_actions"] then
+            local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
+            if check_weapon_want_to_stop(weapon_template.keywords) then
                 clearPromise("wants_to_stop")
             end
+        else
+            clearPromise("wants_to_stop")
         end
     end
-    return out
 end)
+
+--------------------
+-- ON EVERY FRAME --
+--------------------
 
 ----------------
 -- INPUT HOOK --
