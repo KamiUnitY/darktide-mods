@@ -216,6 +216,28 @@ mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_ac
     end
 end)
 
+-- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
+
+local _update_character_state = function (self)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.character_state = self._state_current.name
+        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+            clearPromise("UNALLOWED_CHARACTER_STATE")
+        end
+    end
+end
+
+mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
+    if mod.character_state ~= "" then
+        mod:hook_disable("CharacterStateMachine", "fixed_update")
+    end
+    _update_character_state(self)
+end)
+
+mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
+    _update_character_state(self)
+end)
+
 --------------------
 -- ON EVERY FRAME --
 --------------------
@@ -259,17 +281,6 @@ mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function(self)
     if self._player.viewport_name == "player1" then
         if self._equipped_abilities.combat_ability ~= nil then
             combat_ability = self._equipped_abilities.combat_ability.name
-        end
-    end
-end)
-
--- REALTIME CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
-
-mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.character_state = self._state_current.name
-        if mod.promise_ability and not ALLOWED_CHARACTER_STATE[mod.character_state] then
-            clearPromise("UNALLOWED_CHARACTER_STATE")
         end
     end
 end)

@@ -177,6 +177,28 @@ mod:hook("PlayerUnitAbilityExtension", "can_wield", function(func, self, slot_na
     return out
 end)
 
+-- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
+
+local _update_character_state = function (self)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.character_state = self._state_current.name
+        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+            clearAllPromises()
+        end
+    end
+end
+
+mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
+    if mod.character_state ~= "" then
+        mod:hook_disable("CharacterStateMachine", "fixed_update")
+    end
+    _update_character_state(self)
+end)
+
+mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
+    _update_character_state(self)
+end)
+
 --------------------
 -- ON EVERY FRAME --
 --------------------
@@ -217,17 +239,6 @@ mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit,
         local _grenade_ability = self._equipped_abilities.grenade_ability
         if _grenade_ability ~= nil then
             grenade_ability = _grenade_ability.name
-        end
-    end
-end)
-
--- REALTIME CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
-
-mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.character_state = self._state_current.name
-        if mod.promise_exist and not ALLOWED_CHARACTER_STATE[mod.character_state] then
-            clearAllPromises()
         end
     end
 end)
