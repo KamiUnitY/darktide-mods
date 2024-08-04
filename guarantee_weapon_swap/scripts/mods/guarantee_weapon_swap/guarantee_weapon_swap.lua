@@ -213,17 +213,24 @@ mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt,
     _update_character_state(self)
 end)
 
---------------------
--- ON EVERY FRAME --
---------------------
+-- UPDATE GRENADE ABILITY VARIABLE
 
--- REALTIME GRENADE ABILITY VARIABLE
-
-mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
+mod:hook_safe("PlayerUnitAbilityExtension", "update", function(self, unit, dt, t, fixed_frame)
+    if grenade_ability ~= "" then
+        mod:hook_disable("PlayerUnitAbilityExtension", "update")
+    end
     if self._player.viewport_name == "player1" then
         local _grenade_ability = self._equipped_abilities.grenade_ability
         if _grenade_ability ~= nil then
             grenade_ability = _grenade_ability.name
+        end
+    end
+end)
+
+mod:hook_safe("PlayerUnitAbilityExtension", "equip_ability", function(self, ability_type, ability, fixed_t)
+    if self._player.viewport_name == "player1" then
+        if ability_type == "grenade_ability" then
+            grenade_ability = ability.name
         end
     end
 end)
