@@ -113,8 +113,7 @@ end
 
 local function setPromise(from)
     if not mod.promise_ability then
-        -- slot_unarmed means player is netted or pounced
-        if ALLOWED_CHARACTER_STATE[mod.character_state] and current_slot ~= "slot_unarmed"
+        if ALLOWED_CHARACTER_STATE[mod.character_state]
             and remaining_ability_charges > 0
             and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
         then
@@ -267,7 +266,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
             if weapons[wielded_slot] ~= nil and weapons[wielded_slot].weapon_template ~= nil then
                 weapon_template = weapons[wielded_slot].weapon_template.name
             end
-            if wielded_slot == "slot_combat_ability" or wielded_slot == "slot_unarmed" then
+            if wielded_slot == "slot_combat_ability" then
                 clearPromise("on " .. wielded_slot)
                 return
             end
