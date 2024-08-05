@@ -273,6 +273,28 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
     end
 end)
 
+-- UPDATE COMBAT ABILITY VARIABLE
+
+mod:hook_safe("PlayerUnitAbilityExtension", "update", function(self, unit, dt, t, fixed_frame)
+    if combat_ability ~= "" then
+        mod:hook_disable("PlayerUnitAbilityExtension", "update")
+    end
+    if self._player.viewport_name == "player1" then
+        local _combat_ability = self._equipped_abilities.combat_ability
+        if _combat_ability ~= nil then
+            combat_ability = _combat_ability.name
+        end
+    end
+end)
+
+mod:hook_safe("PlayerUnitAbilityExtension", "equip_ability", function(self, ability_type, ability, fixed_t)
+    if self._player.viewport_name == "player1" then
+        if ability_type == "combat_ability" then
+            combat_ability = ability.name
+        end
+    end
+end)
+
 --------------------
 -- ON EVERY FRAME --
 --------------------
@@ -290,16 +312,6 @@ mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(fun
         end
     end
     return out
-end)
-
--- REALTIME COMBAT ABILITY VARIABLE
-
-mod:hook_safe("PlayerUnitAbilityExtension", "equipped_abilities", function(self)
-    if self._player.viewport_name == "player1" then
-        if self._equipped_abilities.combat_ability ~= nil then
-            combat_ability = self._equipped_abilities.combat_ability.name
-        end
-    end
 end)
 
 ----------------
