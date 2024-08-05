@@ -139,10 +139,11 @@ local function clearAllPromises()
 end
 
 local function isPromised(action)
-    if mod.promises[action] and current_slot ~= "" then
+    local result = mod.promises[action]
+    if result and current_slot ~= "" then
         if modding_tools then debug:print_mod("Attempting to switch weapon: " .. current_slot .. " -> " .. action) end
     end
-    return mod.promises[action]
+    return result
 end
 
 ----------------
