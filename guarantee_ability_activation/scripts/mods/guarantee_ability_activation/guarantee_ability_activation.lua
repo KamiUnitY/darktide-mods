@@ -88,8 +88,6 @@ mod.character_state = ""
 
 local current_slot = ""
 
-local remaining_ability_charges = 0
-
 local combat_ability = ""
 local weapon_template = ""
 
