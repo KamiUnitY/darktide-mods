@@ -112,9 +112,14 @@ end
 -----------------------
 
 local function setPromise(from)
+    local unit = Managers.player:local_player(1).player_unit
+    if unit then
+        if ScriptUnit.extension(unit, "ability_system"):remaining_ability_charges("combat_ability") == 0 then
+            return
+        end
+    end
     if not mod.promise_ability then
         if ALLOWED_CHARACTER_STATE[mod.character_state]
-            and remaining_ability_charges > 0
             and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
         then
             mod.promise_ability = true
@@ -132,17 +137,16 @@ local function clearPromise(from)
 end
 
 local function isPromised()
-    local result
+    if not mod.promise_ability then
+        return false
+    end
     if IS_DASH_ABILITY[combat_ability] then
-        result = mod.promise_ability and ALLOWED_DASH_STATE[mod.character_state]
-            and elapsed(last_set_promise) > DELAY_ABILITY -- hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
-    else
-        result = mod.promise_ability
+        if not (ALLOWED_DASH_STATE[mod.character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then
+            return false
+        end
     end
-    if result then
-        if modding_tools then debug:print_mod("Attempting to activate combat ability for you") end
-    end
-    return result
+    if modding_tools then debug:print_mod("Attempting to activate combat ability for you") end
+    return true
 end
 
 ----------------
@@ -298,21 +302,6 @@ end)
 --------------------
 -- ON EVERY FRAME --
 --------------------
-
--- REALTIME REMAINING ABILITY CHARGE VARIABLE & CLEAR PROMISE ON EMPTY CHARGE
-
-mod:hook("PlayerUnitAbilityExtension", "remaining_ability_charges", function(func, self, ability_type)
-    local out = func(self, ability_type)
-    if self._player.viewport_name == "player1" then
-        if ability_type == "combat_ability" then
-            remaining_ability_charges = out
-            if mod.promise_ability and remaining_ability_charges == 0 then
-                clearPromise("empty_ability_charges")
-            end
-        end
-    end
-    return out
-end)
 
 ----------------
 -- INPUT HOOK --
