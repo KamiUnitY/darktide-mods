@@ -237,7 +237,7 @@ mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt,
     _update_character_state(self)
 end)
 
--- UPDATE WEAPON TEMPLATE VARIABLE & CLEAR PROMISE ON UNARMED AND WIELD ABILITY
+-- UPDATE WEAPON TEMPLATE VARIABLE & CLEAR PROMISE ON WIELDING ABILITY
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     if current_slot ~= "" and weapon_template ~= "" then
