@@ -8,5 +8,8 @@ return {
 			mod_localization = "kami_utilities/scripts/mods/kami_utilities/kami_utilities_localization",
 		})
 	end,
+	load_after = {
+		"modding_tools",
+	},
 	packages = {},
 }
