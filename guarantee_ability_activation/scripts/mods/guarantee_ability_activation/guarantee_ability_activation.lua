@@ -139,7 +139,8 @@ local function isPromised(promise)
         return false
     end
     if IS_DASH_ABILITY[combat_ability] then
-        if not (ALLOWED_DASH_STATE[mod.character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then -- DELAY_ABILITY is a hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
+        -- DELAY_ABILITY is a hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
+        if not (ALLOWED_DASH_STATE[mod.character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then
             return false
         end
     end
