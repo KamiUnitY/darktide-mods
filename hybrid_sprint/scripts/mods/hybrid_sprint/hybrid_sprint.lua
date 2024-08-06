@@ -106,12 +106,11 @@ local function clearPromise(from)
     end
 end
 
-local function isPromised()
-    local result = mod.promise_sprint
-    if result then
+local function isPromised(promise)
+    if promise then
         if modding_tools then debug:print_mod("Attempting to sprint for you !!!") end
     end
-    return result
+    return promise
 end
 
 ----------------
@@ -239,7 +238,8 @@ local _input_hook = function(func, self, action_name)
         if pressed and not mod.settings["enable_hold_to_sprint"] then
             setPromise("Pressed Sprint")
         end
-        return out or isPromised()
+        local promise = mod.promise_sprint
+        return out or (promise and isPromised(promise))
     end
 
     return out

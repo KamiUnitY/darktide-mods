@@ -134,8 +134,8 @@ local function clearPromise(from)
     end
 end
 
-local function isPromised()
-    if not mod.promise_ability then
+local function isPromised(promise)
+    if not promise then
         return false
     end
     if IS_DASH_ABILITY[combat_ability] then
@@ -143,7 +143,7 @@ local function isPromised()
             return false
         end
     end
-    if modding_tools then debug:print_mod("Attempting to activate combat ability for you") end
+    if modding_tools then debug:print_mod("Attempting to activate combat ability for you !!!") end
     return true
 end
 
@@ -317,7 +317,8 @@ local _input_hook = function(func, self, action_name)
         if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
             return false
         end
-        return out or isPromised()
+        local promise = mod.promise_ability
+        return out or (promise and isPromised(promise))
     end
 
     if action_name == "combat_ability_release" then
