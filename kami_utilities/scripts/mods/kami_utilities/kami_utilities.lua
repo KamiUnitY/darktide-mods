@@ -19,7 +19,7 @@ end
 
 mod.on_all_mods_loaded = function()
     -- WATCHER
-    modding_tools:watch("benchmark_input", mod, "benchmark_input")
+    -- modding_tools:watch("benchmark_input", mod, "benchmark_input")
 end
 
 -------------------------
