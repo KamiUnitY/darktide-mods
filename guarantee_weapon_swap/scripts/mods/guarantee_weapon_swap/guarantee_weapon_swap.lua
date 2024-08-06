@@ -248,7 +248,8 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
-    if PROMISE_ACTION_MAP[action_name] then
+    local promise_action = PROMISE_ACTION_MAP[action_name]
+    if promise_action then
         if pressed then
             clearAllPromises()
             if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] then
@@ -258,11 +259,11 @@ local _input_hook = function(func, self, action_name)
                         and current_slot ~= "slot_luggable"
                     )
                 then
-                    setPromise(PROMISE_ACTION_MAP[action_name])
+                    setPromise(promise_action)
                 end
             end
         end
-        return out or isPromised(PROMISE_ACTION_MAP[action_name])
+        return out or isPromised(promise_action)
     end
 
     return out
