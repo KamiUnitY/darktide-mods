@@ -25,7 +25,6 @@ end
 
 mod.on_all_mods_loaded = function()
     -- WATCHER
-    -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
     -- modding_tools:watch("character_state", mod, "character_state")
     -- modding_tools:watch("wants_to_stop", mod, "wants_to_stop")
     -- modding_tools:watch("keep_sprint", mod, "keep_sprint")
