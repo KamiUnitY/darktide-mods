@@ -140,29 +140,6 @@ mod:hook_require("scripts/settings/options/input_settings", function(instance)
     end
 end)
 
--- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
-
-local _update_character_state = function (self)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.character_state = self._state_current.name
-        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
-            clearPromise("Unallowed Character State")
-        end
-        is_on_hub = mod.character_state == "hub_jog"
-    end
-end
-
-mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if mod.character_state ~= "" then
-        mod:hook_disable("CharacterStateMachine", "fixed_update")
-    end
-    _update_character_state(self)
-end)
-
-mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
-    _update_character_state(self)
-end)
-
 -- CLEARING PROMISE ON WEAPON ACTION
 
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
@@ -188,6 +165,29 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
         setPromise("action_complete")
         mod.keep_sprint = false
     end
+end)
+
+-- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
+
+local _update_character_state = function (self)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.character_state = self._state_current.name
+        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+            clearPromise("Unallowed Character State")
+        end
+        is_on_hub = mod.character_state == "hub_jog"
+    end
+end
+
+mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
+    if mod.character_state ~= "" then
+        mod:hook_disable("CharacterStateMachine", "fixed_update")
+    end
+    _update_character_state(self)
+end)
+
+mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
+    _update_character_state(self)
 end)
 
 --------------------
