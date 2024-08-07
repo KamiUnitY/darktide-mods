@@ -3,51 +3,6 @@
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
 
-local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
-
---------------------------
--- MOD SETTINGS CACHING --
---------------------------
-
-mod.settings = {
-    enable_hold_to_sprint                   = mod:get("enable_hold_to_sprint"),
-    enable_keep_sprint_after_weapon_actions = mod:get("enable_keep_sprint_after_weapon_actions"),
-    enable_debug_modding_tools              = mod:get("enable_debug_modding_tools"),
-}
-
-mod.on_setting_changed = function(setting_id)
-    mod.settings[setting_id] = mod:get(setting_id)
-end
-
-------------------------
--- ON ALL MODS LOADED --
-------------------------
-
-mod.on_all_mods_loaded = function()
-    -- WATCHER
-    -- modding_tools:watch("character_state", mod, "character_state")
-    -- modding_tools:watch("wants_to_stop", mod, "wants_to_stop")
-    -- modding_tools:watch("keep_sprint", mod, "keep_sprint")
-end
-
--------------------------
--- MODDING TOOLS DEBUG --
--------------------------
-
-local debug = {
-    is_enabled = function(self)
-        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
-    end,
-    print = function(self, text)
-        pcall(function() modding_tools:console_print(text) end)
-    end,
-    print_mod = function(self, text)
-        if self:is_enabled() then
-            self:print(mod:localize("mod_name") .. ": " .. text)
-        end
-    end,
-}
-
 ---------------
 -- CONSTANTS --
 ---------------
@@ -85,12 +40,77 @@ local movement_pressed = {
     move_right    = false,
 }
 
-local is_on_hub = false
+local is_in_hub = false
 
 mod.character_state = ""
 
 mod.wants_to_stop = false
 mod.keep_sprint = false
+
+---------------
+-- UTILITIES --
+---------------
+
+local debug = {
+    is_enabled = function(self)
+        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
+    end,
+    print = function(self, text)
+        pcall(function() modding_tools:console_print(text) end)
+    end,
+    print_mod = function(self, text)
+        if self:is_enabled() then
+            self:print(mod:localize("mod_name") .. ": " .. text)
+        end
+    end,
+}
+
+local _is_in_hub = function()
+    local game_mode_manager = Managers.state.game_mode
+    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+    return game_mode_name == "hub"
+end
+
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
+mod.settings = {
+    enable_hold_to_sprint                   = mod:get("enable_hold_to_sprint"),
+    enable_keep_sprint_after_weapon_actions = mod:get("enable_keep_sprint_after_weapon_actions"),
+    enable_debug_modding_tools              = mod:get("enable_debug_modding_tools"),
+}
+
+mod.on_setting_changed = function(setting_id)
+    mod.settings[setting_id] = mod:get(setting_id)
+end
+
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
+mod.on_all_mods_loaded = function()
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
+
+    -- WATCHER
+    -- modding_tools:watch("character_state", mod, "character_state")
+    -- modding_tools:watch("wants_to_stop", mod, "wants_to_stop")
+    -- modding_tools:watch("keep_sprint", mod, "keep_sprint")
+end
+
+---------------------------
+-- ON GAME STATE CHANGED --
+---------------------------
+
+mod.on_game_state_changed = function(status, state_name)
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
+
+    -- Force hold sprint in vanilla settings
+    local input_settings = Managers.save:account_data().input_settings
+    input_settings.hold_to_sprint = true
+end
 
 -----------------------
 -- PROMISE FUNCTIONS --
@@ -121,13 +141,6 @@ end
 ----------------
 -- ON TRIGGER --
 ----------------
-
--- FORCE HOLD SPRINT IN VANILLA SETTINGS --
-
-mod.on_game_state_changed = function(status, state_name)
-    local input_settings = Managers.save:account_data().input_settings
-    input_settings.hold_to_sprint = true
-end
 
 -- REMOVE HOLD SPRINT FROM VANILLA SETTINGS --
 
@@ -174,7 +187,6 @@ local _update_character_state = function (self)
     if not ALLOWED_CHARACTER_STATE[mod.character_state] then
         clearPromise("Unallowed Character State")
     end
-    is_on_hub = mod.character_state == "hub_jog"
 end
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
@@ -205,7 +217,7 @@ local _input_hook = function(func, self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
     -- While on hub
-    if is_on_hub and MOVEMENT_ACTIONS[action_name] then
+    if is_in_hub and MOVEMENT_ACTIONS[action_name] then
         -- On releasing movement
         if not pressed and movement_pressed[action_name] then
             local any_movement_pressed = false
