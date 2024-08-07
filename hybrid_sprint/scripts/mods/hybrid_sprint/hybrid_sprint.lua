@@ -158,13 +158,7 @@ end)
 -- CLEARING PROMISE ON WEAPON ACTION
 
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
-    if mod.settings["enable_keep_sprint_after_weapon_actions"] then
-        mod.wants_to_stop = true
-    else
-        if previous_state == "sprinting" then
-            clearPromise("wants_to_stop")
-        end
-    end
+    mod.wants_to_stop = true
     if modding_tools then debug:print_mod("wants_to_stop") end
 end)
 
@@ -172,12 +166,17 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if mod.promise_sprint and mod.wants_to_stop and (reason == "new_interrupting_action" or reason == "started_sprint") then
-        clearPromise("new_interrupting_action")
+        clearPromise(reason)
         mod.keep_sprint = true
         mod.wants_to_stop = false
     end
+    if mod.wants_to_stop then
+        mod.wants_to_stop = false
+    end
     if mod.keep_sprint and (reason == "action_complete" or reason == "hold_input_released") then
-        setPromise("action_complete")
+        if mod.settings["enable_keep_sprint_after_weapon_actions"] then
+            setPromise(reason)
+        end
         mod.keep_sprint = false
     end
 end)
