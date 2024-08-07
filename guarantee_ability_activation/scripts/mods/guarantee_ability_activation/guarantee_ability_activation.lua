@@ -256,7 +256,6 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
             end
             if wielded_slot == "slot_combat_ability" then
                 clearPromise("on " .. wielded_slot)
-                return
             end
         end
     end
@@ -271,7 +270,6 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
         end
         if slot_name == "slot_combat_ability" then
             clearPromise("on " .. slot_name)
-            return
         end
     end
 end)
