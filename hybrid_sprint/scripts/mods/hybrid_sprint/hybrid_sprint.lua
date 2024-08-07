@@ -165,12 +165,11 @@ end)
 -- KEEPING SPRINT AFTER FINISHING WEAPON ACTION
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
-    if mod.promise_sprint and mod.wants_to_stop and (reason == "new_interrupting_action" or reason == "started_sprint") then
-        clearPromise(reason)
-        mod.keep_sprint = true
-        mod.wants_to_stop = false
-    end
     if mod.wants_to_stop then
+        if mod.promise_sprint and (reason == "new_interrupting_action" or reason == "started_sprint") then
+            clearPromise(reason)
+            mod.keep_sprint = true
+        end
         mod.wants_to_stop = false
     end
     if mod.keep_sprint and (reason == "action_complete" or reason == "hold_input_released") then
