@@ -83,6 +83,8 @@ mod.settings = {
 
 mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
+    mod.wants_to_stop = false
+    mod.keep_sprint = false
 end
 
 ------------------------
