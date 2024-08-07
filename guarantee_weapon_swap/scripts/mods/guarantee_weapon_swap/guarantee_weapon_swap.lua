@@ -194,11 +194,9 @@ end)
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 local _update_character_state = function (self)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.character_state = self._state_current.name
-        if not ALLOWED_CHARACTER_STATE[mod.character_state] then
-            clearAllPromises()
-        end
+    mod.character_state = self._state_current.name
+    if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+        clearAllPromises()
     end
 end
 
@@ -206,11 +204,15 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
     if mod.character_state ~= "" then
         mod:hook_disable("CharacterStateMachine", "fixed_update")
     end
-    _update_character_state(self)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _update_character_state(self)
+    end
 end)
 
 mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
-    _update_character_state(self)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _update_character_state(self)
+    end
 end)
 
 -- UPDATE GRENADE ABILITY VARIABLE
