@@ -249,7 +249,6 @@ local function _on_slot_wielded(self, slot_name)
     local slot_weapon = self._weapons[slot_name]
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template.name
-        debug:print(weapon_template)
     end
     if slot_name == "slot_combat_ability" then
         clearPromise("on " .. slot_name)
