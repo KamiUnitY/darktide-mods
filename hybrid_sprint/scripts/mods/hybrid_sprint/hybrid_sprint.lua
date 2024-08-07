@@ -184,7 +184,7 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
         mod.keep_sprint = true
         mod.wants_to_stop = false
     end
-    if mod.keep_sprint and (reason == "action_complete") then
+    if mod.keep_sprint and reason == "action_complete" then
         setPromise("action_complete")
         mod.keep_sprint = false
     end
