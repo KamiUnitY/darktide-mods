@@ -244,6 +244,18 @@ end)
 
 -- UPDATE WEAPON TEMPLATE VARIABLE & CLEAR PROMISE ON WIELDING ABILITY
 
+local function _on_slot_wielded(self, slot_name)
+    current_slot = slot_name
+    local slot_weapon = self._weapons[slot_name]
+    if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
+        weapon_template = slot_weapon.weapon_template.name
+        debug:print(weapon_template)
+    end
+    if slot_name == "slot_combat_ability" then
+        clearPromise("on " .. slot_name)
+    end
+end
+
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     if current_slot ~= "" and weapon_template ~= "" then
         mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
@@ -251,30 +263,17 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
     if self._player.viewport_name == "player1" then
         local wielded_slot = inventory_component.wielded_slot
         if wielded_slot ~= nil and wielded_slot ~= current_slot then
-            current_slot = wielded_slot
-            local slot_weapon = self._weapons[wielded_slot]
-            if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
-                weapon_template = slot_weapon.weapon_template.name
-            end
-            if wielded_slot == "slot_combat_ability" then
-                clearPromise("on " .. wielded_slot)
-            end
+            _on_slot_wielded(self, wielded_slot)
         end
     end
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if self._player.viewport_name == "player1" then
-        current_slot = slot_name
-        local slot_weapon = self._weapons[slot_name]
-        if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
-            weapon_template = slot_weapon.weapon_template.name
-        end
-        if slot_name == "slot_combat_ability" then
-            clearPromise("on " .. slot_name)
-        end
+        _on_slot_wielded(self, slot_name)
     end
 end)
+
 
 -- UPDATE COMBAT ABILITY VARIABLE
 
