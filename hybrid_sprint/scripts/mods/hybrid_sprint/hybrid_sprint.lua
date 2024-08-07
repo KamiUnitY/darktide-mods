@@ -27,6 +27,8 @@ mod.on_all_mods_loaded = function()
     -- WATCHER
     -- modding_tools:watch("pressed_forward", mod, "pressed_forward")
     -- modding_tools:watch("character_state", mod, "character_state")
+    -- modding_tools:watch("wants_to_stop", mod, "wants_to_stop")
+    -- modding_tools:watch("keep_sprint", mod, "keep_sprint")
 end
 
 -------------------------
@@ -88,6 +90,9 @@ local is_on_hub = false
 
 mod.character_state = ""
 
+mod.wants_to_stop = false
+mod.keep_sprint = false
+
 -----------------------
 -- PROMISE FUNCTIONS --
 -----------------------
@@ -100,8 +105,9 @@ local function setPromise(from)
 end
 
 local function clearPromise(from)
-    if mod.promise_sprint then
+    if mod.promise_sprint or mod.keep_sprint then
         mod.promise_sprint = false
+        mod.keep_sprint = false
         if modding_tools then debug:print_mod("clearPromiseFrom: " .. from) end
     end
 end
@@ -158,31 +164,30 @@ mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt,
     _update_character_state(self)
 end)
 
--- FUNCTION FOR CLEARING PROMISE ON WEAPON ACTION
-
-local function check_weapon_want_to_stop(keywords)
-    local has = {}
-    for _, keyword in ipairs(keywords) do
-        has[keyword] = true
-    end
-    local melee = has["melee"]
-    local ranged = has["ranged"]
-    local want_to_stop = (melee and not has["combat_knife"]) or (ranged and has["heavystubber"])
-    return want_to_stop
-end
-
 -- CLEARING PROMISE ON WEAPON ACTION
 
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
     if previous_state == "sprinting" then
         if mod.settings["enable_keep_sprint_after_weapon_actions"] then
-            local weapon_template = PlayerUnitVisualLoadout.wielded_weapon_template(self._visual_loadout_extension, self._inventory_component)
-            if check_weapon_want_to_stop(weapon_template.keywords) then
-                clearPromise("wants_to_stop")
-            end
+            mod.wants_to_stop = true
         else
             clearPromise("wants_to_stop")
         end
+        if modding_tools then debug:print_mod("wants_to_stop") end
+    end
+end)
+
+-- KEEPING SPRINT AFTER FINISHING WEAPON ACTION
+
+mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
+    if mod.wants_to_stop and (reason == "new_interrupting_action") then
+        clearPromise("new_interrupting_action")
+        mod.keep_sprint = true
+        mod.wants_to_stop = false
+    end
+    if mod.keep_sprint and (reason == "action_complete") then
+        setPromise("action_complete")
+        mod.keep_sprint = false
     end
 end)
 
