@@ -3,50 +3,6 @@
 local mod = get_mod("immersive_evasion")
 local modding_tools = get_mod("modding_tools")
 
---------------------------
--- MOD SETTINGS CACHING --
---------------------------
-
-mod.settings = {
-    tilt_factor_dodge          = mod:get("tilt_factor_dodge"),
-    tilt_factor_slide          = mod:get("tilt_factor_slide"),
-    enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
-}
-
-mod.on_setting_changed = function(setting_id)
-    mod.settings[setting_id] = mod:get(setting_id)
-end
-
-------------------------
--- ON ALL MODS LOADED --
-------------------------
-
-mod.on_all_mods_loaded = function()
-    -- WATCHER
-    -- modding_tools:watch("look_rotation", mod, "look_rotation")
-    -- modding_tools:watch("look_direction", mod, "look_direction")
-    -- modding_tools:watch("roll_offset", mod, "roll_offset")
-    -- modding_tools:watch("roll_offset_target", mod, "roll_offset_target")
-end
-
--------------------------
--- MODDING TOOLS DEBUG --
--------------------------
-
-local debug = {
-    is_enabled = function(self)
-        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
-    end,
-    print = function(self, text)
-        pcall(function() modding_tools:console_print(text) end)
-    end,
-    print_mod = function(self, text)
-        if self:is_enabled() then
-            self:print(mod:localize("mod_name") .. ": " .. text)
-        end
-    end,
-}
-
 ---------------
 -- CONSTANTS --
 ---------------
@@ -82,6 +38,50 @@ mod.look_direction = nil
 
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
+
+---------------
+-- UTILITIES --
+---------------
+
+local debug = {
+    is_enabled = function(self)
+        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
+    end,
+    print = function(self, text)
+        pcall(function() modding_tools:console_print(text) end)
+    end,
+    print_mod = function(self, text)
+        if self:is_enabled() then
+            self:print(mod:localize("mod_name") .. ": " .. text)
+        end
+    end,
+}
+
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
+mod.settings = {
+    tilt_factor_dodge          = mod:get("tilt_factor_dodge"),
+    tilt_factor_slide          = mod:get("tilt_factor_slide"),
+    enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
+}
+
+mod.on_setting_changed = function(setting_id)
+    mod.settings[setting_id] = mod:get(setting_id)
+end
+
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
+mod.on_all_mods_loaded = function()
+    -- WATCHER
+    -- modding_tools:watch("look_rotation", mod, "look_rotation")
+    -- modding_tools:watch("look_direction", mod, "look_direction")
+    -- modding_tools:watch("roll_offset", mod, "roll_offset")
+    -- modding_tools:watch("roll_offset_target", mod, "roll_offset_target")
+end
 
 --------------------------------------
 -- ROLL OFFSET CALCULATION FUNCTION --

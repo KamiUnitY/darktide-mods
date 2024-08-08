@@ -3,47 +3,6 @@
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
 
---------------------------
--- MOD SETTINGS CACHING --
---------------------------
-
-mod.settings = {
-    enable_zealot_throwing_knives = mod:get("enable_zealot_throwing_knives"),
-    enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
-}
-
-mod.on_setting_changed = function(setting_id)
-    mod.settings[setting_id] = mod:get(setting_id)
-end
-
-------------------------
--- ON ALL MODS LOADED --
-------------------------
-
-mod.on_all_mods_loaded = function()
-    -- WATCHER
-    -- modding_tools:watch("promise_exist",mod,"promise_exist")
-    -- modding_tools:watch("character_state",mod,"character_state")
-end
-
--------------------------
--- MODDING TOOLS DEBUG --
--------------------------
-
-local debug = {
-    is_enabled = function(self)
-        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
-    end,
-    print = function(self, text)
-        pcall(function() modding_tools:console_print(text) end)
-    end,
-    print_mod = function(self, text)
-        if self:is_enabled() then
-            self:print(mod:localize("mod_name") .. ": " .. text)
-        end
-    end,
-}
-
 ---------------
 -- CONSTANTS --
 ---------------
@@ -110,6 +69,47 @@ mod.promises = {
     device           = false,
     grenade          = false,
 }
+
+---------------
+-- UTILITIES --
+---------------
+
+local debug = {
+    is_enabled = function(self)
+        return mod.settings["enable_debug_modding_tools"] and modding_tools and modding_tools:is_enabled()
+    end,
+    print = function(self, text)
+        pcall(function() modding_tools:console_print(text) end)
+    end,
+    print_mod = function(self, text)
+        if self:is_enabled() then
+            self:print(mod:localize("mod_name") .. ": " .. text)
+        end
+    end,
+}
+
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
+mod.settings = {
+    enable_zealot_throwing_knives = mod:get("enable_zealot_throwing_knives"),
+    enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
+}
+
+mod.on_setting_changed = function(setting_id)
+    mod.settings[setting_id] = mod:get(setting_id)
+end
+
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
+mod.on_all_mods_loaded = function()
+    -- WATCHER
+    -- modding_tools:watch("promise_exist",mod,"promise_exist")
+    -- modding_tools:watch("character_state",mod,"character_state")
+end
 
 -----------------------
 -- PROMISE FUNCTIONS --
