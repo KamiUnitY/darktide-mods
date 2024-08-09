@@ -158,31 +158,35 @@ end)
 -- CLEARING PROMISE ON WEAPON ACTION
 
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
-    mod.wants_to_stop = true
-    if modding_tools then debug:print_mod("wants_to_stop") end
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.wants_to_stop = true
+        if modding_tools then debug:print_mod("wants_to_stop") end
+    end
 end)
 
 -- KEEPING SPRINT AFTER FINISHING WEAPON ACTION
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
-    if mod.wants_to_stop then
-        if mod.promise_sprint and (reason == "new_interrupting_action" or reason == "started_sprint") then
-            local handler_data_component = handler_data.component.__data[1]
-            local previous_action = handler_data_component.previous_action_name or ""
-            local current_action = handler_data_component.current_action_name or ""
-            local weapon_template = handler_data_component.template_name or ""
-            if not string.find(weapon_template, "combatknife") or not (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
-                clearPromise(reason)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        if mod.wants_to_stop then
+            if mod.promise_sprint and (reason == "new_interrupting_action" or reason == "started_sprint") then
+                local handler_data_component = handler_data.component.__data[1]
+                local previous_action = handler_data_component.previous_action_name or ""
+                local current_action = handler_data_component.current_action_name or ""
+                local weapon_template = handler_data_component.template_name or ""
+                if not string.find(weapon_template, "combatknife") or not (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
+                    clearPromise(reason)
+                end
+                mod.keep_sprint = true
             end
-            mod.keep_sprint = true
+            mod.wants_to_stop = false
         end
-        mod.wants_to_stop = false
-    end
-    if mod.keep_sprint and (reason == "action_complete" or reason == "hold_input_released") then
-        if mod.settings["enable_keep_sprint_after_weapon_actions"] then
-            setPromise(reason)
+        if mod.keep_sprint and (reason == "action_complete" or reason == "hold_input_released") then
+            if mod.settings["enable_keep_sprint_after_weapon_actions"] then
+                setPromise(reason)
+            end
+            mod.keep_sprint = false
         end
-        mod.keep_sprint = false
     end
 end)
 
