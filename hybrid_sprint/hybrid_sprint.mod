@@ -8,10 +8,6 @@ return {
 			mod_localization = "hybrid_sprint/scripts/mods/hybrid_sprint/hybrid_sprint_localization",
 		})
 	end,
-	load_before = {
-		"guarantee_weapon_swap",
-		"guarantee_ability_activation",
-	},
 	load_after = {
 		-- "ChatBlock", -- Already ordered by alphabetical order
 		"modding_tools",
