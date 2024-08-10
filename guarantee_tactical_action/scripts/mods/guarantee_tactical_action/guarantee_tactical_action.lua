@@ -8,10 +8,24 @@ local modding_tools = get_mod("modding_tools")
 ---------------
 
 local PROMISE_ACTION_MAP = {
-    weapon_extra_pressed = "special",
+    weapon_extra_pressed = "action_special",
     weapon_reload        = "reload",
+    action_one_pressed   = "action_one",
+    action_two_pressed   = "action_two",
 }
 
+local CLEAR_PROMISE_ACTION = {
+    weapon_extra_pressed  = true,
+    weapon_extra_hold     = true,
+    weapon_extra_released = true,
+    weapon_reload         = true,
+    action_one_pressed    = true,
+    action_one_hold       = true,
+    action_one_released   = true,
+    action_two_pressed    = true,
+    action_two_hold       = true,
+    action_two_released   = true,
+}
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
@@ -34,8 +48,10 @@ mod.character_state = ""
 mod.promise_exist = false
 
 mod.promises = {
-    special = false,
-    reload  = false,
+    action_special = false,
+    reload         = false,
+    action_one     = false,
+    action_two     = false,
 }
 
 ---------------
@@ -105,9 +121,9 @@ local function clearAllPromises()
     end
 end
 
-local function isPromised(promise)
+local function isPromised(action, promise)
     if promise then
-        if modding_tools then debug:print_mod("Attempting to do tactical action !!!") end
+        if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
     end
     return promise
 end
@@ -128,7 +144,7 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if PROMISE_ACTION_MAP[used_input] then
+        if CLEAR_PROMISE_ACTION[used_input] then
             clearAllPromises()
         end
     end
@@ -173,6 +189,7 @@ local _input_hook = function(func, self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
     input_tick = input_tick + 1
+    local do_tick = input_tick % 2 == 0
 
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
@@ -182,21 +199,23 @@ local _input_hook = function(func, self, action_name)
                 setPromise(promise_action)
             end
         end
-        if input_tick % 2 == 0 then
+        if do_tick then
             local promise = mod.promises[promise_action]
-            return out or (promise and isPromised(promise))
+            return out or (promise and isPromised(promise_action, promise))
         end
     end
 
     if mod.promise_exist then
-        if action_name == "action_one_pressed" then
-            return false
-        end
-        if action_name == "action_one_hold" then
-            return false
-        end
-        if action_name == "action_one_released" then
-            return true
+        if do_tick then
+            if action_name == "action_one_pressed" then
+                return false
+            end
+            if action_name == "action_one_hold" then
+                return false
+            end
+            if action_name == "action_one_released" then
+                return true
+            end
         end
     end
 
