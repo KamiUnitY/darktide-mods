@@ -263,9 +263,15 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "sprinting" then
+        -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
+        if pressed and mod.character_state == "lunging" then
+            return false
+        end
+        -- Promise sprinting
         if pressed and not mod.settings["enable_hold_to_sprint"] then
             setPromise("Pressed Sprint")
         end
+        -- Do sprinting if promised
         local promise = mod.promise_sprint
         return out or (promise and isPromised(promise))
     end
