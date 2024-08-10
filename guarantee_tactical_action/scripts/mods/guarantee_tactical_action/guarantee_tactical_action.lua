@@ -129,7 +129,7 @@ end)
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if PROMISE_ACTION_MAP[used_input] then
-            clearPromise(PROMISE_ACTION_MAP[used_input])
+            clearAllPromises()
         end
     end
 end)
@@ -182,9 +182,21 @@ local _input_hook = function(func, self, action_name)
                 setPromise(promise_action)
             end
         end
-        if input_tick % 10 == 0 then
+        if input_tick % 2 == 0 then
             local promise = mod.promises[promise_action]
             return out or (promise and isPromised(promise))
+        end
+    end
+
+    if mod.promise_exist then
+        if action_name == "action_one_pressed" then
+            return false
+        end
+        if action_name == "action_one_hold" then
+            return false
+        end
+        if action_name == "action_one_released" then
+            return true
         end
     end
 
