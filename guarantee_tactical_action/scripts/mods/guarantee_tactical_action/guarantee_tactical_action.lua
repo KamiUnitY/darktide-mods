@@ -30,7 +30,7 @@ local CLEAR_PROMISE_ACTION = {
 local PROMISE_GROUPS = {
     action_one     = {"action_one_pressed", "action_one_hold", "action_one_released"},
     action_two     = {"action_two_pressed", "action_two_hold", "action_two_released"},
-    action_special = {"weapon_extra_pressed"},
+    action_special = {"weapon_extra_pressed", "weapon_extra_hold", "weapon_extra_released"},
     action_reload  = {"weapon_reload"},
 }
 
@@ -225,15 +225,10 @@ local _input_hook = function(func, self, action_name)
     input_tick = input_tick + 1
     local do_tick = input_tick % 2 == 0
 
-    if CLEAR_PROMISE_ACTION[action_name] then
-        if pressed then
-            clearGroupPromises("Input pressed", action_name)
-        end
-    end
-
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
+            clearPromise("Input pressed", action_name)
             if ALLOWED_CHARACTER_STATE[mod.character_state] then
                 setPromise("Input pressed", promise_action)
             end
