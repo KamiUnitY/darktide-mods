@@ -30,7 +30,7 @@ local CLEAR_PROMISE_ACTION = {
 local PROMISE_GROUPS = {
     action_one     = {"action_one_pressed", "action_one_hold", "action_one_released"},
     action_two     = {"action_two_pressed", "action_two_hold", "action_two_released"},
-    action_special = {"weapon_extra_pressed", "weapon_extra_hold", "weapon_extra_released"},
+    action_special = {"weapon_extra_pressed"},
     action_reload  = {"weapon_reload"},
 }
 
@@ -112,35 +112,38 @@ end
 -- PROMISE FUNCTIONS --
 -----------------------
 
-local function setPromise(action)
+local function setPromise(from, action)
     if not mod.promises[action] and ALLOWED_SET_PROMISE[action] then
         mod.promises[action] = true
         mod.promise_exist = true
+        if modding_tools then debug:print_mod("Set " .. action .. " promise from " .. from) end
     end
 end
 
-local function clearPromise(action)
+local function clearPromise(from, action)
     if mod.promises[action] then
         mod.promises[action] = false
         mod.promise_exist = false -- Every setPromise() got clearAllPromises() first, So this is fine
+        if modding_tools then debug:print_mod("Clear " .. action .. " promise from " .. from) end
     end
 end
 
-local function clearGroupPromises(used_input)
+local function clearGroupPromises(from, used_input)
     for group, actions in pairs(PROMISE_GROUPS) do
         for _, action in ipairs(actions) do
             if action == used_input then
-                clearPromise(group)
+                clearPromise(from, group)
                 break
             end
         end
     end
 end
 
-local function clearAllPromises()
+local function clearAllPromises(from)
     if mod.promise_exist then
         for key in pairs(mod.promises) do
             mod.promises[key] = false
+            if modding_tools then debug:print_mod("Clear all promise from " .. from) end
         end
         mod.promise_exist = false
     end
@@ -161,7 +164,7 @@ end
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if self._player.viewport_name == "player1" then
-        clearAllPromises()
+        clearAllPromises("on_slot_wielded")
     end
 end)
 
@@ -170,7 +173,7 @@ end)
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if CLEAR_PROMISE_ACTION[used_input] then
-            clearGroupPromises(used_input)
+            clearGroupPromises("start_action", used_input)
         end
     end
 end)
@@ -180,7 +183,7 @@ end)
 local _update_character_state = function (self)
     mod.character_state = self._state_current.name
     if not ALLOWED_CHARACTER_STATE[mod.character_state] then
-        clearAllPromises()
+        clearAllPromises("UNALLOWED CHARACTER STATE")
     end
 end
 
@@ -224,7 +227,7 @@ local _input_hook = function(func, self, action_name)
 
     if CLEAR_PROMISE_ACTION[action_name] then
         if pressed then
-            clearGroupPromises(action_name)
+            clearGroupPromises("Input pressed", action_name)
         end
     end
 
@@ -232,7 +235,7 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if pressed then
             if ALLOWED_CHARACTER_STATE[mod.character_state] then
-                setPromise(promise_action)
+                setPromise("Input pressed", promise_action)
             end
         end
         if do_tick then
@@ -242,7 +245,7 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "sprinting" and pressed then
-        clearAllPromises()
+        clearAllPromises("sprinting")
     end
 
     if mod.promise_exist then
