@@ -249,16 +249,14 @@ local _input_hook = function(func, self, action_name)
     end
 
     if mod.promise_exist then
-        if do_tick then
-            if action_name == "action_one_pressed" then
-                return false
-            end
-            if action_name == "action_one_hold" then
-                return false
-            end
-            if action_name == "action_one_released" then
-                return true
-            end
+        if action_name == "action_one_pressed" then
+            return false
+        end
+        if action_name == "action_one_hold" then
+            return false
+        end
+        if action_name == "action_one_released" and do_tick then
+            return true
         end
     end
 
