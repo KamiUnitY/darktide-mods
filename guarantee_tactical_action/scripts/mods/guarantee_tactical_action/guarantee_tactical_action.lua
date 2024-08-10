@@ -27,6 +27,13 @@ local CLEAR_PROMISE_ACTION = {
     action_two_released   = true,
 }
 
+local PROMISE_GROUPS = {
+    action_special = {"weapon_extra_pressed", "weapon_extra_hold", "weapon_extra_released"},
+    action_reload  = {"weapon_reload"},
+    action_one     = {"action_one_pressed", "action_one_hold", "action_one_released"},
+    action_two     = {"action_two_pressed", "action_two_hold", "action_two_released"},
+}
+
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
     ledge_vaulting = true,
@@ -49,7 +56,7 @@ mod.promise_exist = false
 
 mod.promises = {
     action_special = false,
-    reload         = false,
+    action_reload  = false,
     action_one     = false,
     action_two     = false,
 }
@@ -112,6 +119,17 @@ local function clearPromise(action)
     end
 end
 
+local function clearGroupPromises(used_input)
+    for group, actions in pairs(PROMISE_GROUPS) do
+        for _, action in ipairs(actions) do
+            if action == used_input then
+                clearPromise(group)
+                break
+            end
+        end
+    end
+end
+
 local function clearAllPromises()
     if mod.promise_exist then
         for key in pairs(mod.promises) do
@@ -145,7 +163,7 @@ end)
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if CLEAR_PROMISE_ACTION[used_input] then
-            clearAllPromises()
+            clearGroupPromises(used_input)
         end
     end
 end)
