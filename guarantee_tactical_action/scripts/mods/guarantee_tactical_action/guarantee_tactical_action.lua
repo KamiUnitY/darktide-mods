@@ -9,7 +9,7 @@ local modding_tools = get_mod("modding_tools")
 
 local PROMISE_ACTION_MAP = {
     weapon_extra_pressed = "action_special",
-    weapon_reload        = "reload",
+    weapon_reload        = "action_reload",
     action_one_pressed   = "action_one",
     action_two_pressed   = "action_two",
 }
@@ -32,6 +32,13 @@ local PROMISE_GROUPS = {
     action_reload  = {"weapon_reload"},
     action_one     = {"action_one_pressed", "action_one_hold", "action_one_released"},
     action_two     = {"action_two_pressed", "action_two_hold", "action_two_released"},
+}
+
+local ALLOWED_SET_PROMISE = {
+    action_special = true,
+    action_reload  = true,
+    action_one     = false,
+    action_two     = false,
 }
 
 local ALLOWED_CHARACTER_STATE = {
@@ -106,7 +113,7 @@ end
 -----------------------
 
 local function setPromise(action)
-    if not mod.promises[action] then
+    if not mod.promises[action] and ALLOWED_SET_PROMISE[action] then
         mod.promises[action] = true
         mod.promise_exist = true
     end
