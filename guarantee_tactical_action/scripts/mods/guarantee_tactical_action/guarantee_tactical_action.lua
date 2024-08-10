@@ -8,30 +8,30 @@ local modding_tools = get_mod("modding_tools")
 ---------------
 
 local PROMISE_ACTION_MAP = {
-    weapon_extra_pressed = "action_special",
-    weapon_reload        = "action_reload",
     action_one_pressed   = "action_one",
     action_two_pressed   = "action_two",
+    weapon_extra_pressed = "action_special",
+    weapon_reload        = "action_reload",
 }
 
 local CLEAR_PROMISE_ACTION = {
-    weapon_extra_pressed  = true,
-    weapon_extra_hold     = true,
-    weapon_extra_released = true,
-    weapon_reload         = true,
     action_one_pressed    = true,
     action_one_hold       = true,
     action_one_released   = true,
     action_two_pressed    = true,
     action_two_hold       = true,
     action_two_released   = true,
+    weapon_extra_pressed  = true,
+    weapon_extra_hold     = true,
+    weapon_extra_released = true,
+    weapon_reload         = true,
 }
 
 local PROMISE_GROUPS = {
-    action_special = {"weapon_extra_pressed", "weapon_extra_hold", "weapon_extra_released"},
-    action_reload  = {"weapon_reload"},
     action_one     = {"action_one_pressed", "action_one_hold", "action_one_released"},
     action_two     = {"action_two_pressed", "action_two_hold", "action_two_released"},
+    action_special = {"weapon_extra_pressed", "weapon_extra_hold", "weapon_extra_released"},
+    action_reload  = {"weapon_reload"},
 }
 
 local ALLOWED_SET_PROMISE = {
@@ -62,10 +62,10 @@ mod.character_state = ""
 mod.promise_exist = false
 
 mod.promises = {
-    action_special = false,
-    action_reload  = false,
     action_one     = false,
     action_two     = false,
+    action_special = false,
+    action_reload  = false,
 }
 
 ---------------
@@ -222,10 +222,15 @@ local _input_hook = function(func, self, action_name)
     input_tick = input_tick + 1
     local do_tick = input_tick % 2 == 0
 
+    if CLEAR_PROMISE_ACTION[action_name] then
+        if pressed then
+            clearGroupPromises(action_name)
+        end
+    end
+
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
-            clearAllPromises()
             if ALLOWED_CHARACTER_STATE[mod.character_state] then
                 setPromise(promise_action)
             end
