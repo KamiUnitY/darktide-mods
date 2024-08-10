@@ -229,6 +229,10 @@ local _input_hook = function(func, self, action_name)
         end
     end
 
+    if action_name == "sprinting" and pressed then
+        clearAllPromises()
+    end
+
     if mod.promise_exist then
         if do_tick then
             if action_name == "action_one_pressed" then
