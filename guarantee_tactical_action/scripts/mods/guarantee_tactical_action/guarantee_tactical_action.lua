@@ -61,6 +61,10 @@ mod.character_state = ""
 
 mod.promise_exist = false
 
+mod.doing_special = false
+mod.doing_reload = false
+mod.doing_melee_start = false
+
 mod.promises = {
     action_one     = false,
     action_two     = false,
@@ -180,18 +184,17 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if string.find(action_name, "action_melee_start") or action_name == "action_push" then
+        if action_name:find("action_melee_start") or action_name == "action_push" then
             mod.doing_melee_start = true
-        end
-        if string.find(action_name, "special") then
+        elseif action_name:find("special") then
             mod.doing_special = true
         elseif action_name == "action_reload" then
             mod.doing_reload = true
         end
-        debug:print("START_"..action_name)
         if CLEAR_PROMISE_ACTION[used_input] then
             clearGroupPromises("start_action", used_input)
         end
+        if modding_tools then debug:print_mod("START "..action_name) end
     end
 end)
 
@@ -199,18 +202,17 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
     if self._unit_data_extension._player.viewport_name == 'player1' then
         local handler_data_component = handler_data.component.__data[1]
         local previous_action = handler_data_component.previous_action_name or ""
-        local current_action = handler_data_component.current_action_name or ""
-        if string.find(previous_action, "action_melee_start") or previous_action == "action_push" then
+        
+        if previous_action:find("action_melee_start") or previous_action == "action_push" then
             mod.doing_melee_start = false
-        end
-        if string.find(previous_action, "special") then
+        elseif previous_action:find("special") then
             mod.doing_special = false
-            clearPromise("finish_action","action_special")
-        elseif string.find(previous_action, "reload") then
+            clearPromise("finish_action", "action_special")
+        elseif previous_action == "action_reload" then
             mod.doing_reload = false
-            clearPromise("finish_action","action_reload")
+            clearPromise("finish_action", "action_reload")
         end
-        debug:print("END_"..previous_action)
+        if modding_tools then debug:print_mod("END "..previous_action) end
     end
 end)
 
@@ -269,13 +271,9 @@ local _input_hook = function(func, self, action_name)
     end
 
     if mod.promise_exist then
-        if action_name == "action_one_pressed" then
+        if action_name == "action_one_pressed" or action_name == "action_one_hold" then
             return false
-        end
-        if action_name == "action_one_hold" then
-            return false
-        end
-        if action_name == "action_one_released" then
+        elseif action_name == "action_one_released" then
             return true
         end
     end
