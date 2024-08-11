@@ -202,7 +202,6 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
     if self._unit_data_extension._player.viewport_name == 'player1' then
         local handler_data_component = handler_data.component.__data[1]
         local previous_action = handler_data_component.previous_action_name or ""
-        
         if previous_action:find("action_melee_start") or previous_action == "action_push" then
             mod.doing_melee_start = false
         elseif previous_action:find("special") then
