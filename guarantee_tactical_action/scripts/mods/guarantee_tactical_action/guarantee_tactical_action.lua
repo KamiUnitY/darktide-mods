@@ -265,8 +265,8 @@ local _input_hook = function(func, self, action_name)
                 setPromise("Input pressed", promise_action)
             end
         end
-            local promise = mod.promises[promise_action]
-            return out or (promise and isPromised(promise_action, promise))
+        local promise = mod.promises[promise_action]
+        return out or (promise and isPromised(promise_action, promise))
     end
 
     if mod.promise_exist then
