@@ -155,6 +155,9 @@ local function clearAllPromises(from)
 end
 
 local function isPromised(action, promise)
+    if mod.doing_melee_start then
+       return false
+    end
     if promise then
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
     end
@@ -177,6 +180,11 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        if string.find(action_name, "melee_start") then
+            mod.doing_melee_start = true
+        else
+            mod.doing_melee_start = false
+        end
         if string.find(action_name, "special") then
             mod.doing_special = true
         elseif string.find(action_name, "reload") then
@@ -244,14 +252,9 @@ end)
 -- INPUT HOOK --
 ----------------
 
-local input_tick = 0
-
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
-
-    input_tick = input_tick + 1
-    local do_tick = input_tick % 2 == 0
 
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
@@ -261,14 +264,8 @@ local _input_hook = function(func, self, action_name)
                 setPromise("Input pressed", promise_action)
             end
         end
-        if do_tick then
             local promise = mod.promises[promise_action]
             return out or (promise and isPromised(promise_action, promise))
-        end
-    end
-
-    if action_name == "sprinting" and pressed then
-        clearAllPromises("sprinting")
     end
 
     if mod.promise_exist then
@@ -278,7 +275,7 @@ local _input_hook = function(func, self, action_name)
         if action_name == "action_one_hold" then
             return false
         end
-        if action_name == "action_one_released" and do_tick then
+        if action_name == "action_one_released" then
             return true
         end
     end
