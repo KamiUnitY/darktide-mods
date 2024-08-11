@@ -64,6 +64,7 @@ mod.promise_exist = false
 mod.doing_special = false
 mod.doing_reload = false
 mod.doing_melee_start = false
+mod.doing_push = false
 
 mod.promises = {
     action_one     = false,
@@ -159,7 +160,7 @@ local function clearAllPromises(from)
 end
 
 local function isPromised(action, promise)
-    if mod.doing_melee_start then
+    if mod.doing_melee_start or mod.doing_push then
        return false
     end
     if promise then
@@ -184,8 +185,10 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if action_name:find("action_melee_start") or action_name == "action_push" then
+        if action_name:find("action_melee_start") then
             mod.doing_melee_start = true
+        elseif action_name == "action_push" then
+            mod.doing_push = true
         elseif action_name:find("special") then
             mod.doing_special = true
         elseif action_name == "action_reload" then
@@ -202,8 +205,10 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
     if self._unit_data_extension._player.viewport_name == 'player1' then
         local handler_data_component = handler_data.component.__data[1]
         local previous_action = handler_data_component.previous_action_name or ""
-        if previous_action:find("action_melee_start") or previous_action == "action_push" then
+        if previous_action:find("action_melee_start") then
             mod.doing_melee_start = false
+        elseif previous_action == "action_push" then
+            mod.doing_push = false
         elseif previous_action:find("special") then
             mod.doing_special = false
             clearPromise("finish_action", "action_special")
@@ -269,7 +274,7 @@ local _input_hook = function(func, self, action_name)
         return out or (promise and isPromised(promise_action, promise))
     end
 
-    if mod.promise_exist then
+    if mod.promise_exist and not mod.doing_push then
         if action_name == "action_one_pressed" or action_name == "action_one_hold" then
             return false
         elseif action_name == "action_one_released" then
