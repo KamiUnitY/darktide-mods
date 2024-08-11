@@ -274,11 +274,16 @@ local _input_hook = function(func, self, action_name)
         return out or (promise and isPromised(promise_action, promise))
     end
 
-    if mod.promise_exist and not mod.doing_push then
-        if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+    if mod.promise_exist  then
+        if not mod.doing_push then
+            if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+                return false
+            elseif action_name == "action_one_released" then
+                return true
+            end
+        end
+        if action_name == "sprinting" then
             return false
-        elseif action_name == "action_one_released" then
-            return true
         end
     end
 

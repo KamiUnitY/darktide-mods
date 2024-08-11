@@ -2,6 +2,7 @@
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
+local guarantee_tactical_action = get_mod("guarantee_tactical_action")
 
 ---------------
 -- CONSTANTS --
@@ -263,6 +264,10 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "sprinting" then
+        -- Compatibility with Guarantee Tactical Action
+        if guarantee_tactical_action and guarantee_tactical_action.promise_exist then
+            return false
+        end
         -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
         if mod.character_state == "lunging" then
             return false
