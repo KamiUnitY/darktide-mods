@@ -114,6 +114,11 @@ end
 
 local function setPromise(from, action)
     if not mod.promises[action] and ALLOWED_SET_PROMISE[action] then
+        if mod.doing_reload and action == "action_reload" then
+            return
+        elseif mod.doing_special and action == "action_special" then
+            return
+        end
         mod.promises[action] = true
         mod.promise_exist = true
         if modding_tools then debug:print_mod("Set " .. action .. " promise from " .. from) end
@@ -172,9 +177,32 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        if string.find(action_name, "special") then
+            mod.doing_special = true
+        elseif string.find(action_name, "reload") then
+            mod.doing_reload = true
+        end
+        debug:print("START_"..action_name)
         if CLEAR_PROMISE_ACTION[used_input] then
             clearGroupPromises("start_action", used_input)
         end
+    end
+end)
+
+mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        local handler_data_component = handler_data.component.__data[1]
+        local previous_action = handler_data_component.previous_action_name or ""
+        local current_action = handler_data_component.current_action_name or ""
+
+        if string.find(previous_action, "special") then
+            mod.doing_special = false
+            clearPromise("finish_action","action_special")
+        elseif string.find(previous_action, "reload") then
+            mod.doing_reload = false
+            clearPromise("finish_action","action_reload")
+        end
+        debug:print("END_"..previous_action)
     end
 end)
 
@@ -228,7 +256,7 @@ local _input_hook = function(func, self, action_name)
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
-            clearPromise("Input pressed", action_name)
+            clearPromise("Input pressed", promise_action)
             if ALLOWED_CHARACTER_STATE[mod.character_state] then
                 setPromise("Input pressed", promise_action)
             end
