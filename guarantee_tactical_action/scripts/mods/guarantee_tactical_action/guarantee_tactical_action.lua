@@ -34,13 +34,6 @@ local PROMISE_GROUPS = {
     action_reload  = {"weapon_reload"},
 }
 
-local ALLOWED_SET_PROMISE = {
-    action_special = true,
-    action_reload  = true,
-    action_one     = false,
-    action_two     = false,
-}
-
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
     ledge_vaulting = true,
@@ -72,6 +65,16 @@ mod.promises = {
     action_special = false,
     action_reload  = false,
 }
+
+local allowed_set_promise = {
+    action_special = true,
+    action_reload  = true,
+    action_one     = false,
+    action_two     = false,
+}
+
+local current_slot = ""
+local weapon_template = ""
 
 ---------------
 -- UTILITIES --
@@ -118,7 +121,7 @@ end
 -----------------------
 
 local function setPromise(from, action)
-    if not mod.promises[action] and ALLOWED_SET_PROMISE[action] then
+    if not mod.promises[action] and allowed_set_promise[action] then
         if mod.doing_reload and action == "action_reload" then
             return
         elseif mod.doing_special and action == "action_special" then
@@ -173,11 +176,44 @@ end
 -- ON TRIGGER --
 ----------------
 
--- CLEAR PROMISE ON CHANGE WEAPON
+-- ONLY ALLOW PROMISE ON WEAPON THAT HAVE THE ACTION AND CLEAR PROMISE ON CHANGE WEAPON
+
+local function _on_slot_wielded(self, slot_name)
+    current_slot = slot_name
+    local slot_weapon = self._weapons[slot_name]
+    if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
+        weapon_template = slot_weapon.weapon_template
+        allowed_set_promise.action_special = false
+        for action_name in pairs(weapon_template.actions) do
+            if string.find(action_name, "special") then
+                allowed_set_promise.action_special = true
+                break
+            end
+        end
+        allowed_set_promise.action_reload = false
+        if weapon_template.actions["action_reload"] then
+            allowed_set_promise.action_reload = true
+        end
+    end
+end
+
+
+mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
+    if current_slot ~= "" and weapon_template ~= "" then
+        mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
+    end
+    if self._player.viewport_name == "player1" then
+        local wielded_slot = inventory_component.wielded_slot
+        if wielded_slot ~= nil and wielded_slot ~= current_slot then
+            _on_slot_wielded(self, wielded_slot)
+        end
+    end
+end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if self._player.viewport_name == "player1" then
         clearAllPromises("on_slot_wielded")
+        _on_slot_wielded(self, slot_name)
     end
 end)
 
