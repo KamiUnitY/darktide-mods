@@ -202,6 +202,9 @@ local function _on_slot_wielded(self, slot_name)
                 break
             end
         end
+        if string.find(weapon_template.name, "slabshield") then
+            allowed_set_promise.action_special = false
+        end
         allowed_set_promise.action_reload = false
         if action_input_hierarchy.reload then
             allowed_set_promise.action_reload = true
