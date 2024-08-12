@@ -193,7 +193,7 @@ local function _on_slot_wielded(self, slot_name)
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
         allowed_set_promise.action_special = false
-        if weapon_template.action_input_hierarchy.special_action and not weapon_template.action_input_hierarchy.special_action_hold then
+        if weapon_template.action_input_hierarchy.special_action then
             allowed_set_promise.action_special = true
         end
         allowed_set_promise.action_reload = false
@@ -316,6 +316,10 @@ local _input_hook = function(func, self, action_name)
         end
         local promise = mod.promises[promise_action]
         return out or (promise and isPromised(promise_action, promise))
+    end
+
+    if action_name == "weapon_extra_hold" and mod.promises.action_special then
+        return true
     end
 
     if mod.promise_exist  then
