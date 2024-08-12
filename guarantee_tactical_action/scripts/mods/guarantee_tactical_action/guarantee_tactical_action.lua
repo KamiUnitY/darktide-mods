@@ -114,7 +114,7 @@ local function setPromise(from, action)
         local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
         if visual_loadout_system then
             if action == "action_special" then
-                if wieldable_component.special_active then
+                if wieldable_component.special_active and wieldable_component.num_special_activations == 0 then
                     return
                 end
             elseif action == "action_reload" then
