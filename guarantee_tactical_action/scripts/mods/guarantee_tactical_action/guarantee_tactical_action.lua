@@ -169,9 +169,9 @@ local function clearAllPromises(from)
     if mod.promise_exist then
         for key in pairs(mod.promises) do
             mod.promises[key] = false
-            if modding_tools then debug:print_mod("Clear all promise from " .. from) end
         end
         mod.promise_exist = false
+        if modding_tools then debug:print_mod("Clear all promise from " .. from) end
     end
 end
 
@@ -313,7 +313,7 @@ local _input_hook = function(func, self, action_name)
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
-            clearPromise("Input pressed", promise_action)
+            clearAllPromises("Input_pressed")
             if ALLOWED_CHARACTER_STATE[mod.character_state] then
                 setPromise("Input pressed", promise_action)
             end
