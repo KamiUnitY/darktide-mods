@@ -124,10 +124,10 @@ local function setPromise(from, action)
     if action == "action_reload" then
         local unit = Managers.player:local_player(1).player_unit
         if unit then
-            local weapon_system = ScriptUnit.extension(unit, "weapon_system")
-            if weapon_system then
-                local base_clip = weapon_system._base_clip_by_slot[current_slot]
-                if base_clip.current_ammunition_clip == base_clip.max_ammunition_clip then
+            local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
+            local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
+            if visual_loadout_system then
+                if wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
                     return
                 end
             end
@@ -196,14 +196,11 @@ local function _on_slot_wielded(self, slot_name)
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
         allowed_set_promise.action_special = false
-        for action_name in pairs(weapon_template.actions) do
-            if string.find(action_name, "special") then
-                allowed_set_promise.action_special = true
-                break
-            end
+        if weapon_template.action_input_hierarchy.special_action then
+            allowed_set_promise.action_special = true
         end
         allowed_set_promise.action_reload = false
-        if weapon_template.actions["action_reload"] then
+        if weapon_template.action_input_hierarchy.reload then
             allowed_set_promise.action_reload = true
         end
     end
