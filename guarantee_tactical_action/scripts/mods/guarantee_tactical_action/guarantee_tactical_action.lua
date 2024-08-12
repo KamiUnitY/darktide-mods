@@ -121,6 +121,18 @@ end
 -----------------------
 
 local function setPromise(from, action)
+    if action == "action_reload" then
+        local unit = Managers.player:local_player(1).player_unit
+        if unit then
+            local weapon_system = ScriptUnit.extension(unit, "weapon_system")
+            if weapon_system then
+                local base_clip = weapon_system._base_clip_by_slot[current_slot]
+                if base_clip.current_ammunition_clip == base_clip.max_ammunition_clip then
+                    return
+                end
+            end
+        end
+    end
     if not mod.promises[action] and allowed_set_promise[action] then
         if mod.doing_reload and action == "action_reload" then
             return
@@ -165,16 +177,6 @@ end
 local function isPromised(action, promise)
     if mod.doing_melee_start or mod.doing_push then
        return false
-    end
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        local weapon_system = ScriptUnit.extension(unit, "weapon_system")
-        if weapon_system then
-            local base_clip = weapon_system._base_clip_by_slot[current_slot]
-            if base_clip.current_ammunition_clip == base_clip.max_ammunition_clip then
-                clearPromise("full_ammo", "action_reload")
-            end
-        end
     end
     if promise then
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
