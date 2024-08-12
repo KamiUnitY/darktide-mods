@@ -114,6 +114,7 @@ mod.on_all_mods_loaded = function()
     -- WATCHER
     -- modding_tools:watch("promise_exist",mod,"promise_exist")
     -- modding_tools:watch("character_state",mod,"character_state")
+    -- modding_tools:watch("doing_reload",mod,"doing_reload")
 end
 
 -----------------------
@@ -236,7 +237,7 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
             mod.doing_push = true
         elseif action_name:find("special") then
             mod.doing_special = true
-        elseif action_name == "action_reload" then
+        elseif action_name:find("reload") then
             mod.doing_reload = true
         end
         if CLEAR_PROMISE_ACTION[used_input] then
@@ -259,7 +260,7 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
         elseif previous_action:find("special") then
             mod.doing_special = false
             clearPromise("finish_action", "action_special")
-        elseif previous_action == "action_reload" then
+        elseif previous_action:find("reload") then
             mod.doing_reload = false
             clearPromise("finish_action", "action_reload")
         end
