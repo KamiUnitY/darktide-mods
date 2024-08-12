@@ -149,7 +149,13 @@ end
 local function clearPromise(from, action)
     if mod.promises[action] then
         mod.promises[action] = false
-        mod.promise_exist = false -- Every setPromise() got clearAllPromises() first, So this is fine
+        mod.promise_exist = false
+        for _, promise in pairs(mod.promises) do
+            if promise then
+                mod.promise_exist = true
+                break
+            end
+        end
         if modding_tools then debug:print_mod("Clear " .. action .. " promise from " .. from) end
     end
 end
@@ -313,7 +319,7 @@ local _input_hook = function(func, self, action_name)
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
-            clearAllPromises("Input_pressed")
+            clearPromise("Input pressed", promise_action)
             if ALLOWED_CHARACTER_STATE[mod.character_state] then
                 setPromise("Input pressed", promise_action)
             end
