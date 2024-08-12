@@ -219,7 +219,6 @@ local function _on_slot_wielded(self, slot_name)
     end
 end
 
-
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
     if current_slot ~= "" and weapon_template ~= "" then
         mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
