@@ -8,19 +8,11 @@ local modding_tools = get_mod("modding_tools")
 ---------------
 
 local PROMISE_ACTION_MAP = {
-    action_one_pressed   = "action_one",
-    action_two_pressed   = "action_two",
     weapon_extra_pressed = "action_special",
     weapon_reload        = "action_reload",
 }
 
 local CLEAR_PROMISE_ACTION = {
-    action_one_pressed    = true,
-    action_one_hold       = true,
-    action_one_released   = true,
-    action_two_pressed    = true,
-    action_two_hold       = true,
-    action_two_released   = true,
     weapon_extra_pressed  = true,
     weapon_extra_hold     = true,
     weapon_extra_released = true,
@@ -28,8 +20,6 @@ local CLEAR_PROMISE_ACTION = {
 }
 
 local PROMISE_GROUPS = {
-    action_one     = {"action_one_pressed", "action_one_hold", "action_one_released"},
-    action_two     = {"action_two_pressed", "action_two_hold", "action_two_released"},
     action_special = {"weapon_extra_pressed", "weapon_extra_hold", "weapon_extra_released"},
     action_reload  = {"weapon_reload"},
 }
@@ -60,17 +50,13 @@ mod.doing_melee_start = false
 mod.doing_push = false
 
 mod.promises = {
-    action_one     = false,
-    action_two     = false,
     action_special = false,
     action_reload  = false,
 }
 
 local allowed_set_promise = {
-    action_special = true,
-    action_reload  = true,
-    action_one     = false,
-    action_two     = false,
+    action_special = false,
+    action_reload  = false,
 }
 
 local current_slot = ""
@@ -319,7 +305,7 @@ local _input_hook = function(func, self, action_name)
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
-            clearPromise("Input pressed", promise_action)
+            clearAllPromises("Input pressed")
             if ALLOWED_CHARACTER_STATE[mod.character_state] then
                 setPromise("Input pressed", promise_action)
             end
