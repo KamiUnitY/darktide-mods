@@ -194,8 +194,11 @@ local function _on_slot_wielded(self, slot_name)
         weapon_template = slot_weapon.weapon_template
         local action_input_hierarchy =  weapon_template.action_input_hierarchy
         allowed_set_promise.action_special = false
-        if action_input_hierarchy.special_action or action_input_hierarchy.special_action_hold then
-            allowed_set_promise.action_special = true
+        for action_name in pairs(action_input_hierarchy) do
+            if string.find(action_name, "special_action") then
+                allowed_set_promise.action_special = true
+                break
+            end
         end
         allowed_set_promise.action_reload = false
         if action_input_hierarchy.reload then
