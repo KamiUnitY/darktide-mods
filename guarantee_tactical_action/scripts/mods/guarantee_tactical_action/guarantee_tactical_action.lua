@@ -36,6 +36,11 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
+local ALLOWED_SLOT = {
+    slot_primary   = true,
+    slot_secondary = true,
+}
+
 ---------------
 -- VARIABLES --
 ---------------
@@ -113,8 +118,8 @@ local function setPromise(from, action)
     local unit = Managers.player:local_player(1).player_unit
     if unit then
         local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
-        local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
         if visual_loadout_system then
+            local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
             if action == "action_special" then
                 if not mod.is_toggle_special and wieldable_component.special_active and wieldable_component.num_special_activations == 0 then
                     return
@@ -324,7 +329,7 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if pressed then
             clearAllPromises("Input pressed")
-            if ALLOWED_CHARACTER_STATE[mod.character_state] then
+            if ALLOWED_CHARACTER_STATE[mod.character_state] and ALLOWED_SLOT[current_slot] then
                 setPromise("Input pressed", promise_action)
             end
         end
