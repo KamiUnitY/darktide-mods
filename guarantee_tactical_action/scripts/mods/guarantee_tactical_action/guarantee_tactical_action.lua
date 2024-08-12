@@ -128,7 +128,7 @@ local function setPromise(from, action)
             local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
             local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
             if visual_loadout_system then
-                if wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
+                if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
                     return
                 end
             end
