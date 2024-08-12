@@ -171,10 +171,10 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if mod.wants_to_stop then
             if mod.promise_sprint and (reason == "new_interrupting_action" or reason == "started_sprint") then
-                local handler_data_component = handler_data.component.__data[1]
-                local previous_action = handler_data_component.previous_action_name or ""
-                local current_action = handler_data_component.current_action_name or ""
-                local weapon_template = handler_data_component.template_name or ""
+                local component = handler_data.component
+                local previous_action = component.previous_action_name or ""
+                local current_action = component.current_action_name or ""
+                local weapon_template = component.template_name or ""
                 if not string.find(weapon_template, "combatknife") or not (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
                     clearPromise(reason)
                 end
