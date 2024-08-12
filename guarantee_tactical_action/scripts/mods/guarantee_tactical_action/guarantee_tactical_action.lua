@@ -195,7 +195,7 @@ local function _on_slot_wielded(self, slot_name)
         local action_input_hierarchy =  weapon_template.action_input_hierarchy
         allowed_set_promise.action_special = false
         for action_name in pairs(action_input_hierarchy) do
-            if string.find(action_name, "special_action") then
+            if string.find(action_name, "special") then
                 allowed_set_promise.action_special = true
                 break
             end
