@@ -231,13 +231,13 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if action_name:find("action_melee_start") then
+        if string.find(action_name, "action_melee_start") then
             mod.doing_melee_start = true
         elseif action_name == "action_push" then
             mod.doing_push = true
-        elseif action_name:find("special") then
+        elseif string.find(action_name, "special") then
             mod.doing_special = true
-        elseif action_name:find("reload") then
+        elseif string.find(action_name, "reload") then
             mod.doing_reload = true
         end
         if CLEAR_PROMISE_ACTION[used_input] then
@@ -252,15 +252,14 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
         local component = handler_data.component
         local previous_action = component.previous_action_name or ""
         local current_action = component.current_action_name or ""
-
-        if previous_action:find("action_melee_start") then
+        if string.find(previous_action, "action_melee_start") then
             mod.doing_melee_start = false
         elseif previous_action == "action_push" then
             mod.doing_push = false
-        elseif previous_action:find("special") then
+        elseif string.find(previous_action, "special") then
             mod.doing_special = false
             clearPromise("finish_action", "action_special")
-        elseif previous_action:find("reload") then
+        elseif string.find(previous_action, "reload") then
             mod.doing_reload = false
             clearPromise("finish_action", "action_reload")
         end
