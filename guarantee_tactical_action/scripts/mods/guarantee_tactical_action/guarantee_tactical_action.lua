@@ -200,13 +200,7 @@ local function _on_slot_wielded(self, slot_name)
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
         local action_input_hierarchy =  weapon_template.action_input_hierarchy
-        allowed_set_promise.action_special = false
-        for action_name in pairs(action_input_hierarchy) do
-            if string.find(action_name, "special") then
-                allowed_set_promise.action_special = true
-                break
-            end
-        end
+        allowed_set_promise.action_special = true
         if string.find(weapon_template.name, "slabshield") then
             allowed_set_promise.action_special = false
         end
@@ -348,6 +342,11 @@ local _input_hook = function(func, self, action_name)
             elseif action_name == "action_one_released" then
                 return true
             end
+            -- if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+            --     return false
+            -- elseif action_name == "action_two_released" then
+            --     return true
+            -- end
         end
         if action_name == "sprinting" then
             return false
