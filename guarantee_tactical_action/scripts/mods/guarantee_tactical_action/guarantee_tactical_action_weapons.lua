@@ -246,22 +246,24 @@ local weapons = {
     },
     powersword_p1_m1 = {
         action_special              = true,
+        ignore_active_special       = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
     },
     powersword_p1_m2 = {
         action_special              = true,
+        ignore_active_special       = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
     },
     thunderhammer_2h_p1_m1 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     thunderhammer_2h_p1_m2 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     autogun_p1_m1 = {
