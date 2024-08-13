@@ -41,6 +41,8 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
+local WEAPONS = mod:io_dofile("guarantee_tactical_action/scripts/mods/guarantee_tactical_action/guarantee_tactical_action_weapons")
+
 ---------------
 -- VARIABLES --
 ---------------
@@ -64,6 +66,11 @@ mod.promises = {
 local allowed_set_promise = {
     action_special = false,
     action_reload  = false,
+}
+
+local do_special_release = {
+    action_one = false,
+    action_two = false,
 }
 
 local current_slot = ""
@@ -199,11 +206,17 @@ local function _on_slot_wielded(self, slot_name)
     local slot_weapon = self._weapons[slot_name]
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
-        local action_input_hierarchy =  weapon_template.action_input_hierarchy
-        allowed_set_promise.action_special = true
-        if string.find(weapon_template.name, "slabshield") then
-            allowed_set_promise.action_special = false
+        debug:print(weapon_template.name)
+        local _weapon_data = WEAPONS[weapon_template.name]
+        allowed_set_promise.action_special = false
+        do_special_release.action_one = false
+        do_special_release.action_two = false
+        if _weapon_data then
+            allowed_set_promise.action_special = _weapon_data.action_special
+            do_special_release.action_one = _weapon_data.special_releases_action_one
+            do_special_release.action_two = _weapon_data.special_releases_action_two
         end
+        local action_input_hierarchy =  weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
         if action_input_hierarchy.reload then
             allowed_set_promise.action_reload = true
@@ -337,16 +350,20 @@ local _input_hook = function(func, self, action_name)
 
     if mod.promise_exist  then
         if not mod.doing_push then
-            if action_name == "action_one_pressed" or action_name == "action_one_hold" then
-                return false
-            elseif action_name == "action_one_released" then
-                return true
+            if do_special_release.action_one then
+                if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+                    return false
+                elseif action_name == "action_one_released" then
+                    return true
+                end
             end
-            -- if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-            --     return false
-            -- elseif action_name == "action_two_released" then
-            --     return true
-            -- end
+            if do_special_release.action_two then
+                if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+                    return false
+                elseif action_name == "action_two_released" then
+                    return true
+                end
+            end
         end
         if action_name == "sprinting" then
             return false
