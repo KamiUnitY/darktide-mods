@@ -58,6 +58,8 @@ mod.doing_push = false
 
 mod.is_toggle_special = false
 
+mod.ignore_active_special = false
+
 mod.promises = {
     action_special = false,
     action_reload  = false,
@@ -128,7 +130,7 @@ local function setPromise(from, action)
         if visual_loadout_system then
             local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
             if action == "action_special" then
-                if not mod.is_toggle_special and wieldable_component.special_active and wieldable_component.num_special_activations == 0 then
+                if not mod.ignore_active_special and not mod.is_toggle_special and wieldable_component.special_active and wieldable_component.num_special_activations == 0 then
                     return
                 end
             elseif action == "action_reload" then
@@ -212,9 +214,10 @@ local function _on_slot_wielded(self, slot_name)
         do_special_release.action_one = false
         do_special_release.action_two = false
         if _weapon_data then
-            allowed_set_promise.action_special = _weapon_data.action_special
-            do_special_release.action_one = _weapon_data.special_releases_action_one
-            do_special_release.action_two = _weapon_data.special_releases_action_two
+            allowed_set_promise.action_special = _weapon_data.action_special or false
+            do_special_release.action_one = _weapon_data.special_releases_action_one or false
+            do_special_release.action_two = _weapon_data.special_releases_action_two or false
+            mod.ignore_active_special = _weapon_data.ignore_active_special or false
         end
         local action_input_hierarchy =  weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
