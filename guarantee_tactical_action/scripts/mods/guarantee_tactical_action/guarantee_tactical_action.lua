@@ -213,6 +213,7 @@ local function _on_slot_wielded(self, slot_name)
         allowed_set_promise.action_special = false
         do_special_release.action_one = false
         do_special_release.action_two = false
+        mod.ignore_active_special = false
         if _weapon_data then
             allowed_set_promise.action_special = _weapon_data.action_special or false
             do_special_release.action_one = _weapon_data.special_releases_action_one or false
