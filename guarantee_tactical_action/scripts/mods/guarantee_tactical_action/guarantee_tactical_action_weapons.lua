@@ -176,17 +176,17 @@ local weapons = {
     },
     ogryn_club_p2_m1 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     ogryn_club_p2_m2 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     ogryn_club_p2_m3 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     ogryn_powermaul_p1_m1 = {
@@ -205,8 +205,8 @@ local weapons = {
         special_releases_action_two = false,
     },
     ogryn_powermaul_slabshield_p1_m1 = {
-        action_special              = true,
-        special_releases_action_one = true,
+        action_special              = false,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     ogryn_pickaxe_2h_p1_m1 = {
@@ -352,7 +352,7 @@ local weapons = {
     ogryn_gauntlet_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
     },
     lasgun_p1_m1 = {
         action_special              = true,
@@ -412,17 +412,17 @@ local weapons = {
     ogryn_heavystubber_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
     },
     ogryn_heavystubber_p1_m2 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
     },
     ogryn_heavystubber_p1_m3 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
     },
     plasmagun_p1_m1 = {
         action_special              = true,
@@ -432,26 +432,26 @@ local weapons = {
     ogryn_rippergun_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
     },
     ogryn_rippergun_p1_m2 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
     },
     ogryn_rippergun_p1_m3 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
     },
     ogryn_thumper_p1_m1 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     ogryn_thumper_p1_m2 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     shotgun_p1_m1 = {
