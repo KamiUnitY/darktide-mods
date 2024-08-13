@@ -101,47 +101,47 @@ local weapons = {
     },
     combatsword_p1_m1 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p1_m2 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p1_m3 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p2_m1 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p2_m2 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p2_m3 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p3_m1 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p3_m2 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     combatsword_p3_m3 = {
         action_special              = true,
-        special_releases_action_one = true,
+        special_releases_action_one = false,
         special_releases_action_two = false,
     },
     forcesword_p1_m1 = {
