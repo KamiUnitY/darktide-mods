@@ -57,6 +57,7 @@ mod.doing_melee_start = false
 mod.doing_push = false
 
 mod.is_toggle_special = false
+mod.is_ammo_special = false
 
 mod.ignore_active_special = false
 
@@ -141,6 +142,9 @@ local function setPromise(from, action)
                 if not mod.ignore_active_special and not mod.is_toggle_special and wieldable_component.special_active then
                     return
                 end
+                if mod.is_ammo_special and wieldable_component.current_ammunition_reserve == 0 then
+                    return
+                end
             elseif action == "action_reload" then
                 if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
                     return
@@ -221,11 +225,13 @@ local function _on_slot_wielded(self, slot_name)
         do_special_release.action_one = false
         do_special_release.action_two = false
         mod.ignore_active_special = false
+        mod.is_ammo_special = false
         if _weapon_data then
             allowed_set_promise.action_special = _weapon_data.action_special or false
             do_special_release.action_one = _weapon_data.special_releases_action_one or false
             do_special_release.action_two = _weapon_data.special_releases_action_two or false
             mod.ignore_active_special = _weapon_data.ignore_active_special or false
+            mod.is_ammo_special = _weapon_data.special_ammo or false
         end
         local action_input_hierarchy =  weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
