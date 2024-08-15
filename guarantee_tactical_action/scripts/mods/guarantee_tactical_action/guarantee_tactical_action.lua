@@ -208,7 +208,6 @@ local function _on_slot_wielded(self, slot_name)
     local slot_weapon = self._weapons[slot_name]
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
-        debug:print(weapon_template.name)
         local _weapon_data = WEAPONS[weapon_template.name]
         allowed_set_promise.action_special = false
         do_special_release.action_one = false
@@ -264,8 +263,6 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
             mod.doing_push = true
         elseif string.find(action_name, "special") then
             mod.doing_special = true
-        elseif string.find(action_name, "reload") then
-            mod.doing_reload = true
         end
         if CLEAR_PROMISE_ACTION[used_input] then
             clearGroupPromises("start_action", used_input)
@@ -286,9 +283,6 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
         elseif string.find(previous_action, "special") then
             mod.doing_special = false
             clearPromise("finish_action", "action_special")
-        elseif string.find(previous_action, "reload") then
-            mod.doing_reload = false
-            clearPromise("finish_action", "action_reload")
         end
         if modding_tools then debug:print_mod("END "..previous_action) end
     end
@@ -320,6 +314,14 @@ end)
 
 mod:hook_safe("ActionReloadState", "start", function(self, action_settings, t, time_scale, ...)
     if self._player.viewport_name == 'player1' then
+        mod.doing_reload = true
+        clearPromise("action_reload")
+    end
+end)
+
+mod:hook_safe("ActionReloadState", "finish", function(self, reason, data, t, time_in_action)
+    if self._player.viewport_name == 'player1' then
+        mod.doing_reload = false
         clearPromise("action_reload")
     end
 end)
