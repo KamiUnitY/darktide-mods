@@ -79,6 +79,7 @@ local current_slot = ""
 local weapon_template = ""
 
 local active_special = {}
+local active_reload = {}
 
 ---------------
 -- UTILITIES --
@@ -268,6 +269,10 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
             mod.doing_special = true
             active_special[action_name] = true
         end
+        if used_input and string.find(used_input, "weapon_reload") then
+            mod.doing_reload = true
+            active_reload[action_name] = true
+        end
         if string.find(action_name, "action_melee_start") then
             mod.doing_melee_start = true
         elseif action_name == "action_push" then
@@ -294,6 +299,22 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
                 break
             end
             mod.doing_special = _active_special
+            if not mod.doing_special then
+                clearPromise("action_special")
+            end
+        end
+
+        if active_reload[previous_action] then
+            active_reload[previous_action] = nil
+            local _active_reload = false
+            for _, _ in pairs(active_reload) do
+                _active_reload = true
+                break
+            end
+            mod.doing_reload = _active_reload
+            if not mod.doing_reload then
+                clearPromise("action_reload")
+            end
         end
 
         if string.find(previous_action, "action_melee_start") then
@@ -326,20 +347,6 @@ end)
 mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         _update_character_state(self)
-    end
-end)
-
-mod:hook_safe("ActionReloadState", "start", function(self, action_settings, t, time_scale, ...)
-    if self._player.viewport_name == 'player1' then
-        mod.doing_reload = true
-        clearPromise("action_reload")
-    end
-end)
-
-mod:hook_safe("ActionReloadState", "finish", function(self, reason, data, t, time_in_action)
-    if self._player.viewport_name == 'player1' then
-        mod.doing_reload = false
-        clearPromise("action_reload")
     end
 end)
 
