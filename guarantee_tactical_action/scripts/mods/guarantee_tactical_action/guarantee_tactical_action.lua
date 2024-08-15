@@ -78,6 +78,8 @@ local do_special_release = {
 local current_slot = ""
 local weapon_template = ""
 
+local active_special = {}
+
 ---------------
 -- UTILITIES --
 ---------------
@@ -95,6 +97,10 @@ local debug = {
         end
     end,
 }
+
+local time_now = function ()
+    return Managers.time and Managers.time:time("main")
+end
 
 --------------------------
 -- MOD SETTINGS CACHING --
@@ -117,6 +123,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("promise_exist",mod,"promise_exist")
     -- modding_tools:watch("character_state",mod,"character_state")
     -- modding_tools:watch("doing_reload",mod,"doing_reload")
+    -- modding_tools:watch("doing_special",mod,"doing_special")
 end
 
 -----------------------
@@ -257,12 +264,14 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        if used_input and string.find(used_input, "weapon_extra") then
+            mod.doing_special = true
+            active_special[action_name] = true
+        end
         if string.find(action_name, "action_melee_start") then
             mod.doing_melee_start = true
         elseif action_name == "action_push" then
             mod.doing_push = true
-        elseif string.find(action_name, "special") then
-            mod.doing_special = true
         end
         if CLEAR_PROMISE_ACTION[used_input] then
             clearGroupPromises("start_action", used_input)
@@ -276,13 +285,21 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
         local component = handler_data.component
         local previous_action = component.previous_action_name or ""
         local current_action = component.current_action_name or ""
+
+        if active_special[previous_action] then
+            active_special[previous_action] = nil
+            local _active_special = false
+            for _, _ in pairs(active_special) do
+                _active_special = true
+                break
+            end
+            mod.doing_special = _active_special
+        end
+
         if string.find(previous_action, "action_melee_start") then
             mod.doing_melee_start = false
         elseif previous_action == "action_push" then
             mod.doing_push = false
-        elseif string.find(previous_action, "special") then
-            mod.doing_special = false
-            clearPromise("finish_action", "action_special")
         end
         if modding_tools then debug:print_mod("END "..previous_action) end
     end
