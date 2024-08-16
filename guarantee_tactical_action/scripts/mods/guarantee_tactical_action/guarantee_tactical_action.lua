@@ -326,6 +326,18 @@ mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt,
     end
 end)
 
+mod:hook_safe("ActionReloadState", "start", function(self, action_settings, t, time_scale, ...)
+    if self._player.viewport_name == 'player1' then
+        mod.doing_reload = true
+    end
+end)
+
+mod:hook_safe("ActionReloadState", "finish", function(self, reason, data, t, time_in_action)
+    if self._player.viewport_name == 'player1' then
+        mod.doing_reload = false
+    end
+end)
+
 --------------------
 -- ON EVERY FRAME --
 --------------------
