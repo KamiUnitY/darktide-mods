@@ -1,4 +1,4 @@
--- Guarantee Tactical Action by KamiUnitY. Ver. 0.0.1
+-- Guarantee Tactical Action by KamiUnitY. Ver. 1.0.0
 
 local mod = get_mod("guarantee_tactical_action")
 local modding_tools = get_mod("modding_tools")
