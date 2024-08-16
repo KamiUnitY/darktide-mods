@@ -12,17 +12,6 @@ local PROMISE_ACTION_MAP = {
     weapon_reload        = "action_reload",
 }
 
-local CLEAR_PROMISE_ACTION = {
-    weapon_extra_pressed  = true,
-    weapon_extra_hold     = true,
-    weapon_extra_released = true,
-    weapon_reload         = true,
-}
-
-local PROMISE_GROUPS = {
-    action_special = {"weapon_extra_pressed", "weapon_extra_hold", "weapon_extra_released"},
-    action_reload  = {"weapon_reload"},
-}
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
@@ -132,7 +121,7 @@ end
 -- PROMISE FUNCTIONS --
 -----------------------
 
-local function setPromise(from, action)
+local function setPromise(action, from)
     local unit = Managers.player:local_player(1).player_unit
     if unit then
         local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
@@ -164,7 +153,7 @@ local function setPromise(from, action)
     end
 end
 
-local function clearPromise(from, action)
+local function clearPromise(action, from)
     if mod.promises[action] then
         mod.promises[action] = false
         mod.promise_exist = false
@@ -175,17 +164,6 @@ local function clearPromise(from, action)
             end
         end
         if modding_tools then debug:print_mod("Clear " .. action .. " promise from " .. from) end
-    end
-end
-
-local function clearGroupPromises(from, used_input)
-    for group, actions in pairs(PROMISE_GROUPS) do
-        for _, action in ipairs(actions) do
-            if action == used_input then
-                clearPromise(from, group)
-                break
-            end
-        end
     end
 end
 
@@ -272,10 +250,11 @@ end)
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if used_input and string.find(used_input, "weapon_extra") then
+            clearPromise("action_special", "start_action")
             mod.doing_special = true
             active_special[action_name] = true
-        end
-        if used_input and string.find(used_input, "weapon_reload") then
+        elseif used_input and string.find(used_input, "weapon_reload") then
+            clearPromise("action_reload", "start_action")
             mod.doing_reload = true
             active_reload[action_name] = true
         end
@@ -283,9 +262,6 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
             mod.doing_melee_start = true
         elseif action_name == "action_push" then
             mod.doing_push = true
-        end
-        if CLEAR_PROMISE_ACTION[used_input] then
-            clearGroupPromises("start_action", used_input)
         end
         if modding_tools then debug:print_mod("START "..action_name) end
     end
@@ -305,9 +281,6 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
                 break
             end
             mod.doing_special = _active_special
-            if not mod.doing_special then
-                clearPromise("action_special")
-            end
         end
 
         if active_reload[previous_action] then
@@ -318,9 +291,6 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
                 break
             end
             mod.doing_reload = _active_reload
-            if not mod.doing_reload then
-                clearPromise("action_reload")
-            end
         end
 
         if string.find(previous_action, "action_melee_start") then
@@ -373,7 +343,7 @@ local _input_hook = function(func, self, action_name)
         if pressed then
             clearAllPromises("Input pressed")
             if ALLOWED_CHARACTER_STATE[mod.character_state] and ALLOWED_SLOT[current_slot] then
-                setPromise("Input pressed", promise_action)
+                setPromise(promise_action, "Input pressed")
             end
         end
         local promise = mod.promises[promise_action]
