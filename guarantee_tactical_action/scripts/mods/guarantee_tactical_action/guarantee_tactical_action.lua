@@ -67,7 +67,7 @@ local do_special_release = {
 }
 
 local current_slot = ""
-local weapon_template = ""
+local weapon_template = nil
 
 local active_special = {}
 local active_reload = {}
@@ -242,7 +242,7 @@ local function _on_slot_wielded(self, slot_name)
 end
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-    if current_slot ~= "" and weapon_template ~= "" then
+    if current_slot ~= "" and weapon_template ~= nil then
         mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
     end
     if self._player.viewport_name == "player1" then
@@ -362,6 +362,12 @@ end)
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
+
+    if action_name == "action_two_pressed" and pressed then
+        if current_slot == "slot_primary" then
+            clearAllPromises("try_melee_block")
+        end
+    end
 
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
