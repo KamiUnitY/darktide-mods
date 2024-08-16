@@ -12,6 +12,7 @@ local PROMISE_ACTION_MAP = {
     weapon_reload        = "action_reload",
 }
 
+PROMISE_TIMEOUT = 0.6
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
@@ -71,6 +72,11 @@ local weapon_template = ""
 local active_special = {}
 local active_reload = {}
 
+local last_set_promise = {
+    action_special = 0,
+    action_reload  = 0,
+}
+
 ---------------
 -- UTILITIES --
 ---------------
@@ -91,6 +97,10 @@ local debug = {
 
 local time_now = function ()
     return Managers.time and Managers.time:time("main")
+end
+
+local elapsed = function(time)
+    return time_now() - time
 end
 
 --------------------------
@@ -149,6 +159,7 @@ local function setPromise(action, from)
         end
         mod.promises[action] = true
         mod.promise_exist = true
+        last_set_promise[action] = time_now()
         if modding_tools then debug:print_mod("Set " .. action .. " promise from " .. from) end
     end
 end
@@ -178,6 +189,10 @@ local function clearAllPromises(from)
 end
 
 local function isPromised(action, promise)
+    if elapsed(last_set_promise[action]) >= PROMISE_TIMEOUT then
+        clearPromise(action, "timeout")
+        return false
+    end
     if mod.doing_melee_start or mod.doing_push then
        return false
     end
@@ -281,9 +296,7 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
                 break
             end
             mod.doing_special = _active_special
-        end
-
-        if active_reload[previous_action] then
+        elseif active_reload[previous_action] then
             active_reload[previous_action] = nil
             local _active_reload = false
             for _, _ in pairs(active_reload) do
