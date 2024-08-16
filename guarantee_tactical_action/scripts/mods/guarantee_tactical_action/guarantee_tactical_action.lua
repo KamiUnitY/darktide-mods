@@ -12,7 +12,7 @@ local PROMISE_ACTION_MAP = {
     weapon_reload        = "action_reload",
 }
 
-PROMISE_TIMEOUT = 0.6
+PROMISE_TIMEOUT = 1.0
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
