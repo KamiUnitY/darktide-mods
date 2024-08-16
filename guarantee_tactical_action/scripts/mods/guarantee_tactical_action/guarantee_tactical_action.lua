@@ -12,7 +12,7 @@ local PROMISE_ACTION_MAP = {
     weapon_reload        = "action_reload",
 }
 
-PROMISE_TIMEOUT = 1.0
+PROMISE_TIMEOUT = 0.7
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
@@ -194,7 +194,8 @@ local function isPromised(action, promise)
         return false
     end
     if mod.doing_melee_start or mod.doing_push then
-       return false
+        last_set_promise[action] = time_now()
+        return false
     end
     if promise then
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
