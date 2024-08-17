@@ -16,6 +16,7 @@ return {
 		"modding_tools",
 		"MultiBind",
 		"ToggleAltFire",
+		"weapon_customization",
 	},
 	packages = {},
 }
