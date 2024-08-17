@@ -7,6 +7,11 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id = "enable_blocking_cancel_special",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
 				setting_id  = "debug_group",
 				type        = "group",
 				sub_widgets = {

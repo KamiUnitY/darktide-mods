@@ -108,7 +108,8 @@ end
 --------------------------
 
 mod.settings = {
-    enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
+    enable_blocking_cancel_special = mod:get("enable_blocking_cancel_special"),
+    enable_debug_modding_tools     = mod:get("enable_debug_modding_tools"),
 }
 
 mod.on_setting_changed = function(setting_id)
@@ -364,9 +365,11 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
-    if action_name == "action_two_pressed" and pressed then
-        if current_slot == "slot_primary" then
-            clearAllPromises("try_melee_block")
+    if action_name == "action_two_pressed" then
+        if pressed and mod.settings["enable_blocking_cancel_special"] then
+            if current_slot == "slot_primary" then
+                clearAllPromises("try_melee_block")
+            end
         end
     end
 
