@@ -12,7 +12,7 @@ local PROMISE_ACTION_MAP = {
     weapon_reload        = "action_reload",
 }
 
-PROMISE_TIMEOUT = 0.7
+DEFAULT_PROMISE_BUFFER = 0.7
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
@@ -51,6 +51,8 @@ mod.is_ammo_special = false
 
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
+
+mod.promise_buffer = DEFAULT_PROMISE_BUFFER
 
 mod.promises = {
     action_special = false,
@@ -191,12 +193,11 @@ local function clearAllPromises(from)
 end
 
 local function isPromised(action, promise)
-    if elapsed(last_set_promise[action]) >= PROMISE_TIMEOUT then
-        clearPromise(action, "timeout")
+    if elapsed(last_set_promise[action]) >= mod.promise_buffer then
+        clearPromise(action, "buffer_timeout")
         return false
     end
     if mod.doing_melee_start or mod.doing_push then
-        last_set_promise[action] = time_now()
         return false
     end
     if promise then
@@ -223,6 +224,7 @@ local function _on_slot_wielded(self, slot_name)
         mod.ignore_active_special = false
         mod.interrupt_sprinting_special = false
         mod.is_ammo_special = false
+        mod.promise_buffer = DEFAULT_PROMISE_BUFFER
         if _weapon_data then
             allowed_set_promise.action_special = _weapon_data.action_special or false
             do_special_release.action_one = _weapon_data.special_releases_action_one or false
@@ -230,6 +232,7 @@ local function _on_slot_wielded(self, slot_name)
             mod.ignore_active_special = _weapon_data.ignore_active_special or false
             mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
             mod.is_ammo_special = _weapon_data.special_ammo or false
+            mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
         end
         local action_input_hierarchy =  weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
