@@ -8,6 +8,9 @@ return {
 			mod_localization = "guarantee_tactical_action/scripts/mods/guarantee_tactical_action/guarantee_tactical_action_localization",
 		})
 	end,
+	load_before = {
+		-- "ChatBlock", -- Already ordered by alphabetical order
+	},
 	load_after = {
 		-- "ChatBlock", -- Already ordered by alphabetical order
 		"modding_tools",
