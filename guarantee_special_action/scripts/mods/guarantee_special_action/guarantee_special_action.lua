@@ -12,7 +12,7 @@ local PROMISE_ACTION_MAP = {
     weapon_reload        = "action_reload",
 }
 
-DEFAULT_PROMISE_BUFFER = 0.7
+DEFAULT_PROMISE_BUFFER = 0.6
 
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
