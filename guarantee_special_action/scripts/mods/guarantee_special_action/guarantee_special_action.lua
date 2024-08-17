@@ -41,6 +41,8 @@ mod.character_state = ""
 
 mod.promise_exist = false
 
+mod.current_action = "none"
+
 mod.doing_special = false
 mod.doing_reload = false
 mod.doing_melee_start = false
@@ -129,6 +131,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("character_state",mod,"character_state")
     -- modding_tools:watch("doing_reload",mod,"doing_reload")
     -- modding_tools:watch("doing_special",mod,"doing_special")
+    -- modding_tools:watch("current_action",mod,"current_action")
 end
 
 -----------------------
@@ -272,6 +275,7 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.current_action = action_name
         if used_input and string.find(used_input, "weapon_extra") then
             clearPromise("action_special", "start_action")
             mod.doing_special = true
@@ -292,6 +296,7 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.current_action = "none"
         local component = handler_data.component
         local previous_action = component.previous_action_name or ""
         local current_action = component.current_action_name or ""
@@ -396,7 +401,7 @@ local _input_hook = function(func, self, action_name)
     end
 
     if mod.promise_exist  then
-        if not mod.doing_push then
+        if not mod.doing_melee_start and not mod.doing_push then
             if do_special_release.action_one then
                 if action_name == "action_one_pressed" or action_name == "action_one_hold" then
                     return false
