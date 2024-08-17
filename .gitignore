@@ -7,8 +7,8 @@
 !guarantee_weapon_swap
 !guarantee_weapon_swap/**
 
-!guarantee_tactical_action
-!guarantee_tactical_action/**
+!guarantee_special_action
+!guarantee_special_action/**
 
 !guarantee_ability_activation
 !guarantee_ability_activation/**

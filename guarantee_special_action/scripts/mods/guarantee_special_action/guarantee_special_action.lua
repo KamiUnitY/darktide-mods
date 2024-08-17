@@ -1,6 +1,6 @@
 -- Guarantee Tactical Action by KamiUnitY. Ver. 1.0.0
 
-local mod = get_mod("guarantee_tactical_action")
+local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
 
 ---------------
@@ -31,7 +31,7 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
-local WEAPONS = mod:io_dofile("guarantee_tactical_action/scripts/mods/guarantee_tactical_action/guarantee_tactical_action_weapons")
+local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
 ---------------
 -- VARIABLES --

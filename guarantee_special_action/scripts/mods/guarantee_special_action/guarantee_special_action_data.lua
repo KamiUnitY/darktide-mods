@@ -1,4 +1,4 @@
-local mod = get_mod("guarantee_tactical_action")
+local mod = get_mod("guarantee_special_action")
 
 return {
 	name = mod:localize("mod_name"),
