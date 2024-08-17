@@ -264,7 +264,7 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "sprinting" then
-        -- Compatibility with Guarantee Tactical Action
+        -- Compatibility with Guarantee Special Action
         if guarantee_special_action and guarantee_special_action.promise_exist then
             return false
         end

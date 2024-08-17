@@ -1,9 +1,9 @@
 return {
 	mod_name = {
-		en = "Guarantee Tactical Action",
+		en = "Guarantee Special Action",
 	},
 	mod_description = {
-		en = "Guarantee special and reload action when player try to do them in middle of animation",
+		en = "Guarantee special and reload action when the player try to perform them in the middle of animation",
 	},
 	debug_group = {
 		en = "Debug",
