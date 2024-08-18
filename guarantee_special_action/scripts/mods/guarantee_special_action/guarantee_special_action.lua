@@ -41,7 +41,8 @@ mod.character_state = ""
 
 mod.promise_exist = false
 
-mod.current_action = "none"
+mod.current_action = ""
+mod.previous_action = ""
 
 mod.doing_special = false
 mod.doing_reload = false
@@ -73,9 +74,6 @@ local do_special_release = {
 
 local current_slot = ""
 local weapon_template = nil
-
-local active_special = {}
-local active_reload = {}
 
 local last_set_promise = {
     action_special = 0,
@@ -279,11 +277,9 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
         if used_input and string.find(used_input, "weapon_extra") then
             clearPromise("action_special", "start_action")
             mod.doing_special = true
-            active_special[action_name] = true
         elseif used_input and string.find(used_input, "weapon_reload") then
             clearPromise("action_reload", "start_action")
             mod.doing_reload = true
-            active_reload[action_name] = true
         end
         if string.find(action_name, "action_melee_start") then
             mod.doing_melee_start = true
@@ -296,35 +292,13 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.doing_special = false
+        mod.doing_reload = false
+        mod.doing_melee_start = false
+        mod.doing_push = false
+        mod.previous_action = mod.current_action
         mod.current_action = "none"
-        local component = handler_data.component
-        local previous_action = component.previous_action_name or ""
-        local current_action = component.current_action_name or ""
-
-        if active_special[previous_action] then
-            active_special[previous_action] = nil
-            local _active_special = false
-            for _, _ in pairs(active_special) do
-                _active_special = true
-                break
-            end
-            mod.doing_special = _active_special
-        elseif active_reload[previous_action] then
-            active_reload[previous_action] = nil
-            local _active_reload = false
-            for _, _ in pairs(active_reload) do
-                _active_reload = true
-                break
-            end
-            mod.doing_reload = _active_reload
-        end
-
-        if string.find(previous_action, "action_melee_start") then
-            mod.doing_melee_start = false
-        elseif previous_action == "action_push" then
-            mod.doing_push = false
-        end
-        if modding_tools then debug:print_mod("END "..previous_action) end
+        if modding_tools then debug:print_mod("END "..mod.previous_action) end
     end
 end)
 
