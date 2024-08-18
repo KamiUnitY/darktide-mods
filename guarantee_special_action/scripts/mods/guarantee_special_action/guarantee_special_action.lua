@@ -55,6 +55,8 @@ mod.is_ammo_special = false
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
 
+mod.allowed_chain_special = false
+
 mod.promise_buffer = DEFAULT_PROMISE_BUFFER
 
 mod.promises = {
@@ -130,6 +132,8 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("doing_reload",mod,"doing_reload")
     -- modding_tools:watch("doing_special",mod,"doing_special")
     -- modding_tools:watch("current_action",mod,"current_action")
+    -- modding_tools:watch("promise_buffer",mod,"promise_buffer")
+    modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
 end
 
 -----------------------
@@ -274,6 +278,14 @@ end)
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.current_action = action_name
+
+        local chain_special = weapon_template
+            and weapon_template.actions
+            and weapon_template.actions[action_name]
+            and weapon_template.actions[action_name].allowed_chain_actions
+            and weapon_template.actions[action_name].allowed_chain_actions["special_action"]
+        mod.allowed_chain_special = chain_special ~= nil
+
         if used_input and string.find(used_input, "weapon_extra") then
             clearPromise("action_special", "start_action")
             mod.doing_special = true
@@ -281,11 +293,13 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
             clearPromise("action_reload", "start_action")
             mod.doing_reload = true
         end
+
         if string.find(action_name, "action_melee_start") then
             mod.doing_melee_start = true
         elseif action_name == "action_push" then
             mod.doing_push = true
         end
+
         if modding_tools then debug:print_mod("START "..action_name) end
     end
 end)
@@ -375,7 +389,7 @@ local _input_hook = function(func, self, action_name)
     end
 
     if mod.promise_exist  then
-        if not mod.doing_melee_start and not mod.doing_push then
+        if not mod.doing_push and (not mod.doing_melee_start or not mod.allowed_chain_special) then
             if do_special_release.action_one then
                 if action_name == "action_one_pressed" or action_name == "action_one_hold" then
                     return false
