@@ -365,14 +365,6 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
-    if action_name == "action_two_pressed" then
-        if pressed and mod.settings["enable_blocking_cancel_special"] then
-            if current_slot == "slot_primary" then
-                clearAllPromises("try_melee_block")
-            end
-        end
-    end
-
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
@@ -385,29 +377,47 @@ local _input_hook = function(func, self, action_name)
         return out or (promise and isPromised(promise_action, promise))
     end
 
-    if action_name == "weapon_extra_hold" and mod.promises.action_special then
-        return true
-    end
-
-    if mod.promise_exist  then
-        if not mod.doing_push and (not mod.doing_melee_start or not mod.allowed_chain_special) then
-            if do_special_release.action_one then
-                if action_name == "action_one_pressed" or action_name == "action_one_hold" then
-                    return false
-                elseif action_name == "action_one_released" then
-                    return true
-                end
-            end
-            if do_special_release.action_two then
-                if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-                    return false
-                elseif action_name == "action_two_released" then
-                    return true
-                end
+    if action_name == "action_two_pressed" then
+        if pressed and mod.settings["enable_blocking_cancel_special"] then
+            if current_slot == "slot_primary" then
+                clearAllPromises("try_melee_block")
             end
         end
-        if action_name == "sprinting" and mod.interrupt_sprinting_special then
-            return false
+        return out
+    end
+
+    if action_name == "weapon_extra_hold" then
+        if mod.promises.action_special then
+            return true
+        end
+        return out
+    end
+
+    if mod.promise_exist then
+        if mod.interrupt_sprinting_special then
+            if action_name == "sprinting" then
+                return false
+            end
+        end
+
+        if mod.doing_push or (mod.doing_melee_start and mod.allowed_chain_special) then
+            return out
+        end
+
+        if do_special_release.action_one then
+            if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+                return false
+            elseif action_name == "action_one_released" then
+                return true
+            end
+        end
+
+        if do_special_release.action_two then
+            if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+                return false
+            elseif action_name == "action_two_released" then
+                return true
+            end
         end
     end
 
