@@ -133,7 +133,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("doing_special",mod,"doing_special")
     -- modding_tools:watch("current_action",mod,"current_action")
     -- modding_tools:watch("promise_buffer",mod,"promise_buffer")
-    modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
+    -- modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
 end
 
 -----------------------
