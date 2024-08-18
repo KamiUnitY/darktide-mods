@@ -55,7 +55,7 @@ mod.is_ammo_special = false
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
 
-mod.allowed_chain_special = false
+mod.allowed_chain_special = true
 
 mod.promise_buffer = DEFAULT_PROMISE_BUFFER
 
@@ -306,6 +306,7 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.allowed_chain_special = true
         mod.doing_special = false
         mod.doing_reload = false
         mod.doing_melee_start = false
