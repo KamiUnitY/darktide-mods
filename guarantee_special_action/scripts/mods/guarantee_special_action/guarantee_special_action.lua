@@ -407,16 +407,12 @@ local _input_hook = function(func, self, action_name)
         if do_special_release.action_one then
             if action_name == "action_one_pressed" or action_name == "action_one_hold" then
                 return false
-            elseif action_name == "action_one_released" then
-                return true
             end
         end
 
         if do_special_release.action_two then
             if action_name == "action_two_pressed" or action_name == "action_two_hold" then
                 return false
-            elseif action_name == "action_two_released" then
-                return true
             end
         end
     end
