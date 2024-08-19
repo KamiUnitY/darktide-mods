@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.2.2
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.0
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -47,6 +47,11 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
+local EXCEPTION_ATTACK_PREVENT_ACTION = {
+    action_shoot_hip_start    = true,
+    action_shoot_zoomed_start = true,
+}
+
 ---------------
 -- VARIABLES --
 ---------------
@@ -55,6 +60,9 @@ local grenade_ability = ""
 
 local current_slot = ""
 local previous_slot = ""
+
+local current_action = ""
+local previous_action = ""
 
 mod.character_state = ""
 
@@ -237,6 +245,21 @@ mod:hook_safe("PlayerUnitAbilityExtension", "equip_ability", function(self, abil
     end
 end)
 
+-- UPDATE ACTION VARIABLE
+
+mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        current_action = action_name
+    end
+end)
+
+mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        previous_action = current_action
+        current_action = "none"
+    end
+end)
+
 --------------------
 -- ON EVERY FRAME --
 --------------------
@@ -266,6 +289,16 @@ local _input_hook = function(func, self, action_name)
         end
         local promise = mod.promises[promise_action]
         return out or (promise and isPromised(promise))
+    end
+
+    if mod.promise_exist and not EXCEPTION_ATTACK_PREVENT_ACTION[current_action] then
+        if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+            return false
+        end
+
+        if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+            return false
+        end
     end
 
     return out
