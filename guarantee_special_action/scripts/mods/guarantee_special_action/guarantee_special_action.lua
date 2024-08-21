@@ -39,8 +39,6 @@ local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_s
 
 mod.promise_exist = false
 
-
-
 mod.is_toggle_special = false
 mod.is_ammo_special = false
 
@@ -104,7 +102,7 @@ local debug = {
     end,
 }
 
-local time_now = function ()
+local time_now = function()
     return Managers.time and Managers.time:time("main")
 end
 
@@ -118,7 +116,7 @@ end
 
 mod.settings = {
     enable_blocking_cancel_special = mod:get("enable_blocking_cancel_special"),
-    enable_ads_cancel_special = mod:get("enable_ads_cancel_special"),
+    enable_ads_cancel_special      = mod:get("enable_ads_cancel_special"),
     enable_debug_modding_tools     = mod:get("enable_debug_modding_tools"),
 }
 
@@ -253,7 +251,7 @@ local function _on_slot_wielded(self, slot_name)
             mod.is_parry_special = _weapon_data.special_parry or false
             mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
         end
-        local action_input_hierarchy =  weapon_template.action_input_hierarchy
+        local action_input_hierarchy = weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
         if action_input_hierarchy.reload then
             allowed_set_promise.action_reload = true
@@ -290,53 +288,57 @@ end)
 -- CLEAR PROMISE ON START ACTION
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        current_action = action_name
+        if self._unit_data_extension._player.viewport_name == 'player1' then
+            current_action = action_name
 
-        local chain_special = weapon_template
-            and weapon_template.actions
-            and weapon_template.actions[action_name]
-            and weapon_template.actions[action_name].allowed_chain_actions
-            and weapon_template.actions[action_name].allowed_chain_actions["special_action"]
-        allowed_chain_special = chain_special ~= nil
+            local chain_special = weapon_template
+                and weapon_template.actions
+                and weapon_template.actions[action_name]
+                and weapon_template.actions[action_name].allowed_chain_actions
+                and weapon_template.actions[action_name].allowed_chain_actions["special_action"]
+            allowed_chain_special = chain_special ~= nil
 
-        if used_input and string.find(used_input, "weapon_extra") then
-            clearPromise("action_special", "start_action")
-            doing_special = true
-        elseif used_input and string.find(used_input, "weapon_reload") then
-            clearPromise("action_reload", "start_action")
-            doing_reload = true
+            if used_input and string.find(used_input, "weapon_extra") then
+                clearPromise("action_special", "start_action")
+                doing_special = true
+            elseif used_input and string.find(used_input, "weapon_reload") then
+                clearPromise("action_reload", "start_action")
+                doing_reload = true
+            end
+
+            if string.find(action_name, "action_melee_start") then
+                doing_melee_start = true
+            elseif action_name == "action_push" then
+                doing_push = true
+            end
+
+            if modding_tools then debug:print_mod("START " .. action_name) end
         end
-
-        if string.find(action_name, "action_melee_start") then
-            doing_melee_start = true
-        elseif action_name == "action_push" then
-            doing_push = true
-        end
-
-        if modding_tools then debug:print_mod("START "..action_name) end
-    end
-end)
+    end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if current_action == "action_parry_special" then
             prevent_attack_while_parry = false
         end
+
         allowed_chain_special = true
+
         doing_special = false
         doing_reload = false
         doing_melee_start = false
         doing_push = false
+
         previous_action = current_action
         current_action = "none"
-        if modding_tools then debug:print_mod("END "..previous_action) end
+
+        if modding_tools then debug:print_mod("END " .. previous_action) end
     end
 end)
 
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
-local _update_character_state = function (self)
+local _update_character_state = function(self)
     character_state = self._state_current.name
     if not ALLOWED_CHARACTER_STATE[character_state] then
         clearAllPromises("UNALLOWED CHARACTER STATE")
