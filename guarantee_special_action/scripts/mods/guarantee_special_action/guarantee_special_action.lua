@@ -66,6 +66,8 @@ local doing_reload = false
 local doing_melee_start = false
 local doing_push = false
 
+local prevent_attack_while_parry = false
+
 local allowed_set_promise = {
     action_special = false,
     action_reload  = false,
@@ -137,6 +139,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("current_action",mod,"current_action")
     -- modding_tools:watch("promise_buffer",mod,"promise_buffer")
     -- modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
+    -- modding_tools:watch("prevent_attack_while_parry",mod,"prevent_attack_while_parry")
 end
 
 -----------------------
@@ -172,6 +175,9 @@ local function setPromise(action, from)
         mod.promises[action] = true
         mod.promise_exist = true
         last_set_promise[action] = time_now()
+        if action == "action_special" and mod.is_parry_special then
+            prevent_attack_while_parry = true
+        end
         if modding_tools then debug:print_mod("Set " .. action .. " promise from " .. from) end
     end
 end
@@ -186,6 +192,9 @@ local function clearPromise(action, from)
                 break
             end
         end
+        if action == "action_special" and from ~= "start_action" then
+            prevent_attack_while_parry = false
+        end
         if modding_tools then debug:print_mod("Clear " .. action .. " promise from " .. from) end
     end
 end
@@ -193,7 +202,7 @@ end
 local function clearAllPromises(from)
     if mod.promise_exist then
         for key in pairs(mod.promises) do
-            mod.promises[key] = false
+            clearPromise(key, from)
         end
         mod.promise_exist = false
         if modding_tools then debug:print_mod("Clear all promise from " .. from) end
@@ -232,6 +241,7 @@ local function _on_slot_wielded(self, slot_name)
         mod.ignore_active_special = false
         mod.interrupt_sprinting_special = false
         mod.is_ammo_special = false
+        mod.is_parry_special = false
         mod.promise_buffer = DEFAULT_PROMISE_BUFFER
         if _weapon_data then
             allowed_set_promise.action_special = _weapon_data.action_special or false
@@ -240,6 +250,7 @@ local function _on_slot_wielded(self, slot_name)
             mod.ignore_active_special = _weapon_data.ignore_active_special or false
             mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
             mod.is_ammo_special = _weapon_data.special_ammo or false
+            mod.is_parry_special = _weapon_data.special_parry or false
             mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
         end
         local action_input_hierarchy =  weapon_template.action_input_hierarchy
@@ -309,6 +320,9 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        if current_action == "action_parry_special" then
+            prevent_attack_while_parry = false
+        end
         allowed_chain_special = true
         doing_special = false
         doing_reload = false
@@ -396,6 +410,16 @@ local _input_hook = function(func, self, action_name)
             return true
         end
         return out
+    end
+
+    if prevent_attack_while_parry then
+        if action_name == "action_one_pressed" then
+            if pressed then
+                prevent_attack_while_parry = false
+            end
+        elseif action_name == "action_one_hold" then
+            return false
+        end
     end
 
     if mod.promise_exist then
