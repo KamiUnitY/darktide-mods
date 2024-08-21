@@ -12,8 +12,6 @@ local PROMISE_ACTION_MAP = {
     weapon_reload        = "action_reload",
 }
 
-DEFAULT_PROMISE_BUFFER = 0.5
-
 local ALLOWED_CHARACTER_STATE = {
     dodging        = true,
     ledge_vaulting = true,
@@ -31,23 +29,17 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
+local DEFAULT_PROMISE_BUFFER = 0.5
+
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
 ---------------
 -- VARIABLES --
 ---------------
 
-mod.character_state = ""
-
 mod.promise_exist = false
 
-mod.current_action = ""
-mod.previous_action = ""
 
-mod.doing_special = false
-mod.doing_reload = false
-mod.doing_melee_start = false
-mod.doing_push = false
 
 mod.is_toggle_special = false
 mod.is_ammo_special = false
@@ -55,14 +47,24 @@ mod.is_ammo_special = false
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
 
-mod.allowed_chain_special = true
-
 mod.promise_buffer = DEFAULT_PROMISE_BUFFER
 
 mod.promises = {
     action_special = false,
     action_reload  = false,
 }
+
+local character_state = ""
+
+local current_action = ""
+local previous_action = ""
+
+local allowed_chain_special = true
+
+local doing_special = false
+local doing_reload = false
+local doing_melee_start = false
+local doing_push = false
 
 local allowed_set_promise = {
     action_special = false,
@@ -162,9 +164,9 @@ local function setPromise(action, from)
         end
     end
     if not mod.promises[action] and allowed_set_promise[action] then
-        if mod.doing_reload and action == "action_reload" then
+        if doing_reload and action == "action_reload" then
             return
-        elseif mod.doing_special and action == "action_special" then
+        elseif doing_special and action == "action_special" then
             return
         end
         mod.promises[action] = true
@@ -203,7 +205,7 @@ local function isPromised(action, promise)
         clearPromise(action, "buffer_timeout")
         return false
     end
-    if mod.doing_melee_start or mod.doing_push then
+    if doing_melee_start or doing_push then
         return false
     end
     if promise then
@@ -278,27 +280,27 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.current_action = action_name
+        current_action = action_name
 
         local chain_special = weapon_template
             and weapon_template.actions
             and weapon_template.actions[action_name]
             and weapon_template.actions[action_name].allowed_chain_actions
             and weapon_template.actions[action_name].allowed_chain_actions["special_action"]
-        mod.allowed_chain_special = chain_special ~= nil
+        allowed_chain_special = chain_special ~= nil
 
         if used_input and string.find(used_input, "weapon_extra") then
             clearPromise("action_special", "start_action")
-            mod.doing_special = true
+            doing_special = true
         elseif used_input and string.find(used_input, "weapon_reload") then
             clearPromise("action_reload", "start_action")
-            mod.doing_reload = true
+            doing_reload = true
         end
 
         if string.find(action_name, "action_melee_start") then
-            mod.doing_melee_start = true
+            doing_melee_start = true
         elseif action_name == "action_push" then
-            mod.doing_push = true
+            doing_push = true
         end
 
         if modding_tools then debug:print_mod("START "..action_name) end
@@ -307,28 +309,28 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.allowed_chain_special = true
-        mod.doing_special = false
-        mod.doing_reload = false
-        mod.doing_melee_start = false
-        mod.doing_push = false
-        mod.previous_action = mod.current_action
-        mod.current_action = "none"
-        if modding_tools then debug:print_mod("END "..mod.previous_action) end
+        allowed_chain_special = true
+        doing_special = false
+        doing_reload = false
+        doing_melee_start = false
+        doing_push = false
+        previous_action = current_action
+        current_action = "none"
+        if modding_tools then debug:print_mod("END "..previous_action) end
     end
 end)
 
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 local _update_character_state = function (self)
-    mod.character_state = self._state_current.name
-    if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+    character_state = self._state_current.name
+    if not ALLOWED_CHARACTER_STATE[character_state] then
         clearAllPromises("UNALLOWED CHARACTER STATE")
     end
 end
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if mod.character_state ~= "" then
+    if character_state ~= "" then
         mod:hook_disable("CharacterStateMachine", "fixed_update")
     end
     if self._unit_data_extension._player.viewport_name == 'player1' then
@@ -344,13 +346,13 @@ end)
 
 mod:hook_safe("ActionReloadState", "start", function(self, action_settings, t, time_scale, ...)
     if self._player.viewport_name == 'player1' then
-        mod.doing_reload = true
+        doing_reload = true
     end
 end)
 
 mod:hook_safe("ActionReloadState", "finish", function(self, reason, data, t, time_in_action)
     if self._player.viewport_name == 'player1' then
-        mod.doing_reload = false
+        doing_reload = false
     end
 end)
 
@@ -370,7 +372,7 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if pressed then
             clearAllPromises("Input pressed")
-            if ALLOWED_CHARACTER_STATE[mod.character_state] and ALLOWED_SLOT[current_slot] then
+            if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
                 setPromise(promise_action, "Input pressed")
             end
         end
@@ -403,7 +405,7 @@ local _input_hook = function(func, self, action_name)
             end
         end
 
-        if mod.doing_push or (mod.doing_melee_start and mod.allowed_chain_special) then
+        if doing_push or (doing_melee_start and allowed_chain_special) then
             return out
         end
 
