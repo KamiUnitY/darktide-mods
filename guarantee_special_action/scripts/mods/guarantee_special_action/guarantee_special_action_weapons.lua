@@ -585,7 +585,7 @@ local weapons = {
         ignore_active_special       = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     stubrevolver_p1_m1 = {
         action_special              = true,
