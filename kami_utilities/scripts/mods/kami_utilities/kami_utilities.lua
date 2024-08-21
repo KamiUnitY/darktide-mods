@@ -40,22 +40,6 @@ local debug = {
     end,
 }
 
-------------------------
--- PSYKHANIUM CHEATS ---
-------------------------
-
-mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
-    if self._player.viewport_name == "player1" then
-        if ability_type == "combat_ability" then
-            local unit = Managers.player:local_player(1).player_unit
-            if unit then
-                local ability_system = ScriptUnit.extension(unit, "ability_system")
-                ability_system:set_ability_charges("combat_ability",2)
-            end
-        end
-    end
-end)
-
 ----------------
 -- INPUT HOOK --
 ----------------
