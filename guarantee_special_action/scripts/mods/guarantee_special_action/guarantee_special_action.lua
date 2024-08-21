@@ -114,6 +114,7 @@ end
 
 mod.settings = {
     enable_blocking_cancel_special = mod:get("enable_blocking_cancel_special"),
+    enable_ads_cancel_special = mod:get("enable_ads_cancel_special"),
     enable_debug_modding_tools     = mod:get("enable_debug_modding_tools"),
 }
 
@@ -378,9 +379,11 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "action_two_pressed" then
-        if pressed and mod.settings["enable_blocking_cancel_special"] then
-            if current_slot == "slot_primary" then
+        if pressed then
+            if current_slot == "slot_primary" and mod.settings["enable_blocking_cancel_special"] then
                 clearAllPromises("try_melee_block")
+            elseif current_slot == "slot_secondary" and mod.settings["enable_ads_cancel_special"] then
+                clearAllPromises("try_ranged_ads")
             end
         end
         return out

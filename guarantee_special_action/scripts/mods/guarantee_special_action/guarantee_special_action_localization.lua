@@ -11,6 +11,12 @@ return {
 	enable_blocking_cancel_special_description = {
 		en = "While using melee weapon, Prioritize blocking over special action.",
 	},
+	enable_ads_cancel_special = {
+		en = "ADS Cancel Special Action",
+	},
+	enable_ads_cancel_special_description = {
+		en = "While using ranged weapon, Prioritize ADS over special action.",
+	},
 	debug_group = {
 		en = "Debug",
 	},

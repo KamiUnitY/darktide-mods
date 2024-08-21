@@ -12,6 +12,11 @@ return {
 				default_value = true,
 			},
 			{
+				setting_id = "enable_ads_cancel_special",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
 				setting_id  = "debug_group",
 				type        = "group",
 				sub_widgets = {
