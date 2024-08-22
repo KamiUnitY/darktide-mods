@@ -29,7 +29,7 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
-local DEFAULT_PROMISE_BUFFER = 0.5
+local DEFAULT_PROMISE_BUFFER = 0.7
 
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
