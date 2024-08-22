@@ -422,7 +422,9 @@ local _input_hook = function(func, self, action_name)
                 prevent_attack_while_parry = false
             end
         elseif action_name == "action_one_hold" then
-            return false
+            if doing_special then
+                return false
+            end
         end
     end
 
