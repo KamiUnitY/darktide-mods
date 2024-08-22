@@ -192,11 +192,12 @@ local function clearPromise(action, from)
                 break
             end
         end
-        if action == "action_special" and from ~= "start_action" then
-            prevent_attack_while_parry = false
-            promise_prevent_attack_while_parry = false
-        end
         if modding_tools then debug:print_mod("Clear " .. action .. " promise from " .. from) end
+    end
+
+    if action == "action_special" and from ~= "start_action" then
+        prevent_attack_while_parry = false
+        promise_prevent_attack_while_parry = false
     end
 end
 
@@ -236,23 +237,23 @@ local function _on_slot_wielded(self, slot_name)
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
         local _weapon_data = WEAPONS[weapon_template.name]
-        allowed_set_promise.action_special = false
-        do_special_release.action_one = false
-        do_special_release.action_two = false
         mod.ignore_active_special = false
         mod.interrupt_sprinting_special = false
         mod.is_ammo_special = false
         mod.is_parry_special = false
         mod.promise_buffer = DEFAULT_PROMISE_BUFFER
+        allowed_set_promise.action_special = false
+        do_special_release.action_one = false
+        do_special_release.action_two = false
         if _weapon_data then
-            allowed_set_promise.action_special = _weapon_data.action_special or false
-            do_special_release.action_one = _weapon_data.special_releases_action_one or false
-            do_special_release.action_two = _weapon_data.special_releases_action_two or false
             mod.ignore_active_special = _weapon_data.ignore_active_special or false
             mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
             mod.is_ammo_special = _weapon_data.special_ammo or false
             mod.is_parry_special = _weapon_data.special_parry or false
             mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
+            allowed_set_promise.action_special = _weapon_data.action_special or false
+            do_special_release.action_one = _weapon_data.special_releases_action_one or false
+            do_special_release.action_two = _weapon_data.special_releases_action_two or false
         end
         local action_input_hierarchy = weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
