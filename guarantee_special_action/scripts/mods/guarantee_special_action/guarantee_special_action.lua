@@ -57,6 +57,9 @@ local character_state = ""
 local current_action = ""
 local previous_action = ""
 
+local current_slot = ""
+local weapon_template = nil
+
 local allowed_chain_special = true
 
 local doing_special = false
@@ -75,9 +78,6 @@ local do_special_release = {
     action_one = false,
     action_two = false,
 }
-
-local current_slot = ""
-local weapon_template = nil
 
 local last_set_promise = {
     action_special = 0,
@@ -285,7 +285,7 @@ mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slo
     end
 end)
 
--- CLEAR PROMISE ON START ACTION
+-- DO STUFF ON ACTION CHANGE
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
         if self._unit_data_extension._player.viewport_name == 'player1' then
@@ -359,6 +359,8 @@ mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt,
         _update_character_state(self)
     end
 end)
+
+-- UPDATE DOING RELOAD VARIABLE
 
 mod:hook_safe("ActionReloadState", "start", function(self, action_settings, t, time_scale, ...)
     if self._player.viewport_name == 'player1' then
