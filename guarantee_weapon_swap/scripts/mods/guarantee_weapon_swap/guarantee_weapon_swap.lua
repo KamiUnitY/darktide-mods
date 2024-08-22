@@ -64,7 +64,7 @@ local previous_slot = ""
 local current_action = ""
 local previous_action = ""
 
-mod.character_state = ""
+local character_state = ""
 
 mod.promise_exist = false
 
@@ -202,14 +202,14 @@ end)
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 local _update_character_state = function (self)
-    mod.character_state = self._state_current.name
-    if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+    character_state = self._state_current.name
+    if not ALLOWED_CHARACTER_STATE[character_state] then
         clearAllPromises()
     end
 end
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if mod.character_state ~= "" then
+    if character_state ~= "" then
         mod:hook_disable("CharacterStateMachine", "fixed_update")
     end
     if self._unit_data_extension._player.viewport_name == 'player1' then
@@ -276,7 +276,7 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if pressed then
             clearAllPromises()
-            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[mod.character_state] then
+            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[character_state] then
                 if action_name ~= "grenade_ability_pressed"
                     or (
                         (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"])

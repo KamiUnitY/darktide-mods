@@ -34,6 +34,9 @@ local MOVEMENT_ACTIONS = {
 
 mod.promise_sprint = false
 
+mod.wants_to_stop = false
+mod.keep_sprint = false
+
 local movement_pressed = {
     move_forward  = false,
     move_backward = false,
@@ -43,13 +46,10 @@ local movement_pressed = {
 
 local is_in_hub = false
 
-mod.character_state = ""
+local character_state = ""
 
-mod.current_action = ""
-mod.previous_action = ""
-
-mod.wants_to_stop = false
-mod.keep_sprint = false
+local current_action = ""
+local previous_action = ""
 
 ---------------
 -- UTILITIES --
@@ -123,7 +123,7 @@ end
 -----------------------
 
 local function setPromise(from)
-    if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[mod.character_state] then
+    if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[character_state] then
         mod.promise_sprint = true
         if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
     end
@@ -172,7 +172,7 @@ end)
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.current_action = action_name
+        current_action = action_name
     end
 end)
 
@@ -184,7 +184,7 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
             if mod.promise_sprint and (reason == "new_interrupting_action" or reason == "started_sprint") then
                 local component = handler_data.component
                 local weapon_template = component.template_name or ""
-                if not string.find(weapon_template, "combatknife") or not (string.find(mod.previous_action, "heavy") or string.find(mod.current_action, "heavy")) then
+                if not string.find(weapon_template, "combatknife") or not (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
                     clearPromise(reason)
                 end
                 mod.keep_sprint = true
@@ -197,22 +197,22 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
             end
             mod.keep_sprint = false
         end
-        mod.previous_action = mod.current_action
-        mod.current_action = "none"
+        previous_action = current_action
+        current_action = "none"
     end
 end)
 
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 local _update_character_state = function (self)
-    mod.character_state = self._state_current.name
-    if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+    character_state = self._state_current.name
+    if not ALLOWED_CHARACTER_STATE[character_state] then
         clearPromise("Unallowed Character State")
     end
 end
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if mod.character_state ~= "" then
+    if character_state ~= "" then
         mod:hook_disable("CharacterStateMachine", "fixed_update")
     end
     if self._unit_data_extension._player.viewport_name == 'player1' then
@@ -280,7 +280,7 @@ local _input_hook = function(func, self, action_name)
             return false
         end
         -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
-        if mod.character_state == "lunging" then
+        if character_state == "lunging" then
             return false
         end
         -- Promise sprinting

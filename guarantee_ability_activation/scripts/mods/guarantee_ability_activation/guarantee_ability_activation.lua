@@ -40,7 +40,7 @@ local DELAY_ABILITY = 0.2
 
 mod.promise_ability = false
 
-mod.character_state = ""
+local character_state = ""
 
 local current_slot = ""
 
@@ -113,8 +113,8 @@ local function setPromise(from)
         end
     end
     if not mod.promise_ability then
-        if ALLOWED_CHARACTER_STATE[mod.character_state]
-            and (mod.character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
+        if ALLOWED_CHARACTER_STATE[character_state]
+            and (character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
         then
             mod.promise_ability = true
             last_set_promise = time_now()
@@ -136,7 +136,7 @@ local function isPromised(promise)
     end
     if IS_DASH_ABILITY[combat_ability] then
         -- DELAY_ABILITY is a hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
-        if not (ALLOWED_DASH_STATE[mod.character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then
+        if not (ALLOWED_DASH_STATE[character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then
             return false
         end
     end
@@ -217,14 +217,14 @@ end)
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 local function _update_character_state(self)
-    mod.character_state = self._state_current.name
-    if not ALLOWED_CHARACTER_STATE[mod.character_state] then
+    character_state = self._state_current.name
+    if not ALLOWED_CHARACTER_STATE[character_state] then
         clearPromise("UNALLOWED_CHARACTER_STATE")
     end
 end
 
 mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, t, frame, ...)
-    if mod.character_state ~= "" then
+    if character_state ~= "" then
         mod:hook_disable("CharacterStateMachine", "fixed_update")
     end
     if self._unit_data_extension._player.viewport_name == 'player1' then
@@ -309,7 +309,7 @@ local _input_hook = function(func, self, action_name)
             setPromise("pressed")
             if modding_tools then debug:print_mod("Player pressed " .. action_name) end
         end
-        if IS_DASH_ABILITY[combat_ability] and mod.character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
+        if IS_DASH_ABILITY[combat_ability] and character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
             return false
         end
         local promise = mod.promise_ability
@@ -332,7 +332,7 @@ local _input_hook = function(func, self, action_name)
 
     if action_name == "sprinting" then
         -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
-        if mod.character_state == "lunging" then
+        if character_state == "lunging" then
             return false
         end
         return out
