@@ -33,9 +33,6 @@ mod.roll_offset_damping = DAMPING_MOVE
 mod.roll_offset = 0
 mod.roll_offset_target = 0
 
-mod.move_direction = nil
-mod.look_direction = nil
-
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
 
@@ -77,8 +74,6 @@ end
 
 mod.on_all_mods_loaded = function()
     -- WATCHER
-    -- modding_tools:watch("look_rotation", mod, "look_rotation")
-    -- modding_tools:watch("look_direction", mod, "look_direction")
     -- modding_tools:watch("roll_offset", mod, "roll_offset")
     -- modding_tools:watch("roll_offset_target", mod, "roll_offset_target")
 end
@@ -221,9 +216,8 @@ mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, y
         local initial_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
 
         -- Calculate the look direction and full direction without roll offset
-        mod.look_rotation = initial_rotation
-        mod.look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(mod.look_rotation)))
-        look_direction_box:store(mod.look_direction)
+        local look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(initial_rotation)))
+        look_direction_box:store(look_direction)
 
         -- Smoothly update the roll offset
         mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
