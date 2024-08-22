@@ -405,6 +405,7 @@ local _input_hook = function(func, self, action_name)
         return out or (promise and isPromised(promise_action, promise))
     end
 
+    -- Cancel promise on action two pressed
     if action_name == "action_two_pressed" then
         if pressed then
             if current_slot == "slot_primary" and mod.settings["enable_blocking_cancel_special"] then
@@ -416,6 +417,7 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
+    -- Some weapons wont get activated with weapon_extra_pressed
     if action_name == "weapon_extra_hold" then
         if mod.promises.action_special then
             return true
@@ -423,6 +425,7 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
+    -- Prevent parry getting cancel by holding action one
     if prevent_attack_while_parry then
         if action_name == "action_one_pressed" then
             if pressed then
@@ -439,6 +442,7 @@ local _input_hook = function(func, self, action_name)
         end
     end
 
+    -- Auto release weapon holding action on promise_exist
     if mod.promise_exist then
         if mod.interrupt_sprinting_special then
             if action_name == "sprinting" then
