@@ -139,6 +139,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("promise_buffer",mod,"promise_buffer")
     -- modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
     -- modding_tools:watch("prevent_attack_while_parry",mod,"prevent_attack_while_parry")
+    -- modding_tools:watch("promise_prevent_attack_while_parry",mod,"promise_prevent_attack_while_parry")
 end
 
 -----------------------
@@ -165,7 +166,7 @@ local function setPromise(action, from)
             end
         end
     end
-
+    
     if not mod.promises[action] and allowed_set_promise[action] then
         if doing_reload and action == "action_reload" then
             return
@@ -210,6 +211,11 @@ local function clearAllPromises(from)
         mod.promise_exist = false
         if modding_tools then debug:print_mod("Clear all promise from " .. from) end
     end
+
+    if from ~= "start_action" then
+        prevent_attack_while_parry = false
+        promise_prevent_attack_while_parry = false
+    end
 end
 
 local function isPromised(action, promise)
@@ -240,6 +246,7 @@ local function _on_slot_wielded(self, slot_name)
         local _weapon_data = WEAPONS[weapon_template.name]
         mod.ignore_active_special = false
         mod.interrupt_sprinting_special = false
+        mod.interrupt_push_special = false
         mod.is_ammo_special = false
         mod.is_parry_special = false
         mod.promise_buffer = DEFAULT_PROMISE_BUFFER
@@ -249,6 +256,7 @@ local function _on_slot_wielded(self, slot_name)
         if _weapon_data then
             mod.ignore_active_special = _weapon_data.ignore_active_special or false
             mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
+            mod.interrupt_push_special = _weapon_data.interrupt_push_special or false
             mod.is_ammo_special = _weapon_data.special_ammo or false
             mod.is_parry_special = _weapon_data.special_parry or false
             mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
@@ -402,6 +410,9 @@ local _input_hook = function(func, self, action_name)
                 setPromise(promise_action, "Input pressed")
             end
         end
+        if mod.interrupt_push_special and doing_push then
+            return false
+        end
         local promise = mod.promises[promise_action]
         return out or (promise and isPromised(promise_action, promise))
     end
@@ -427,7 +438,7 @@ local _input_hook = function(func, self, action_name)
     end
 
     -- Prevent parry getting cancel by holding action one
-    if prevent_attack_while_parry then
+    if mod.is_parry_special and prevent_attack_while_parry then
         if action_name == "action_one_pressed" then
             if pressed then
                 if doing_special then
