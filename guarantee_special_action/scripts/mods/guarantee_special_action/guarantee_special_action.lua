@@ -68,6 +68,7 @@ local doing_melee_start = false
 local doing_push = false
 
 local prevent_attack_while_parry = false
+local promise_prevent_attack_while_parry = false
 
 local allowed_set_promise = {
     action_special = false,
@@ -164,6 +165,7 @@ local function setPromise(action, from)
             end
         end
     end
+
     if not mod.promises[action] and allowed_set_promise[action] then
         if doing_reload and action == "action_reload" then
             return
@@ -192,6 +194,7 @@ local function clearPromise(action, from)
         end
         if action == "action_special" and from ~= "start_action" then
             prevent_attack_while_parry = false
+            promise_prevent_attack_while_parry = false
         end
         if modding_tools then debug:print_mod("Clear " .. action .. " promise from " .. from) end
     end
@@ -310,6 +313,9 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
                 doing_melee_start = true
             elseif action_name == "action_push" then
                 doing_push = true
+            elseif action_name == "action_parry_special" then
+                prevent_attack_while_parry = not promise_prevent_attack_while_parry
+                promise_prevent_attack_while_parry = false
             end
 
             if modding_tools then debug:print_mod("START " .. action_name) end
@@ -419,7 +425,11 @@ local _input_hook = function(func, self, action_name)
     if prevent_attack_while_parry then
         if action_name == "action_one_pressed" then
             if pressed then
-                prevent_attack_while_parry = false
+                if doing_special then
+                    prevent_attack_while_parry = false
+                else
+                    promise_prevent_attack_while_parry = true
+                end
             end
         elseif action_name == "action_one_hold" then
             if doing_special then
