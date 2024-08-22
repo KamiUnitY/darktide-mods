@@ -175,10 +175,11 @@ local function setPromise(action, from)
         mod.promises[action] = true
         mod.promise_exist = true
         last_set_promise[action] = time_now()
-        if mod.is_parry_special and action == "action_special" then
-            prevent_attack_while_parry = true
-        end
         if modding_tools then debug:print_mod("Set " .. action .. " promise from " .. from) end
+    end
+
+    if mod.is_parry_special and action == "action_special" then
+        prevent_attack_while_parry = true
     end
 end
 
