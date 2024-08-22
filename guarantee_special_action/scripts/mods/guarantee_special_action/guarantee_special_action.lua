@@ -166,7 +166,7 @@ local function setPromise(action, from)
             end
         end
     end
-    
+
     if not mod.promises[action] and allowed_set_promise[action] then
         if doing_reload and action == "action_reload" then
             return
@@ -223,7 +223,7 @@ local function isPromised(action, promise)
         clearPromise(action, "buffer_timeout")
         return false
     end
-    if doing_melee_start or doing_push then
+    if current_slot == "slot_primary" and not allowed_chain_special then
         return false
     end
     if promise then
@@ -324,8 +324,10 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
             elseif action_name == "action_push" then
                 doing_push = true
             elseif action_name == "action_parry_special" then
-                prevent_attack_while_parry = not promise_prevent_attack_while_parry
-                promise_prevent_attack_while_parry = false
+                if promise_prevent_attack_while_parry then
+                    prevent_attack_while_parry = true
+                    promise_prevent_attack_while_parry = false
+                end
             end
 
             if modding_tools then debug:print_mod("START " .. action_name) end
@@ -448,7 +450,7 @@ local _input_hook = function(func, self, action_name)
                 end
             end
         elseif action_name == "action_one_hold" then
-            if doing_special then
+            if doing_special or doing_push then
                 return false
             end
         end
