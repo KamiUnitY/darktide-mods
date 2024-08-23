@@ -223,9 +223,6 @@ local function isPromised(action, promise)
         clearPromise(action, "buffer_timeout")
         return false
     end
-    if current_slot == "slot_primary" and not allowed_chain_special then
-        return false
-    end
     if promise then
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
     end
@@ -246,7 +243,6 @@ local function _on_slot_wielded(self, slot_name)
         local _weapon_data = WEAPONS[weapon_template.name]
         mod.ignore_active_special = false
         mod.interrupt_sprinting_special = false
-        mod.interrupt_push_special = false
         mod.is_ammo_special = false
         mod.is_parry_special = false
         mod.promise_buffer = DEFAULT_PROMISE_BUFFER
@@ -256,7 +252,6 @@ local function _on_slot_wielded(self, slot_name)
         if _weapon_data then
             mod.ignore_active_special = _weapon_data.ignore_active_special or false
             mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
-            mod.interrupt_push_special = _weapon_data.interrupt_push_special or false
             mod.is_ammo_special = _weapon_data.special_ammo or false
             mod.is_parry_special = _weapon_data.special_parry or false
             mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
@@ -412,7 +407,7 @@ local _input_hook = function(func, self, action_name)
                 setPromise(promise_action, "Input pressed")
             end
         end
-        if mod.interrupt_push_special and doing_push then
+        if promise_action == "action_special" and not allowed_chain_special and current_slot == "slot_primary" then
             return false
         end
         local promise = mod.promises[promise_action]
