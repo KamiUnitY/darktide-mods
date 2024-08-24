@@ -3,7 +3,7 @@ return {
 		en = "Guarantee Special Action",
 	},
 	mod_description = {
-		en = "Guarantee special and reload action when the player try to perform them in the middle of animation",
+		en = "Guarantee special action and reload action when the player try to perform them in the middle of certain animations",
 	},
 	enable_blocking_cancel_special = {
 		en = "Blocking Cancel Special Action",
