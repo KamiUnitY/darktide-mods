@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.0.0
+-- Guarantee Special Action by KamiUnitY. Ver. 1.0.1
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -30,6 +30,8 @@ local ALLOWED_SLOT = {
 }
 
 local DEFAULT_PROMISE_BUFFER = 0.7
+
+local TIME_PARRY_CHAIN_ACTION_ONE = 0.2
 
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
@@ -69,6 +71,13 @@ local doing_push = false
 
 local prevent_attack_while_parry = false
 local promise_prevent_attack_while_parry = false
+
+local is_parry_success = false
+local last_action_one_pressed_for_parry = 0
+local promise_action_one_parry = false
+
+local action_one_pressed = false
+local action_two_pressed = false
 
 local allowed_set_promise = {
     action_special = false,
@@ -140,6 +149,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
     -- modding_tools:watch("prevent_attack_while_parry",mod,"prevent_attack_while_parry")
     -- modding_tools:watch("promise_prevent_attack_while_parry",mod,"promise_prevent_attack_while_parry")
+    -- modding_tools:watch("is_parry_success",mod,"is_parry_success")
 end
 
 -----------------------
@@ -325,6 +335,8 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
                 end
             end
 
+            is_parry_success = false
+
             if modding_tools then debug:print_mod("START " .. action_name) end
         end
     end)
@@ -333,6 +345,7 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if current_action == "action_parry_special" then
             prevent_attack_while_parry = false
+            promise_action_one_parry = false
         end
 
         allowed_chain_special = true
@@ -387,6 +400,16 @@ mod:hook_safe("ActionReloadState", "finish", function(self, reason, data, t, tim
     end
 end)
 
+
+mod:hook_safe("PlayerUnitWeaponExtension", "blocked_attack", function(self, attacking_unit, hit_world_position, block_broken, weapon_template, attack_type, block_cost, is_perfect_block)
+    if self._player.viewport_name == 'player1' then
+        if current_action == "action_parry_special" and not block_broken then
+            is_parry_success = true
+            if modding_tools then debug:print_mod("PARRY SUCCESS !!!") end
+        end
+    end
+end)
+
 --------------------
 -- ON EVERY FRAME --
 --------------------
@@ -434,19 +457,54 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
-    -- Prevent parry getting cancel by holding action one
-    if mod.is_parry_special and prevent_attack_while_parry then
-        if action_name == "action_one_pressed" then
-            if pressed then
-                if doing_special then
-                    prevent_attack_while_parry = false
+    -- Record action_one_pressed and action_two_pressed for Parry Cancel Pevention
+    if action_name == "action_one_hold" then
+        if mod.is_parry_special and pressed and not action_one_pressed then
+            if elapsed(last_action_one_pressed_for_parry) > TIME_PARRY_CHAIN_ACTION_ONE then
+                if action_two_pressed then
+                    last_action_one_pressed_for_parry = time_now() - TIME_PARRY_CHAIN_ACTION_ONE
                 else
-                    promise_prevent_attack_while_parry = true
+                    last_action_one_pressed_for_parry = time_now()
+                end
+                promise_action_one_parry = true
+            end
+        end
+        action_one_pressed = pressed
+    elseif action_name == "action_two_hold" then
+        action_two_pressed = pressed
+    end
+
+    -- Prevent parry getting cancel by holding action one
+    if mod.is_parry_special then
+        if prevent_attack_while_parry then
+            if action_name == "action_one_pressed" then
+                if pressed then
+                    if doing_special then
+                        prevent_attack_while_parry = false
+                    else
+                        promise_prevent_attack_while_parry = true
+                    end
+                end
+            elseif action_name == "action_one_hold" then
+                if doing_special or doing_push then
+                    return false
                 end
             end
-        elseif action_name == "action_one_hold" then
-            if doing_special or doing_push then
-                return false
+        end
+        if doing_special then
+            if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+                local _is_elapsed = elapsed(last_action_one_pressed_for_parry) > TIME_PARRY_CHAIN_ACTION_ONE
+                if promise_action_one_parry and _is_elapsed then
+                    return true
+                end
+                if is_parry_success then
+                    return false
+                end
+                if action_one_pressed and _is_elapsed then
+                    return true
+                else
+                    return false
+                end
             end
         end
     end
