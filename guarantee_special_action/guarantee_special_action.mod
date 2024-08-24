@@ -8,9 +8,6 @@ return {
 			mod_localization = "guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_localization",
 		})
 	end,
-	load_before = {
-		-- "ChatBlock", -- Already ordered by alphabetical order
-	},
 	load_after = {
 		-- "ChatBlock", -- Already ordered by alphabetical order
 		"modding_tools",
