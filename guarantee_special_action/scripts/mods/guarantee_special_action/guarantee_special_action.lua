@@ -320,7 +320,7 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
                 doing_push = true
             elseif action_name == "action_parry_special" then
                 if promise_prevent_attack_while_parry then
-                    prevent_attack_while_parry = true
+                    prevent_attack_while_parry = false
                     promise_prevent_attack_while_parry = false
                 end
             end
