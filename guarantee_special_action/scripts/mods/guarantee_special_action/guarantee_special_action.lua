@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.0.1
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.0
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -45,6 +45,7 @@ mod.is_ammo_special = false
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
 
+mod.pressing_buffer = nil
 mod.promise_buffer = DEFAULT_PROMISE_BUFFER
 
 mod.promises = {
@@ -84,6 +85,16 @@ local do_special_release = {
 local last_set_promise = {
     action_special = 0,
     action_reload  = 0,
+}
+
+local last_press_action = {
+    action_special = 0,
+    action_reload  = 0,
+}
+
+local is_elapsed_pressing_buffer = {
+    action_special = true,
+    action_reload  = true,
 }
 
 ---------------
@@ -246,6 +257,7 @@ local function _on_slot_wielded(self, slot_name)
         mod.interrupt_sprinting_special = false
         mod.is_ammo_special = false
         mod.is_parry_special = false
+        mod.pressing_buffer = nil
         mod.promise_buffer = DEFAULT_PROMISE_BUFFER
         allowed_set_promise.action_special = false
         do_special_release.action_one = false
@@ -255,6 +267,7 @@ local function _on_slot_wielded(self, slot_name)
             mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
             mod.is_ammo_special = _weapon_data.special_ammo or false
             mod.is_parry_special = _weapon_data.special_parry or false
+            mod.pressing_buffer = _weapon_data.pressing_buffer or nil
             mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
             allowed_set_promise.action_special = _weapon_data.action_special or false
             do_special_release.action_one = _weapon_data.special_releases_action_one or false
@@ -423,10 +436,20 @@ local _input_hook = function(func, self, action_name)
 
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
-        if pressed then
-            clearAllPromises("Input pressed")
-            if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
+        if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
+            if pressed then
+                last_press_action[promise_action] = time_now()
+                is_elapsed_pressing_buffer[promise_action] = false
+                clearAllPromises("Input pressed")
                 setPromise(promise_action, "Input pressed")
+            else
+                if mod.pressing_buffer and not is_elapsed_pressing_buffer[promise_action] then
+                    if elapsed(last_press_action[promise_action]) < mod.pressing_buffer then
+                        setPromise(promise_action, "pressing_buffer")
+                    else
+                        is_elapsed_pressing_buffer[promise_action] = true
+                    end
+                end
             end
         end
         if is_blacklist_action or (promise_action == "action_special" and not allowed_chain_special) then

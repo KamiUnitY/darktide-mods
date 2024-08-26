@@ -521,6 +521,7 @@ local weapons = {
         special_releases_action_two = false,
     },
     shotgun_p1_m1 = {
+        pressing_buffer             = 0.1,
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
@@ -531,6 +532,7 @@ local weapons = {
         },
     },
     shotgun_p1_m2 = {
+        pressing_buffer             = 0.1,
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
@@ -541,6 +543,7 @@ local weapons = {
         },
     },
     shotgun_p1_m3 = {
+        pressing_buffer             = 0.1,
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
