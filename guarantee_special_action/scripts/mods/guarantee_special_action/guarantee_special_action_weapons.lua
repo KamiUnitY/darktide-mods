@@ -393,14 +393,20 @@ local weapons = {
     bolter_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 0.7,
+        blacklist_actions = {
+            "action_shoot_zoomed"
+        },
     },
     boltpistol_p1_m1 = {
         action_special              = true,
-        special_releases_action_one = false,
-        special_releases_action_two = false,
+        special_releases_action_one = true,
+        special_releases_action_two = true,
         promise_buffer              = 0.7,
+        blacklist_actions = {
+            "action_shoot_zoomed"
+        },
     },
     flamer_p1_m1 = {
         action_special              = true,
@@ -455,18 +461,27 @@ local weapons = {
         special_releases_action_one = false,
         special_releases_action_two = true,
         promise_buffer              = 0.7,
+        blacklist_actions = {
+            "action_shoot_zoomed_start"
+        },
     },
     lasgun_p2_m2 = {
         action_special              = true,
         special_releases_action_one = false,
         special_releases_action_two = true,
         promise_buffer              = 0.7,
+        blacklist_actions = {
+            "action_shoot_zoomed_start"
+        },
     },
     lasgun_p2_m3 = {
         action_special              = true,
         special_releases_action_one = false,
         special_releases_action_two = true,
         promise_buffer              = 0.7,
+        blacklist_actions = {
+            "action_shoot_zoomed_start"
+        },
     },
     lasgun_p3_m1 = {
         action_special              = true,
@@ -509,22 +524,31 @@ local weapons = {
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
+        blacklist_actions = {
+            "action_shoot_zoomed"
+        },
     },
     shotgun_p1_m2 = {
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
+        blacklist_actions = {
+            "action_shoot_zoomed"
+        },
     },
     shotgun_p1_m3 = {
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
+        blacklist_actions = {
+            "action_shoot_zoomed"
+        },
     },
     shotgun_p2_m1 = {
         action_special              = true,
