@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.0.1
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.0
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -31,6 +31,8 @@ local ALLOWED_SLOT = {
 
 local DEFAULT_PROMISE_BUFFER = 0.7
 
+local DEFAULT_INTERVAL_DO_PROMISE = 0.1
+
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
 ---------------
@@ -51,6 +53,8 @@ mod.promises = {
     action_special = false,
     action_reload  = false,
 }
+
+mod.interval_do_promise = DEFAULT_INTERVAL_DO_PROMISE
 
 local character_state = ""
 
@@ -82,6 +86,11 @@ local do_special_release = {
 }
 
 local last_set_promise = {
+    action_special = 0,
+    action_reload  = 0,
+}
+
+local last_do_promise = {
     action_special = 0,
     action_reload  = 0,
 }
@@ -219,12 +228,17 @@ local function clearAllPromises(from)
     end
 end
 
-local function isPromised(action, promise)
+local function isPromised(action, promise, last_time)
     if elapsed(last_set_promise[action]) >= mod.promise_buffer then
         clearPromise(action, "buffer_timeout")
         return false
     end
+    local interval_do_promise = mod.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+    if last_time - last_do_promise[action] < interval_do_promise then
+        promise = false
+    end
     if promise then
+        last_do_promise[action] = last_time
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
     end
     return promise
@@ -247,6 +261,7 @@ local function _on_slot_wielded(self, slot_name)
         mod.is_ammo_special = false
         mod.is_parry_special = false
         mod.promise_buffer = DEFAULT_PROMISE_BUFFER
+        mod.interval_do_promise = DEFAULT_INTERVAL_DO_PROMISE
         allowed_set_promise.action_special = false
         do_special_release.action_one = false
         do_special_release.action_two = false
@@ -256,6 +271,7 @@ local function _on_slot_wielded(self, slot_name)
             mod.is_ammo_special = _weapon_data.special_ammo or false
             mod.is_parry_special = _weapon_data.special_parry or false
             mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
+            mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
             allowed_set_promise.action_special = _weapon_data.action_special or false
             do_special_release.action_one = _weapon_data.special_releases_action_one or false
             do_special_release.action_two = _weapon_data.special_releases_action_two or false
@@ -433,7 +449,7 @@ local _input_hook = function(func, self, action_name)
             return false
         end
         local promise = mod.promises[promise_action]
-        return out or (promise and isPromised(promise_action, promise))
+        return out or (promise and isPromised(promise_action, promise, self._last_time))
     end
 
     -- Cancel promise on action two pressed
