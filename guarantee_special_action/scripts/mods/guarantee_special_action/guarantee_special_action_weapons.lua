@@ -161,12 +161,14 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     forcesword_p1_m1 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.3,
     },
     forcesword_p1_m2 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
