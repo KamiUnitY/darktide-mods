@@ -267,29 +267,19 @@ local function _on_slot_wielded(self, slot_name)
     local slot_weapon = self._weapons[slot_name]
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
-        local _weapon_data = WEAPONS[weapon_template.name]
-        mod.ignore_active_special = false
-        mod.interrupt_sprinting_special = false
-        mod.is_ammo_special = false
-        mod.is_parry_special = false
-        mod.pressing_buffer = nil
-        mod.promise_buffer = DEFAULT_PROMISE_BUFFER
-        mod.interval_do_promise = DEFAULT_INTERVAL_DO_PROMISE
-        allowed_set_promise.action_special = false
-        do_special_release.action_one = false
-        do_special_release.action_two = false
-        if _weapon_data then
-            mod.ignore_active_special = _weapon_data.ignore_active_special or false
-            mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
-            mod.is_ammo_special = _weapon_data.special_ammo or false
-            mod.is_parry_special = _weapon_data.special_parry or false
-            mod.pressing_buffer = _weapon_data.pressing_buffer or nil
-            mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
-            mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-            allowed_set_promise.action_special = _weapon_data.action_special or false
-            do_special_release.action_one = _weapon_data.special_releases_action_one or false
-            do_special_release.action_two = _weapon_data.special_releases_action_two or false
-        end
+        local _weapon_data = WEAPONS[weapon_template.name] or {}
+
+        mod.ignore_active_special = _weapon_data.ignore_active_special or false
+        mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
+        mod.is_ammo_special = _weapon_data.special_ammo or false
+        mod.is_parry_special = _weapon_data.special_parry or false
+        mod.pressing_buffer = _weapon_data.pressing_buffer or nil
+        mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
+        mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+        allowed_set_promise.action_special = _weapon_data.action_special or false
+        do_special_release.action_one = _weapon_data.special_releases_action_one or false
+        do_special_release.action_two = _weapon_data.special_releases_action_two or false
+
         local action_input_hierarchy = weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
         if action_input_hierarchy.reload then
