@@ -169,27 +169,28 @@ end
 -----------------------
 
 local function setPromise(action, from)
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
-        if visual_loadout_system then
-            local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
-            if action == "action_special" then
-                if not mod.ignore_active_special and not mod.is_toggle_special and wieldable_component.special_active then
-                    return
-                end
-                if mod.is_ammo_special and wieldable_component.current_ammunition_reserve == 0 then
-                    return
-                end
-            elseif action == "action_reload" then
-                if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
-                    return
+    if not mod.promises[action] and allowed_set_promise[action] then
+
+        local unit = Managers.player:local_player(1).player_unit
+        if unit then
+            local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
+            if visual_loadout_system then
+                local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
+                if action == "action_special" then
+                    if not mod.ignore_active_special and not mod.is_toggle_special and wieldable_component.special_active then
+                        return
+                    end
+                    if mod.is_ammo_special and wieldable_component.current_ammunition_reserve == 0 then
+                        return
+                    end
+                elseif action == "action_reload" then
+                    if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
+                        return
+                    end
                 end
             end
         end
-    end
 
-    if not mod.promises[action] and allowed_set_promise[action] then
         if doing_reload and action == "action_reload" then
             return
         elseif doing_special and action == "action_special" then
