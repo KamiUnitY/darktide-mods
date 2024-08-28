@@ -445,13 +445,13 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
             if pressed then
-                last_press_action[promise_action] = time_now()
+                last_press_action[promise_action] = self._last_time
                 is_elapsed_pressing_buffer[promise_action] = false
                 clearAllPromises("Input pressed")
                 setPromise(promise_action, "Input pressed")
             else
                 if mod.pressing_buffer and not is_elapsed_pressing_buffer[promise_action] then
-                    if elapsed(last_press_action[promise_action]) < mod.pressing_buffer then
+                    if self._last_time - last_press_action[promise_action] < mod.pressing_buffer then
                         setPromise(promise_action, "pressing_buffer")
                     else
                         is_elapsed_pressing_buffer[promise_action] = true
