@@ -57,6 +57,8 @@ mod.promises = {
 
 mod.interval_do_promise = DEFAULT_INTERVAL_DO_PROMISE
 
+local is_in_hub = false
+
 local character_state = ""
 
 local current_action = ""
@@ -124,6 +126,12 @@ local debug = {
     end,
 }
 
+local _is_in_hub = function()
+    local game_mode_manager = Managers.state.game_mode
+    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+    return game_mode_name == "hub"
+end
+
 local time_now = function()
     return Managers.time and Managers.time:time("main")
 end
@@ -151,6 +159,9 @@ end
 ------------------------
 
 mod.on_all_mods_loaded = function()
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
+
     -- WATCHER
     -- modding_tools:watch("promise_exist",mod,"promise_exist")
     -- modding_tools:watch("character_state",mod,"character_state")
@@ -161,6 +172,15 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
     -- modding_tools:watch("prevent_attack_while_parry",mod,"prevent_attack_while_parry")
     -- modding_tools:watch("promise_prevent_attack_while_parry",mod,"promise_prevent_attack_while_parry")
+end
+
+---------------------------
+-- ON GAME STATE CHANGED --
+---------------------------
+
+mod.on_game_state_changed = function(status, state_name)
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
 end
 
 -----------------------
@@ -428,6 +448,10 @@ end)
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
+
+    if is_in_hub then
+        return out
+    end
 
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then

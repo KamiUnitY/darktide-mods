@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.0
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.1
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -40,6 +40,8 @@ local DELAY_ABILITY = 0.2
 
 mod.promise_ability = false
 
+local is_in_hub = false
+
 local character_state = ""
 
 local current_slot = ""
@@ -66,6 +68,12 @@ local debug = {
         end
     end,
 }
+
+local _is_in_hub = function()
+    local game_mode_manager = Managers.state.game_mode
+    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+    return game_mode_name == "hub"
+end
 
 local time_now = function ()
     return Managers.time and Managers.time:time("main")
@@ -96,9 +104,21 @@ end
 ------------------------
 
 mod.on_all_mods_loaded = function()
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
+
     -- WATCHER
     -- modding_tools:watch("promise_ability",mod,"promise_ability")
     -- modding_tools:watch("character_state",mod,"character_state")
+end
+
+---------------------------
+-- ON GAME STATE CHANGED --
+---------------------------
+
+mod.on_game_state_changed = function(status, state_name)
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
 end
 
 -----------------------
@@ -303,6 +323,10 @@ end)
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
+
+    if is_in_hub then
+        return out
+    end
 
     if action_name == "combat_ability_pressed" then
         if pressed then

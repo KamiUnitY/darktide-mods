@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.0
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.1
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -56,16 +56,6 @@ local EXCEPTION_ATTACK_PREVENT_ACTION = {
 -- VARIABLES --
 ---------------
 
-local grenade_ability = ""
-
-local current_slot = ""
-local previous_slot = ""
-
-local current_action = ""
-local previous_action = ""
-
-local character_state = ""
-
 mod.promise_exist = false
 
 mod.promises = {
@@ -77,6 +67,18 @@ mod.promises = {
     device           = false,
     grenade          = false,
 }
+
+local is_in_hub = false
+
+local grenade_ability = ""
+
+local current_slot = ""
+local previous_slot = ""
+
+local current_action = ""
+local previous_action = ""
+
+local character_state = ""
 
 ---------------
 -- UTILITIES --
@@ -96,6 +98,12 @@ local debug = {
     end,
 }
 
+local _is_in_hub = function()
+    local game_mode_manager = Managers.state.game_mode
+    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+    return game_mode_name == "hub"
+end
+
 --------------------------
 -- MOD SETTINGS CACHING --
 --------------------------
@@ -114,9 +122,21 @@ end
 ------------------------
 
 mod.on_all_mods_loaded = function()
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
+
     -- WATCHER
     -- modding_tools:watch("promise_exist",mod,"promise_exist")
     -- modding_tools:watch("character_state",mod,"character_state")
+end
+
+---------------------------
+-- ON GAME STATE CHANGED --
+---------------------------
+
+mod.on_game_state_changed = function(status, state_name)
+    -- Update is_in_hub
+    is_in_hub = _is_in_hub()
 end
 
 -----------------------
@@ -271,6 +291,10 @@ end)
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
+
+    if is_in_hub then
+        return out
+    end
 
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
