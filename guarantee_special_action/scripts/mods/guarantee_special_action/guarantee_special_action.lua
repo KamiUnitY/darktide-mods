@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.0.0
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.0
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -31,6 +31,8 @@ local ALLOWED_SLOT = {
 
 local DEFAULT_PROMISE_BUFFER = 0.7
 
+local DEFAULT_INTERVAL_DO_PROMISE = 0.1
+
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
 ---------------
@@ -45,12 +47,15 @@ mod.is_ammo_special = false
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
 
+mod.pressing_buffer = nil
 mod.promise_buffer = DEFAULT_PROMISE_BUFFER
 
 mod.promises = {
     action_special = false,
     action_reload  = false,
 }
+
+mod.interval_do_promise = DEFAULT_INTERVAL_DO_PROMISE
 
 local character_state = ""
 
@@ -83,6 +88,22 @@ local do_special_release = {
 local last_set_promise = {
     action_special = 0,
     action_reload  = 0,
+}
+
+local last_do_promise = {
+    action_special = 0,
+    action_reload  = 0,
+}
+
+local last_press_action = {
+    action_special = 0,
+    action_reload  = 0,
+}
+
+
+local is_elapsed_pressing_buffer = {
+    action_special = true,
+    action_reload  = true,
 }
 
 ---------------
@@ -147,32 +168,33 @@ end
 -----------------------
 
 local function setPromise(action, from)
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
-        if visual_loadout_system then
-            local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
-            if action == "action_special" then
-                if not mod.ignore_active_special and not mod.is_toggle_special and wieldable_component.special_active then
-                    return
-                end
-                if mod.is_ammo_special and wieldable_component.current_ammunition_reserve == 0 then
-                    return
-                end
-            elseif action == "action_reload" then
-                if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
-                    return
+    if not mod.promises[action] and allowed_set_promise[action] then
+        local unit = Managers.player:local_player(1).player_unit
+        if unit then
+            local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
+            if visual_loadout_system then
+                local wieldable_component = visual_loadout_system._wieldable_slot_components[current_slot]
+                if action == "action_special" then
+                    if not mod.ignore_active_special and not mod.is_toggle_special and wieldable_component.special_active then
+                        return
+                    end
+                    if mod.is_ammo_special and wieldable_component.current_ammunition_reserve == 0 then
+                        return
+                    end
+                elseif action == "action_reload" then
+                    if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
+                        return
+                    end
                 end
             end
         end
-    end
 
-    if not mod.promises[action] and allowed_set_promise[action] then
         if doing_reload and action == "action_reload" then
             return
         elseif doing_special and action == "action_special" then
             return
         end
+
         mod.promises[action] = true
         mod.promise_exist = true
         last_set_promise[action] = time_now()
@@ -218,12 +240,17 @@ local function clearAllPromises(from)
     end
 end
 
-local function isPromised(action, promise)
+local function isPromised(action, promise, last_time)
     if elapsed(last_set_promise[action]) >= mod.promise_buffer then
         clearPromise(action, "buffer_timeout")
         return false
     end
+    local interval_do_promise = mod.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+    if last_time - last_do_promise[action] < interval_do_promise then
+        promise = false
+    end
     if promise then
+        last_do_promise[action] = last_time
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
     end
     return promise
@@ -240,25 +267,19 @@ local function _on_slot_wielded(self, slot_name)
     local slot_weapon = self._weapons[slot_name]
     if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
         weapon_template = slot_weapon.weapon_template
-        local _weapon_data = WEAPONS[weapon_template.name]
-        mod.ignore_active_special = false
-        mod.interrupt_sprinting_special = false
-        mod.is_ammo_special = false
-        mod.is_parry_special = false
-        mod.promise_buffer = DEFAULT_PROMISE_BUFFER
-        allowed_set_promise.action_special = false
-        do_special_release.action_one = false
-        do_special_release.action_two = false
-        if _weapon_data then
-            mod.ignore_active_special = _weapon_data.ignore_active_special or false
-            mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
-            mod.is_ammo_special = _weapon_data.special_ammo or false
-            mod.is_parry_special = _weapon_data.special_parry or false
-            mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
-            allowed_set_promise.action_special = _weapon_data.action_special or false
-            do_special_release.action_one = _weapon_data.special_releases_action_one or false
-            do_special_release.action_two = _weapon_data.special_releases_action_two or false
-        end
+        local _weapon_data = WEAPONS[weapon_template.name] or {}
+
+        mod.ignore_active_special = _weapon_data.ignore_active_special or false
+        mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
+        mod.is_ammo_special = _weapon_data.special_ammo or false
+        mod.is_parry_special = _weapon_data.special_parry or false
+        mod.pressing_buffer = _weapon_data.pressing_buffer or nil
+        mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
+        mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+        allowed_set_promise.action_special = _weapon_data.action_special or false
+        do_special_release.action_one = _weapon_data.special_releases_action_one or false
+        do_special_release.action_two = _weapon_data.special_releases_action_two or false
+
         local action_input_hierarchy = weapon_template.action_input_hierarchy
         allowed_set_promise.action_reload = false
         if action_input_hierarchy.reload then
@@ -299,11 +320,20 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
         if self._unit_data_extension._player.viewport_name == 'player1' then
             current_action = action_name
 
-            local chain_special = weapon_template
+            local allowed_chain_actions = weapon_template
                 and weapon_template.actions
                 and weapon_template.actions[action_name]
                 and weapon_template.actions[action_name].allowed_chain_actions
-                and weapon_template.actions[action_name].allowed_chain_actions["special_action"]
+
+            local chain_special = nil
+            if allowed_chain_actions then
+                for key, value in pairs(allowed_chain_actions) do
+                    if string.find(key, "special_action") then
+                        chain_special = value
+                        break
+                    end
+                end
+            end
             allowed_chain_special = chain_special ~= nil
 
             if used_input and string.find(used_input, "weapon_extra") then
@@ -401,17 +431,27 @@ local _input_hook = function(func, self, action_name)
 
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
-        if pressed then
-            clearAllPromises("Input pressed")
-            if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
+        if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
+            if pressed then
+                last_press_action[promise_action] = self._last_time
+                is_elapsed_pressing_buffer[promise_action] = false
+                clearAllPromises("Input pressed")
                 setPromise(promise_action, "Input pressed")
+            else
+                if mod.pressing_buffer and not is_elapsed_pressing_buffer[promise_action] then
+                    if self._last_time - last_press_action[promise_action] < mod.pressing_buffer then
+                        setPromise(promise_action, "pressing_buffer")
+                    else
+                        is_elapsed_pressing_buffer[promise_action] = true
+                    end
+                end
             end
         end
-        if promise_action == "action_special" and not allowed_chain_special and current_slot == "slot_primary" then
+        if promise_action == "action_special" and not allowed_chain_special then
             return false
         end
         local promise = mod.promises[promise_action]
-        return out or (promise and isPromised(promise_action, promise))
+        return out or (promise and isPromised(promise_action, promise, self._last_time))
     end
 
     -- Cancel promise on action two pressed

@@ -161,12 +161,14 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     forcesword_p1_m1 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.3,
     },
     forcesword_p1_m2 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
@@ -391,15 +393,17 @@ local weapons = {
         promise_buffer              = 0.7,
     },
     bolter_p1_m1 = {
+        interval_do_promise         = 0.2,
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 0.7,
     },
     boltpistol_p1_m1 = {
+        interval_do_promise         = 0.2,
         action_special              = true,
-        special_releases_action_one = false,
-        special_releases_action_two = false,
+        special_releases_action_one = true,
+        special_releases_action_two = true,
         promise_buffer              = 0.7,
     },
     flamer_p1_m1 = {
@@ -489,14 +493,14 @@ local weapons = {
     laspistol_p1_m1 = {
         action_special              = true,
         ignore_active_special       = true,
-        special_releases_action_one = false,
+        special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 0.7,
     },
     laspistol_p1_m3 = {
         action_special              = true,
         ignore_active_special       = true,
-        special_releases_action_one = false,
+        special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 0.7,
     },
@@ -506,6 +510,7 @@ local weapons = {
         special_releases_action_two = false,
     },
     shotgun_p1_m1 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
@@ -513,6 +518,7 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     shotgun_p1_m2 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
@@ -520,6 +526,7 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     shotgun_p1_m3 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         special_ammo                = true,
         special_releases_action_one = true,
