@@ -337,47 +337,47 @@ end)
 -- DO STUFF ON ACTION CHANGE
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
-        if self._unit_data_extension._player.viewport_name == 'player1' then
-            current_action = action_name
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        current_action = action_name
 
-            local allowed_chain_actions = weapon_template
-                and weapon_template.actions
-                and weapon_template.actions[action_name]
-                and weapon_template.actions[action_name].allowed_chain_actions
+        local allowed_chain_actions = weapon_template
+            and weapon_template.actions
+            and weapon_template.actions[action_name]
+            and weapon_template.actions[action_name].allowed_chain_actions
 
-            local chain_special = nil
-            if allowed_chain_actions then
-                for key, value in pairs(allowed_chain_actions) do
-                    if string.find(key, "special_action") then
-                        chain_special = value
-                        break
-                    end
+        local chain_special = nil
+        if allowed_chain_actions then
+            for key, value in pairs(allowed_chain_actions) do
+                if string.find(key, "special_action") then
+                    chain_special = value
+                    break
                 end
             end
-            allowed_chain_special = chain_special ~= nil
-
-            if used_input and string.find(used_input, "weapon_extra") then
-                clearPromise("action_special", "start_action")
-                doing_special = true
-            elseif used_input and string.find(used_input, "weapon_reload") then
-                clearPromise("action_reload", "start_action")
-                doing_reload = true
-            end
-
-            if string.find(action_name, "action_melee_start") then
-                doing_melee_start = true
-            elseif action_name == "action_push" then
-                doing_push = true
-            elseif action_name == "action_parry_special" then
-                if promise_prevent_attack_while_parry then
-                    prevent_attack_while_parry = false
-                    promise_prevent_attack_while_parry = false
-                end
-            end
-
-            if modding_tools then debug:print_mod("START " .. action_name) end
         end
-    end)
+        allowed_chain_special = chain_special ~= nil
+
+        if used_input and string.find(used_input, "weapon_extra") then
+            clearPromise("action_special", "start_action")
+            doing_special = true
+        elseif used_input and string.find(used_input, "weapon_reload") then
+            clearPromise("action_reload", "start_action")
+            doing_reload = true
+        end
+
+        if string.find(action_name, "action_melee_start") then
+            doing_melee_start = true
+        elseif action_name == "action_push" then
+            doing_push = true
+        elseif action_name == "action_parry_special" then
+            if promise_prevent_attack_while_parry then
+                prevent_attack_while_parry = false
+                promise_prevent_attack_while_parry = false
+            end
+        end
+
+        if modding_tools then debug:print_mod("START " .. action_name) end
+    end
+end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
