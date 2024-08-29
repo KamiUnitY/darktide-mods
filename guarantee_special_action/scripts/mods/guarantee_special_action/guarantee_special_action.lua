@@ -66,7 +66,6 @@ local current_slot = ""
 local weapon_template = nil
 
 local allowed_chain_special = true
-local is_blacklist_action = false
 
 local doing_special = false
 local doing_reload = false
@@ -170,7 +169,6 @@ end
 
 local function setPromise(action, from)
     if not mod.promises[action] and allowed_set_promise[action] then
-
         local unit = Managers.player:local_player(1).player_unit
         if unit then
             local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
@@ -196,6 +194,7 @@ local function setPromise(action, from)
         elseif doing_special and action == "action_special" then
             return
         end
+
         mod.promises[action] = true
         mod.promise_exist = true
         last_set_promise[action] = time_now()
@@ -320,7 +319,6 @@ end)
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
         if self._unit_data_extension._player.viewport_name == 'player1' then
             current_action = action_name
-            local _weapon_data = weapon_template and WEAPONS[weapon_template.name]
 
             local allowed_chain_actions = weapon_template
                 and weapon_template.actions
@@ -337,16 +335,6 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
                 end
             end
             allowed_chain_special = chain_special ~= nil
-
-            is_blacklist_action = false
-            if _weapon_data and _weapon_data.blacklist_actions then
-                for _, value in ipairs(_weapon_data.blacklist_actions) do
-                    if value == action_name then
-                        is_blacklist_action = true
-                        break
-                    end
-                end
-            end
 
             if used_input and string.find(used_input, "weapon_extra") then
                 clearPromise("action_special", "start_action")
@@ -378,7 +366,6 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
         end
 
         allowed_chain_special = true
-        is_blacklist_action = false
 
         doing_special = false
         doing_reload = false
@@ -460,7 +447,7 @@ local _input_hook = function(func, self, action_name)
                 end
             end
         end
-        if is_blacklist_action or (promise_action == "action_special" and not allowed_chain_special) then
+        if promise_action == "action_special" and not allowed_chain_special then
             return false
         end
         local promise = mod.promises[promise_action]
