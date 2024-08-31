@@ -318,19 +318,19 @@ local weapons = {
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
-        promise_buffer              = 1.3,
+        promise_buffer              = 1.5,
     },
     ogryn_pickaxe_2h_p1_m2 = {
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
-        promise_buffer              = 1.3,
+        promise_buffer              = 1.5,
     },
     ogryn_pickaxe_2h_p1_m3 = {
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
-        promise_buffer              = 1.3,
+        promise_buffer              = 1.5,
     },
     autogun_p1_m1 = {
         action_special              = true,
