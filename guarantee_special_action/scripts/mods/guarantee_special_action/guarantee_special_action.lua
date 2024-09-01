@@ -456,8 +456,8 @@ local _input_hook = function(func, self, action_name)
             if pressed then
                 last_press_action[promise_action] = self._last_time
                 is_elapsed_pressing_buffer[promise_action] = false
-                clearAllPromises("Input pressed")
-                setPromise(promise_action, "Input pressed")
+                clearAllPromises("input_pressed")
+                setPromise(promise_action, "input_pressed")
             else
                 if mod.pressing_buffer and not is_elapsed_pressing_buffer[promise_action] then
                     if self._last_time - last_press_action[promise_action] < mod.pressing_buffer then
