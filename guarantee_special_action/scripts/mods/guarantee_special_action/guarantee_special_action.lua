@@ -496,18 +496,25 @@ local _input_hook = function(func, self, action_name)
     end
 
     -- Prevent parry getting cancel by holding action one
-    if mod.is_parry_special and prevent_attack_while_parry then
-        if action_name == "action_one_pressed" then
-            if pressed then
-                if doing_special then
-                    prevent_attack_while_parry = false
-                else
-                    promise_prevent_attack_while_parry = true
+    if mod.is_parry_special then
+        if prevent_attack_while_parry then
+            if action_name == "action_one_pressed" then
+                if pressed then
+                    if doing_special then
+                        prevent_attack_while_parry = false
+                    else
+                        promise_prevent_attack_while_parry = true
+                    end
+                end
+            elseif action_name == "action_one_hold" then
+                if doing_special or doing_push then
+                    return false
                 end
             end
-        elseif action_name == "action_one_hold" then
-            if doing_special or doing_push then
-                return false
+        end
+        if mod.promises.action_special then
+            if action_name == "action_two_hold" then
+                return true
             end
         end
     end
