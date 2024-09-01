@@ -340,10 +340,7 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
     if self._unit_data_extension._player.viewport_name == 'player1' then
         current_action = action_name
 
-        local allowed_chain_actions = weapon_template
-            and weapon_template.actions
-            and weapon_template.actions[action_name]
-            and weapon_template.actions[action_name].allowed_chain_actions
+        local allowed_chain_actions = action_settings.allowed_chain_actions
 
         local chain_special = nil
         if allowed_chain_actions then
