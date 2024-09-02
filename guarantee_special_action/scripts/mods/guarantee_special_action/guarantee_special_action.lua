@@ -61,8 +61,8 @@ local is_in_hub = false
 
 local character_state = ""
 
-local current_action = ""
-local previous_action = ""
+mod.current_action = ""
+mod.previous_action = ""
 
 local current_slot = ""
 local weapon_template = nil
@@ -167,6 +167,7 @@ mod.on_all_mods_loaded = function()
     -- modding_tools:watch("character_state",mod,"character_state")
     -- modding_tools:watch("doing_reload",mod,"doing_reload")
     -- modding_tools:watch("doing_special",mod,"doing_special")
+    -- modding_tools:watch("previous_action",mod,"previous_action")
     -- modding_tools:watch("current_action",mod,"current_action")
     -- modding_tools:watch("promise_buffer",mod,"promise_buffer")
     -- modding_tools:watch("allowed_chain_special",mod,"allowed_chain_special")
@@ -336,22 +337,65 @@ end)
 
 -- DO STUFF ON ACTION CHANGE
 
-mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        current_action = action_name
+local function _on_action_change(self)
+    local registered_components = self._registered_components
+    local handler_data = registered_components["weapon_action"]
+    local running_action = handler_data and handler_data.running_action
+    local action_settings = running_action and running_action._action_settings
+    local new_action = action_settings and action_settings.name or "none"
 
-        local allowed_chain_actions = action_settings.allowed_chain_actions
+    if handler_data and mod.current_action ~= new_action then
+        mod.previous_action = mod.current_action ~= "none" and mod.current_action or mod.previous_action
+        mod.current_action = new_action
 
-        local chain_special = nil
-        if allowed_chain_actions then
-            for key, value in pairs(allowed_chain_actions) do
-                if string.find(key, "special_action") then
-                    chain_special = value
-                    break
+        -- START ACTION
+        if mod.current_action ~= "none" then
+            local chain_special = nil
+            local allowed_chain_actions = action_settings.allowed_chain_actions
+            if allowed_chain_actions then
+                for key, value in pairs(allowed_chain_actions) do
+                    if string.find(key, "special_action") then
+                        chain_special = value
+                        break
+                    end
                 end
             end
+            allowed_chain_special = chain_special ~= nil
+
+            if string.find(mod.current_action, "action_melee_start") then
+                doing_melee_start = true
+            elseif mod.current_action == "action_push" then
+                doing_push = true
+            elseif mod.current_action == "action_parry_special" then
+                if promise_prevent_attack_while_parry then
+                    prevent_attack_while_parry = false
+                    promise_prevent_attack_while_parry = false
+                end
+            end
+
+            if modding_tools then debug:print_mod("START " .. mod.current_action) end
+
+        -- FINISH ACTION
+        else
+            if mod.previous_action == "action_parry_special" then
+                prevent_attack_while_parry = false
+            end
+
+            allowed_chain_special = true
+            doing_special = false
+            doing_reload = false
+            doing_melee_start = false
+            doing_push = false
+
+            if modding_tools then debug:print_mod("END " .. mod.previous_action) end
         end
-        allowed_chain_special = chain_special ~= nil
+
+    end
+end
+
+mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_action_change(self)
 
         if used_input and string.find(used_input, "weapon_extra") then
             clearPromise("action_special", "start_action")
@@ -360,39 +404,18 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
             clearPromise("action_reload", "start_action")
             doing_reload = true
         end
-
-        if string.find(action_name, "action_melee_start") then
-            doing_melee_start = true
-        elseif action_name == "action_push" then
-            doing_push = true
-        elseif action_name == "action_parry_special" then
-            if promise_prevent_attack_while_parry then
-                prevent_attack_while_parry = false
-                promise_prevent_attack_while_parry = false
-            end
-        end
-
-        if modding_tools then debug:print_mod("START " .. action_name) end
     end
 end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if current_action == "action_parry_special" then
-            prevent_attack_while_parry = false
-        end
+        _on_action_change(self)
+    end
+end)
 
-        allowed_chain_special = true
-
-        doing_special = false
-        doing_reload = false
-        doing_melee_start = false
-        doing_push = false
-
-        previous_action = current_action
-        current_action = "none"
-
-        if modding_tools then debug:print_mod("END " .. previous_action) end
+mod:hook_safe("ActionHandler", "server_correction_occurred", function(self, id, action_objects, action_params, actions)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_action_change(self)
     end
 end)
 
