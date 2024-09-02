@@ -69,6 +69,16 @@ local debug = {
     end,
 }
 
+local _is_available_ability_charges = function()
+    local unit = Managers.player:local_player(1).player_unit
+    if unit then
+        if ScriptUnit.extension(unit, "ability_system"):remaining_ability_charges("combat_ability") > 0 then
+            return true
+        end
+    end
+    return false
+end
+
 local _is_in_hub = function()
     local game_mode_manager = Managers.state.game_mode
     local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
@@ -126,11 +136,8 @@ end
 -----------------------
 
 local function setPromise(from)
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        if ScriptUnit.extension(unit, "ability_system"):remaining_ability_charges("combat_ability") == 0 then
-            return
-        end
+    if not _is_available_ability_charges() then
+        return
     end
     if not mod.promise_ability then
         if ALLOWED_CHARACTER_STATE[character_state]
@@ -152,6 +159,10 @@ end
 
 local function isPromised(promise)
     if not promise then
+        return false
+    end
+    if not _is_available_ability_charges() then
+        clearPromise("empty_ability_charges")
         return false
     end
     if IS_DASH_ABILITY[combat_ability] then
