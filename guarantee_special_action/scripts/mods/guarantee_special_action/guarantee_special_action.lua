@@ -29,13 +29,6 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
-local INIT_ACTION_STATE = {
-    last_set_promise = 0,
-    last_do_promise = 0,
-    last_press_action = 0,
-    allowed_set_promise = false,
-    is_elapsed_pressing_buffer = true,
-}
 
 local DEFAULT_PROMISE_BUFFER = 0.7
 
@@ -92,8 +85,20 @@ local do_special_release = {
 }
 
 local action_states = {
-    action_special = INIT_ACTION_STATE,
-    action_reload = INIT_ACTION_STATE,
+    action_special = {
+        last_set_promise = 0,
+        last_do_promise = 0,
+        last_press_action = 0,
+        allowed_set_promise = false,
+        is_elapsed_pressing_buffer = true,
+    },
+    action_reload = {
+        last_set_promise = 0,
+        last_do_promise = 0,
+        last_press_action = 0,
+        allowed_set_promise = false,
+        is_elapsed_pressing_buffer = true,
+    },
 }
 
 ---------------
