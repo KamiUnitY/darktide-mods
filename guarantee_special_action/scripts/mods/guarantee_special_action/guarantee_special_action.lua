@@ -51,6 +51,7 @@ mod.promise_exist = false
 
 mod.is_toggle_special = false
 mod.is_ammo_special = false
+mod.is_parry_special = false
 
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
