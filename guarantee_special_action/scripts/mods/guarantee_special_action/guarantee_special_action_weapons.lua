@@ -396,14 +396,14 @@ local weapons = {
         interval_do_promise         = 0.2,
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = true,
+        special_releases_action_two = false,
         promise_buffer              = 0.7,
     },
     boltpistol_p1_m1 = {
         interval_do_promise         = 0.2,
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = true,
+        special_releases_action_two = false,
         promise_buffer              = 0.7,
     },
     flamer_p1_m1 = {
