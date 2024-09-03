@@ -69,8 +69,8 @@ local is_in_hub = false
 
 local character_state = ""
 
-mod.current_action = ""
-mod.previous_action = ""
+local current_action = ""
+local previous_action = ""
 
 local current_slot = ""
 local weapon_template = nil
@@ -328,12 +328,12 @@ local function _on_action_change(self)
     local action_settings = running_action and running_action._action_settings
     local new_action = action_settings and action_settings.name or "none"
 
-    if handler_data and mod.current_action ~= new_action then
-        mod.previous_action = mod.current_action ~= "none" and mod.current_action or mod.previous_action
-        mod.current_action = new_action
+    if handler_data and current_action ~= new_action then
+        previous_action = current_action ~= "none" and current_action or previous_action
+        current_action = new_action
 
         -- START ACTION
-        if mod.current_action ~= "none" then
+        if current_action ~= "none" then
             local chain_special = nil
             local allowed_chain_actions = action_settings.allowed_chain_actions
             if allowed_chain_actions then
@@ -346,22 +346,22 @@ local function _on_action_change(self)
             end
             allowed_chain_special = chain_special ~= nil
 
-            if string.find(mod.current_action, "action_melee_start") then
+            if string.find(current_action, "action_melee_start") then
                 doing_melee_start = true
-            elseif mod.current_action == "action_push" then
+            elseif current_action == "action_push" then
                 doing_push = true
-            elseif mod.current_action == "action_parry_special" then
+            elseif current_action == "action_parry_special" then
                 if promise_prevent_attack_while_parry then
                     prevent_attack_while_parry = false
                     promise_prevent_attack_while_parry = false
                 end
             end
 
-            if modding_tools then debug:print_mod("START " .. mod.current_action) end
+            if modding_tools then debug:print_mod("START " .. current_action) end
 
         -- FINISH ACTION
         else
-            if mod.previous_action == "action_parry_special" then
+            if previous_action == "action_parry_special" then
                 prevent_attack_while_parry = false
             end
 
@@ -371,7 +371,7 @@ local function _on_action_change(self)
             doing_melee_start = false
             doing_push = false
 
-            if modding_tools then debug:print_mod("END " .. mod.previous_action) end
+            if modding_tools then debug:print_mod("END " .. previous_action) end
         end
 
     end
