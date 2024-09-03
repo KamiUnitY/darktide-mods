@@ -29,6 +29,14 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
+local INIT_ACTION_STATE = {
+    last_set_promise = 0,
+    last_do_promise = 0,
+    last_press_action = 0,
+    allowed_set_promise = false,
+    is_elapsed_pressing_buffer = true,
+}
+
 local DEFAULT_PROMISE_BUFFER = 0.7
 
 local DEFAULT_INTERVAL_DO_PROMISE = 0.1
@@ -77,35 +85,14 @@ local doing_push = false
 local prevent_attack_while_parry = false
 local promise_prevent_attack_while_parry = false
 
-local allowed_set_promise = {
-    action_special = false,
-    action_reload  = false,
-}
-
 local do_special_release = {
     action_one = false,
     action_two = false,
 }
 
-local last_set_promise = {
-    action_special = 0,
-    action_reload  = 0,
-}
-
-local last_do_promise = {
-    action_special = 0,
-    action_reload  = 0,
-}
-
-local last_press_action = {
-    action_special = 0,
-    action_reload  = 0,
-}
-
-
-local is_elapsed_pressing_buffer = {
-    action_special = true,
-    action_reload  = true,
+local action_states = {
+    action_special = INIT_ACTION_STATE,
+    action_reload = INIT_ACTION_STATE,
 }
 
 ---------------
@@ -189,7 +176,7 @@ end
 -----------------------
 
 local function setPromise(action, from)
-    if not mod.promises[action] and allowed_set_promise[action] then
+    if not mod.promises[action] and action_states[action].allowed_set_promise then
         local unit = Managers.player:local_player(1).player_unit
         if unit then
             local visual_loadout_system = ScriptUnit.extension(unit, "visual_loadout_system")
@@ -218,7 +205,7 @@ local function setPromise(action, from)
 
         mod.promises[action] = true
         mod.promise_exist = true
-        last_set_promise[action] = time_now()
+        action_states[action].last_set_promise = time_now()
         if modding_tools then debug:print_mod("Set " .. action .. " promise from " .. from) end
     end
 
@@ -263,15 +250,15 @@ end
 
 local function isPromised(action, promise)
     local interval_do_promise = mod.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-    if elapsed(last_do_promise[action]) < interval_do_promise then
+    if elapsed(action_states[action].last_do_promise) < interval_do_promise then
         return false
     end
-    if elapsed(last_set_promise[action]) >= mod.promise_buffer then
+    if elapsed(action_states[action].last_set_promise) >= mod.promise_buffer then
         clearPromise(action, "buffer_timeout")
         return false
     end
     if promise then
-        last_do_promise[action] = time_now()
+        action_states[action].last_do_promise = time_now()
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
     end
     return promise
@@ -297,15 +284,12 @@ local function _on_slot_wielded(self, slot_name)
         mod.pressing_buffer = _weapon_data.pressing_buffer or nil
         mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
         mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-        allowed_set_promise.action_special = _weapon_data.action_special or false
         do_special_release.action_one = _weapon_data.special_releases_action_one or false
         do_special_release.action_two = _weapon_data.special_releases_action_two or false
 
-        local action_input_hierarchy = weapon_template.action_input_hierarchy
-        allowed_set_promise.action_reload = false
-        if action_input_hierarchy.reload then
-            allowed_set_promise.action_reload = true
-        end
+        action_states["action_reload"].allowed_set_promise = weapon_template.action_input_hierarchy.reload ~= nil
+        action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
+
         mod.is_toggle_special = false
         for _, action in pairs(weapon_template.actions) do
             if action.kind == "toggle_special" then
@@ -477,16 +461,16 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
             if pressed then
-                last_press_action[promise_action] = self._last_time
-                is_elapsed_pressing_buffer[promise_action] = false
+                action_states[promise_action].last_press_action = self._last_time
+                action_states[promise_action].is_elapsed_pressing_buffer = false
                 clearAllPromises("input_pressed")
                 setPromise(promise_action, "input_pressed")
             else
-                if mod.pressing_buffer and not is_elapsed_pressing_buffer[promise_action] then
-                    if self._last_time - last_press_action[promise_action] < mod.pressing_buffer then
+                if mod.pressing_buffer and not action_states[promise_action].is_elapsed_pressing_buffer then
+                    if self._last_time - action_states[promise_action].last_press_action < mod.pressing_buffer then
                         setPromise(promise_action, "pressing_buffer")
                     else
-                        is_elapsed_pressing_buffer[promise_action] = true
+                        action_states[promise_action].is_elapsed_pressing_buffer = true
                     end
                 end
             end
