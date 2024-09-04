@@ -177,6 +177,16 @@ end
 -- ON TRIGGER --
 ----------------
 
+-- CLEAR PROMISE ON ENTER OR EXIT GAMEPLAY
+
+mod:hook_safe("GameplayStateRun", "on_enter", function(...)
+    clearAllPromises()
+end)
+
+mod:hook_safe("GameplayStateRun", "on_exit", function(...)
+    clearAllPromises()
+end)
+
 -- CLEAR PROMISE ON SUCCESSFULLY CHANGE WEAPON
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)

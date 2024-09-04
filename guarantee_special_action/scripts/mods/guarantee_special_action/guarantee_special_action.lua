@@ -274,6 +274,16 @@ end
 -- ON TRIGGER --
 ----------------
 
+-- CLEAR PROMISE ON ENTER OR EXIT GAMEPLAY
+
+mod:hook_safe("GameplayStateRun", "on_enter", function(...)
+    clearAllPromises("ENTER_GAMEPLAY")
+end)
+
+mod:hook_safe("GameplayStateRun", "on_exit", function(...)
+    clearAllPromises("EXIT_GAMEPLAY")
+end)
+
 -- ONLY ALLOW PROMISE ON WEAPON THAT HAVE THE ACTION AND CLEAR PROMISE ON CHANGE WEAPON
 
 local function _on_slot_wielded(self, slot_name)

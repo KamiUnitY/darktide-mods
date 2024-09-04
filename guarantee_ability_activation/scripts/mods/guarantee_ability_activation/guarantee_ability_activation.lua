@@ -179,6 +179,16 @@ end
 -- ON TRIGGER --
 ----------------
 
+-- CLEAR PROMISE ON ENTER OR EXIT GAMEPLAY
+
+mod:hook_safe("GameplayStateRun", "on_enter", function(...)
+    clearPromise("ENTER_GAMEPLAY")
+end)
+
+mod:hook_safe("GameplayStateRun", "on_exit", function(...)
+    clearPromise("EXIT_GAMEPLAY")
+end)
+
 -- CLEAR PROMISE ON ABILITY USED
 
 mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
