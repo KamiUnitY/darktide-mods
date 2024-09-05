@@ -90,14 +90,12 @@ local action_states = {
         last_do_promise = 0,
         last_press_action = 0,
         allowed_set_promise = false,
-        is_elapsed_pressing_buffer = true,
     },
     action_reload = {
         last_set_promise = 0,
         last_do_promise = 0,
         last_press_action = 0,
         allowed_set_promise = false,
-        is_elapsed_pressing_buffer = true,
     },
 }
 
@@ -478,15 +476,12 @@ local _input_hook = function(func, self, action_name)
         if ALLOWED_CHARACTER_STATE[character_state] and ALLOWED_SLOT[current_slot] then
             if pressed then
                 action_states[promise_action].last_press_action = self._last_time
-                action_states[promise_action].is_elapsed_pressing_buffer = false
                 clearAllPromises("input_pressed")
                 setPromise(promise_action, "input_pressed")
             else
-                if mod.pressing_buffer and not action_states[promise_action].is_elapsed_pressing_buffer then
+                if mod.pressing_buffer then
                     if self._last_time - action_states[promise_action].last_press_action < mod.pressing_buffer then
                         setPromise(promise_action, "pressing_buffer")
-                    else
-                        action_states[promise_action].is_elapsed_pressing_buffer = true
                     end
                 end
             end
