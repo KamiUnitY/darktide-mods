@@ -123,6 +123,15 @@ local _is_in_hub = function()
     return game_mode_name == "hub"
 end
 
+local function has_key_containing(table, pattern)
+    for key, _ in pairs(table) do
+        if string.find(key, pattern) then
+            return true
+        end
+    end
+    return false
+end
+
 local time_now = function()
     return Managers.time and Managers.time:time("main")
 end
@@ -348,17 +357,8 @@ local function _on_action_change(self)
 
         -- START ACTION
         if current_action ~= "none" then
-            local chain_special = nil
             local allowed_chain_actions = action_settings.allowed_chain_actions
-            if allowed_chain_actions then
-                for key, value in pairs(allowed_chain_actions) do
-                    if string.find(key, "special_action") then
-                        chain_special = value
-                        break
-                    end
-                end
-            end
-            allowed_chain_special = chain_special ~= nil
+            allowed_chain_special = allowed_chain_actions and has_key_containing(allowed_chain_actions, "special_action")
 
             if string.find(current_action, "action_melee_start") then
                 doing_melee_start = true
