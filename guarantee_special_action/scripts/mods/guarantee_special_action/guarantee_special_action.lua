@@ -77,7 +77,6 @@ local doing_melee_start = false
 local doing_push = false
 
 local prevent_attack_while_parry = false
-local promise_prevent_attack_while_parry = false
 
 local do_special_release = {
     action_one = false,
@@ -240,9 +239,8 @@ local function clearPromise(action, from)
         if modding_tools then debug:print_mod("Clear " .. action .. " promise from " .. from) end
     end
 
-    if action == "action_special" and from ~= "start_action" then
+    if from ~= "start_action" then
         prevent_attack_while_parry = false
-        promise_prevent_attack_while_parry = false
     end
 end
 
@@ -257,7 +255,6 @@ local function clearAllPromises(from)
 
     if from ~= "start_action" then
         prevent_attack_while_parry = false
-        promise_prevent_attack_while_parry = false
     end
 end
 
@@ -364,11 +361,6 @@ local function _on_action_change(self)
                 doing_melee_start = true
             elseif current_action == "action_push" then
                 doing_push = true
-            elseif current_action == "action_parry_special" then
-                if promise_prevent_attack_while_parry then
-                    prevent_attack_while_parry = false
-                    promise_prevent_attack_while_parry = false
-                end
             end
 
             if modding_tools then debug:print_mod("START " .. current_action) end
@@ -518,11 +510,7 @@ local _input_hook = function(func, self, action_name)
         if prevent_attack_while_parry then
             if action_name == "action_one_pressed" then
                 if pressed then
-                    if doing_special then
-                        prevent_attack_while_parry = false
-                    else
-                        promise_prevent_attack_while_parry = true
-                    end
+                    prevent_attack_while_parry = false
                 end
             elseif action_name == "action_one_hold" then
                 if doing_special or doing_push then
