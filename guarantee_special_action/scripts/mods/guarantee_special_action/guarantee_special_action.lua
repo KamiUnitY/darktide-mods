@@ -122,7 +122,7 @@ local _is_in_hub = function()
     return game_mode_name == "hub"
 end
 
-local function has_key_containing(table, pattern)
+local has_key_containing = function(table, pattern)
     for key, _ in pairs(table) do
         if string.find(key, pattern) then
             return true
