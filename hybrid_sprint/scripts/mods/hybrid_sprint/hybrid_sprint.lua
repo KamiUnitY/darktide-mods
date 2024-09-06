@@ -1,4 +1,4 @@
--- Hybrid Sprint by KamiUnitY. Ver. 1.2.1
+-- Hybrid Sprint by KamiUnitY. Ver. 1.2.2
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
@@ -18,7 +18,6 @@ local ALLOWED_CHARACTER_STATE = {
     walking        = true,
     jumping        = true,
     falling        = true,
-    hub_jog        = true,
 }
 
 local MOVEMENT_ACTIONS = {
@@ -123,7 +122,7 @@ end
 -----------------------
 
 local function setPromise(from)
-    if not mod.promise_sprint and ALLOWED_CHARACTER_STATE[character_state] then
+    if not mod.promise_sprint and (ALLOWED_CHARACTER_STATE[character_state] or is_in_hub) then
         mod.promise_sprint = true
         if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
     end
@@ -147,6 +146,16 @@ end
 ----------------
 -- ON TRIGGER --
 ----------------
+
+-- CLEAR PROMISE ON ENTER OR EXIT GAMEPLAY
+
+mod:hook_safe("GameplayStateRun", "on_enter", function(...)
+    clearPromise("ENTER_GAMEPLAY")
+end)
+
+mod:hook_safe("GameplayStateRun", "on_exit", function(...)
+    clearPromise("EXIT_GAMEPLAY")
+end)
 
 -- REMOVE HOLD SPRINT FROM VANILLA SETTINGS --
 
@@ -275,6 +284,10 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "sprinting" then
+        -- Promise sprinting
+        if pressed and not mod.settings["enable_hold_to_sprint"] then
+            setPromise("Pressed Sprint")
+        end
         -- Compatibility with Guarantee Special Action
         if guarantee_special_action and guarantee_special_action.promise_exist and guarantee_special_action.interrupt_sprinting_special then
             return false
@@ -282,10 +295,6 @@ local _input_hook = function(func, self, action_name)
         -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
         if character_state == "lunging" then
             return false
-        end
-        -- Promise sprinting
-        if pressed and not mod.settings["enable_hold_to_sprint"] then
-            setPromise("Pressed Sprint")
         end
         -- Do sprinting if promised
         local promise = mod.promise_sprint
