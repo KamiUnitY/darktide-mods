@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.1.0
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.1
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -355,7 +355,11 @@ local function _on_action_change(self)
         -- START ACTION
         if current_action ~= "none" then
             local allowed_chain_actions = action_settings.allowed_chain_actions
-            allowed_chain_special = allowed_chain_actions and has_key_containing(allowed_chain_actions, "special_action")
+            allowed_chain_special = allowed_chain_actions and (
+                has_key_containing(allowed_chain_actions, "special_action") or
+                has_key_containing(allowed_chain_actions, "bash") or
+                has_key_containing(allowed_chain_actions, "stab")
+            )
 
             if string.find(current_action, "action_melee_start") then
                 doing_melee_start = true
