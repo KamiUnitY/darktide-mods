@@ -298,16 +298,33 @@ end)
 
 -- UPDATE ACTION VARIABLE
 
-mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
+local function _on_action_change(self)
+    local registered_components = self._registered_components
+    local handler_data = registered_components["weapon_action"]
+    local running_action = handler_data and handler_data.running_action
+    local action_settings = running_action and running_action._action_settings
+    local new_action = action_settings and action_settings.name or "none"
+    if handler_data and current_action ~= new_action then
+        previous_action = current_action ~= "none" and current_action or previous_action
+        current_action = new_action
+    end
+end
+
+mod:hook_safe("ActionHandler", "start_action", function(self, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        current_action = action_name
+        _on_action_change(self)
     end
 end)
 
-mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
+mod:hook_safe("ActionHandler", "_finish_action", function(self, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        previous_action = current_action
-        current_action = "none"
+        _on_action_change(self)
+    end
+end)
+
+mod:hook_safe("ActionHandler", "server_correction_occurred", function(self, ...)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_action_change(self)
     end
 end)
 
