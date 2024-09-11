@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.1
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.2
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -6,15 +6,6 @@ local modding_tools = get_mod("modding_tools")
 ---------------
 -- CONSTANTS --
 ---------------
-
-local PROMISE_SLOT_MAP = {
-    slot_primary          = "primary",
-    slot_secondary        = "secondary",
-    slot_pocketable       = "pocketable",
-    slot_pocketable_small = "pocketable_small",
-    slot_device           = "device",
-    slot_grenade_ability  = "grenade",
-}
 
 local PROMISE_ACTION_MAP = {
     quick_wield             = "quick",
@@ -26,13 +17,22 @@ local PROMISE_ACTION_MAP = {
     grenade_ability_pressed = "grenade",
 }
 
-local ACTION_SLOT_MAP = {
-    wield_1                 = "slot_primary",
-    wield_2                 = "slot_secondary",
-    wield_3                 = "slot_pocketable",
-    wield_4                 = "slot_pocketable_small",
-    wield_5                 = "slot_device",
-    grenade_ability_pressed = "slot_grenade_ability",
+local PROMISE_SLOT_MAP = {
+    slot_primary          = "primary",
+    slot_secondary        = "secondary",
+    slot_pocketable       = "pocketable",
+    slot_pocketable_small = "pocketable_small",
+    slot_device           = "device",
+    slot_grenade_ability  = "grenade",
+}
+
+local SLOT_ACTION_MAP = {
+    primary          = "slot_primary",
+    secondary        = "slot_secondary",
+    pocketable       = "slot_pocketable",
+    pocketable_small = "slot_pocketable_small",
+    device           = "slot_device",
+    grenade          = "slot_grenade_ability",
 }
 
 local ALLOWED_CHARACTER_STATE = {
@@ -166,7 +166,12 @@ local function clearAllPromises()
     end
 end
 
-local function isPromised(promise)
+local function isPromised(action, promise)
+    if current_slot == SLOT_ACTION_MAP[action] then
+        clearAllPromises()
+        return false
+    end
+
     if promise then
         if modding_tools then debug:print_mod("Attempting to switch weapon !!!") end
     end
@@ -189,14 +194,30 @@ end)
 
 -- CLEAR PROMISE ON SUCCESSFULLY CHANGE WEAPON
 
+local function _on_slot_wielded(self, slot_name)
+    clearPromise("quick")
+    clearPromise(PROMISE_SLOT_MAP[slot_name])
+    previous_slot = current_slot
+    current_slot = slot_name
+    if current_slot ~= "" and previous_slot ~= "" then
+        if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
+    end
+end
+
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if self._player.viewport_name == "player1" then
-        clearPromise("quick")
-        clearPromise(PROMISE_SLOT_MAP[slot_name])
-        previous_slot = current_slot
-        current_slot = slot_name
-        if current_slot ~= "" and previous_slot ~= "" then
-            if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
+        _on_slot_wielded(self, slot_name)
+    end
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
+    if current_slot ~= "" then
+        mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
+    end
+    if self._player.viewport_name == "player1" then
+        local wielded_slot = inventory_component.wielded_slot
+        if wielded_slot ~= nil and wielded_slot ~= current_slot then
+            _on_slot_wielded(self, wielded_slot)
         end
     end
 end)
@@ -310,7 +331,7 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if pressed then
             clearAllPromises()
-            if current_slot ~= ACTION_SLOT_MAP[action_name] and ALLOWED_CHARACTER_STATE[character_state] then
+            if current_slot ~= SLOT_ACTION_MAP[promise_action] and ALLOWED_CHARACTER_STATE[character_state] then
                 if action_name ~= "grenade_ability_pressed"
                     or (
                         (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"])
@@ -322,7 +343,7 @@ local _input_hook = function(func, self, action_name)
             end
         end
         local promise = mod.promises[promise_action]
-        return out or (promise and isPromised(promise))
+        return out or (promise and isPromised(promise_action, promise))
     end
 
     if mod.promise_exist and not EXCEPTION_ATTACK_PREVENT_ACTION[current_action] then
