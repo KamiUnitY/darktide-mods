@@ -92,15 +92,6 @@ local debug = {
     end,
 }
 
-local has_value = function(table, find)
-    for _, value in pairs(table) do
-        if value == find then
-            return true
-        end
-    end
-    return false
-end
-
 local _is_in_hub = function()
     local game_mode_manager = Managers.state.game_mode
     local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
@@ -203,9 +194,10 @@ local function _on_slot_wielded(self, slot_name)
 
     local slot_weapon = self._weapons[slot_name]
     local weapon_template = slot_weapon and slot_weapon.weapon_template
-    is_attack_prevent_weapon = weapon_template and (
-        has_value(weapon_template.keywords, "psyker") or
-        has_value(weapon_template.keywords, "force_staff")
+    local weapon_keywords = weapon_template and weapon_template.keywords
+    is_attack_prevent_weapon = weapon_keywords and (
+        table.contains(weapon_keywords, "psyker") or
+        table.contains(weapon_keywords, "force_staff")
     )
 
     clearPromise("quick")
