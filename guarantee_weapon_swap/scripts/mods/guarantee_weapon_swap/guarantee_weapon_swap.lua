@@ -168,7 +168,7 @@ end
 
 local function isPromised(action, promise)
     if current_slot == SLOT_ACTION_MAP[action] then
-        clearAllPromises()
+        clearPromise(action)
         return false
     end
 
