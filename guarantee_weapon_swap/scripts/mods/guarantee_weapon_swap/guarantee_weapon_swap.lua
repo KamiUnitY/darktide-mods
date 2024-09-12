@@ -47,11 +47,6 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
-local EXCEPTION_ATTACK_PREVENT_ACTION = {
-    action_shoot_hip_start    = true,
-    action_shoot_zoomed_start = true,
-}
-
 ---------------
 -- VARIABLES --
 ---------------
@@ -68,15 +63,14 @@ mod.promises = {
     grenade          = false,
 }
 
+local is_attack_prevent_weapon = false
+
 local is_in_hub = false
 
 local grenade_ability = ""
 
 local current_slot = ""
 local previous_slot = ""
-
-local current_action = ""
-local previous_action = ""
 
 local character_state = ""
 
@@ -97,6 +91,15 @@ local debug = {
         end
     end,
 }
+
+local has_value = function(table, find)
+    for _, value in pairs(table) do
+        if value == find then
+            return true
+        end
+    end
+    return false
+end
 
 local _is_in_hub = function()
     local game_mode_manager = Managers.state.game_mode
@@ -195,10 +198,19 @@ end)
 -- CLEAR PROMISE ON SUCCESSFULLY CHANGE WEAPON
 
 local function _on_slot_wielded(self, slot_name)
-    clearPromise("quick")
-    clearPromise(PROMISE_SLOT_MAP[slot_name])
     previous_slot = current_slot
     current_slot = slot_name
+
+    local slot_weapon = self._weapons[slot_name]
+    local weapon_template = slot_weapon and slot_weapon.weapon_template
+    is_attack_prevent_weapon = weapon_template and (
+        has_value(weapon_template.keywords, "psyker") or
+        has_value(weapon_template.keywords, "force_staff")
+    )
+
+    clearPromise("quick")
+    clearPromise(PROMISE_SLOT_MAP[slot_name])
+
     if current_slot ~= "" and previous_slot ~= "" then
         if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
     end
@@ -296,38 +308,6 @@ mod:hook_safe("PlayerUnitAbilityExtension", "equip_ability", function(self, abil
     end
 end)
 
--- UPDATE ACTION VARIABLE
-
-local function _on_action_change(self)
-    local registered_components = self._registered_components
-    local handler_data = registered_components["weapon_action"]
-    local running_action = handler_data and handler_data.running_action
-    local action_settings = running_action and running_action._action_settings
-    local new_action = action_settings and action_settings.name or "none"
-    if handler_data and current_action ~= new_action then
-        previous_action = current_action ~= "none" and current_action or previous_action
-        current_action = new_action
-    end
-end
-
-mod:hook_safe("ActionHandler", "start_action", function(self, ...)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        _on_action_change(self)
-    end
-end)
-
-mod:hook_safe("ActionHandler", "_finish_action", function(self, ...)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        _on_action_change(self)
-    end
-end)
-
-mod:hook_safe("ActionHandler", "server_correction_occurred", function(self, ...)
-    if self._unit_data_extension._player.viewport_name == 'player1' then
-        _on_action_change(self)
-    end
-end)
-
 --------------------
 -- ON EVERY FRAME --
 --------------------
@@ -363,7 +343,7 @@ local _input_hook = function(func, self, action_name)
         return out or (promise and isPromised(promise_action, promise))
     end
 
-    if mod.promise_exist and not EXCEPTION_ATTACK_PREVENT_ACTION[current_action] then
+    if mod.promise_exist and is_attack_prevent_weapon then
         if action_name == "action_one_pressed" or action_name == "action_one_hold" then
             return false
         end
