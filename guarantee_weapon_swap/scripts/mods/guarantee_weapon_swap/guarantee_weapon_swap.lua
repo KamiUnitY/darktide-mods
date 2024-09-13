@@ -147,7 +147,7 @@ end
 local function clearPromise(action)
     if mod.promises[action] then
         mod.promises[action] = false
-        mod.promise_exist = false -- Every setPromise() got clearAllPromises() first, So this is fine
+        mod.promise_exist = table.contains(mod.promises, true)
     end
 end
 
