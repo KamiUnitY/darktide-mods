@@ -1,4 +1,4 @@
--- Immersive Evasion by KamiUnitY. Ver. 1.0.3
+-- Immersive Evasion by KamiUnitY. Ver. 1.1.0
 
 local mod = get_mod("immersive_evasion")
 local modding_tools = get_mod("modding_tools")
@@ -21,6 +21,9 @@ local ALLOWED_CHARACTER_STATE = {
 
 local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 7
+
+local START_RECOVERY_DODGE_AT_DISTANCE = 1
+local START_RECOVERY_SLIDE_AT_SPEED = 3
 
 local ROLL_OFFSET_THRESHOLD = 0.001
 
@@ -108,6 +111,18 @@ local calculate_roll_offset = function(tilt_factor)
     return roll_offset
 end
 
+local adjust_roll_offset_based_on_distance = function(roll_offset, distance_left)
+    local capped_distance_left = math.min(distance_left, START_RECOVERY_DODGE_AT_DISTANCE) / START_RECOVERY_DODGE_AT_DISTANCE
+    local adjusted_roll_offset = roll_offset * capped_distance_left
+    return adjusted_roll_offset
+end
+
+local adjust_roll_offset_based_on_speed = function(roll_offset, speed)
+    local capped_speed = math.min(speed, START_RECOVERY_SLIDE_AT_SPEED) / START_RECOVERY_SLIDE_AT_SPEED
+    local adjusted_roll_offset = roll_offset * capped_speed
+    return adjusted_roll_offset
+end
+
 -------------------------
 -- DODGE RELATED HOOKS --
 -------------------------
@@ -124,8 +139,12 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
         if modding_tools then debug:print_mod("DODGE!!!  " .. tostring(move_direction)) end
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
+            local roll_offset = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
+            -- Adjust roll offset based on distance_left
+            roll_offset = adjust_roll_offset_based_on_distance(roll_offset, dodge_character_state_component.distance_left)
+
             mod.roll_offset_damping = DAMPING_MOVE
-            mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
+            mod.roll_offset_target = roll_offset
         end
     end
 end)
@@ -177,8 +196,12 @@ mod:hook_safe("PlayerCharacterStateSliding", "_check_transition", function(self,
     if self._player.viewport_name == "player1" then
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
+            local roll_offset = calculate_roll_offset(mod.settings["tilt_factor_slide"])
+            -- Adjust roll offset based on current_speed
+            roll_offset = adjust_roll_offset_based_on_speed(roll_offset, current_speed)
+
             mod.roll_offset_damping = DAMPING_MOVE
-            mod.roll_offset_target = calculate_roll_offset(mod.settings["tilt_factor_slide"])
+            mod.roll_offset_target = roll_offset
         end
     end
 end)
