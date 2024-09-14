@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.1
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.2
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -257,7 +257,7 @@ end)
 
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
-local function _update_character_state(self)
+local function _on_character_state_change(self)
     character_state = self._state_current.name
     if not ALLOWED_CHARACTER_STATE[character_state] then
         clearPromise("UNALLOWED_CHARACTER_STATE")
@@ -269,13 +269,19 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
         mod:hook_disable("CharacterStateMachine", "fixed_update")
     end
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        _update_character_state(self)
+        _on_character_state_change(self)
     end
 end)
 
 mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        _update_character_state(self)
+        _on_character_state_change(self)
+    end
+end)
+
+mod:hook_safe("CharacterStateMachine", "server_correction_occurred", function(self, unit)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_character_state_change(self)
     end
 end)
 

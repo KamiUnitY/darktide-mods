@@ -1,4 +1,4 @@
--- Immersive Evasion by KamiUnitY. Ver. 1.0.2
+-- Immersive Evasion by KamiUnitY. Ver. 1.0.3
 
 local mod = get_mod("immersive_evasion")
 local modding_tools = get_mod("modding_tools")
@@ -197,12 +197,24 @@ end)
 --------------------------
 
 -- CLEAR ROLL OFFSET WHEN PLAYER GET DISABLED
+
+local _on_character_state_change = function (self)
+    local character_state = self._state_current.name
+    if not ALLOWED_CHARACTER_STATE[character_state] then
+        mod.roll_offset_damping = DAMPING_RECOVER
+        mod.roll_offset_target = 0
+    end
+end
+
 mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if not ALLOWED_CHARACTER_STATE[next_state] then
-            mod.roll_offset_damping = DAMPING_RECOVER
-            mod.roll_offset_target = 0
-        end
+        _on_character_state_change(self)
+    end
+end)
+
+mod:hook_safe("CharacterStateMachine", "server_correction_occurred", function(self, unit)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_character_state_change(self)
     end
 end)
 

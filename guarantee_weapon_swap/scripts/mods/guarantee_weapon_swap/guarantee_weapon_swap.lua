@@ -256,7 +256,7 @@ end)
 
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
-local _update_character_state = function (self)
+local _on_character_state_change = function (self)
     character_state = self._state_current.name
     if not ALLOWED_CHARACTER_STATE[character_state] then
         clearAllPromises()
@@ -268,13 +268,19 @@ mod:hook_safe("CharacterStateMachine", "fixed_update", function(self, unit, dt, 
         mod:hook_disable("CharacterStateMachine", "fixed_update")
     end
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        _update_character_state(self)
+        _on_character_state_change(self)
     end
 end)
 
 mod:hook_safe("CharacterStateMachine", "_change_state", function(self, unit, dt, t, next_state, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        _update_character_state(self)
+        _on_character_state_change(self)
+    end
+end)
+
+mod:hook_safe("CharacterStateMachine", "server_correction_occurred", function(self, unit)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_character_state_change(self)
     end
 end)
 
