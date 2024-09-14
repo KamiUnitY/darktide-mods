@@ -9,14 +9,14 @@ return {
 			{
 				setting_id      = "tilt_factor_dodge",
 				type            = "numeric",
-				default_value   = 0.05,
+				default_value   = 0.075,
 				range           = { 0.0, 0.5 },
 				decimals_number = 3,
 			},
 			{
 				setting_id      = "tilt_factor_slide",
 				type            = "numeric",
-				default_value   = 0.15,
+				default_value   = 0.150,
 				range           = { 0.0, 0.5 },
 				decimals_number = 3,
 			},
