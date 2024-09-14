@@ -12,16 +12,6 @@ return {
 		ru = "Гарантированная активация боевой способности, когда игрок пытается активировать её в середине анимации",
 		["zh-cn"] = "确保玩家在动画中途能成功激活主动技能",
 	},
-	enable_prevent_cancel_on_start_sprinting = {
-		en = "Prevent cancel on start sprinting",
-		ru = "Предотвращение отмены при старте спринта",
-		["zh-cn"] = "防止开始疾跑时取消激活",
-	},
-	enable_prevent_cancel_on_start_sprinting_description = {
-		en = "Promise ability key press when start sprinting while holding ability key",
-		ru = "Обещанное нажатие клавиши способности при начале спринта с удержанием клавиши способности.",
-		["zh-cn"] = "如果在按住技能键的情况下开始疾跑，则保证技能键被触发",
-	},
 	enable_prevent_double_dashing = {
 		en = "Prevent double dashing",
 		ru = "Предотвращение двойного рывка",

@@ -98,8 +98,6 @@ end
 --------------------------
 
 mod.settings = {
-    enable_prevent_cancel_on_short_ability_press = true,
-    enable_prevent_cancel_on_start_sprinting     = true,
     enable_prevent_double_dashing                = mod:get("enable_prevent_double_dashing"),
     enable_prevent_ability_aiming                = mod:get("enable_prevent_ability_aiming"),
     enable_debug_modding_tools                   = mod:get("enable_debug_modding_tools"),
@@ -236,11 +234,11 @@ mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_ac
         local action_settings = self._action_settings
         if action_settings and action_settings.ability_type == "combat_ability" then
             if IS_AIM_CANCEL[reason] then
-                if reason == AIM_CANCEL_WITH_SPRINT and mod.settings["enable_prevent_cancel_on_start_sprinting"] then
+                if reason == AIM_CANCEL_WITH_SPRINT then
                     setPromise("AIM_CANCEL_WITH_SPRINT")
                     return
                 end
-                if mod.settings["enable_prevent_cancel_on_short_ability_press"] and elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
+                if elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
                     setPromise("AIM_CANCEL_NORMAL")
                     return
                 end
