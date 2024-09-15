@@ -64,6 +64,7 @@ local debug = {
 --------------------------
 
 mod.settings = {
+    inverted_dodge_angle       = mod:get("inverted_dodge_angle"),
     tilt_factor_dodge          = mod:get("tilt_factor_dodge"),
     tilt_factor_slide          = mod:get("tilt_factor_slide"),
     enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
@@ -130,8 +131,10 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
         local unit_rotation = self._first_person_component.rotation
         local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
         local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-        local inverted_move_direction = move_direction * -1
-        move_direction_box:store(inverted_move_direction)
+        if not mod.settings["inverted_dodge_angle"] then
+            move_direction = move_direction * -1
+        end
+        move_direction_box:store(move_direction)
         if modding_tools then debug:print_mod("DODGE!!!  " .. tostring(move_direction)) end
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors

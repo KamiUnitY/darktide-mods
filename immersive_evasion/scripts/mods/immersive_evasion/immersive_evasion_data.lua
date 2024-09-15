@@ -7,6 +7,11 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id      = "inverted_dodge_angle",
+				type = "checkbox",
+				default_value = false,
+			},
+			{
 				setting_id      = "tilt_factor_dodge",
 				type            = "numeric",
 				default_value   = 0.075,
