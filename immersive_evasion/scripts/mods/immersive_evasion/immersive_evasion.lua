@@ -25,6 +25,8 @@ local DAMPING_RECOVER = 7
 local START_RECOVERY_DODGE_AT_DISTANCE = 1
 local START_RECOVERY_SLIDE_AT_SPEED = 3
 
+local CURVE_RECOVERY_FACTOR = 2
+
 local ROLL_OFFSET_THRESHOLD = 0.001
 
 ---------------
@@ -111,15 +113,9 @@ local calculate_roll_offset = function(tilt_factor)
     return roll_offset
 end
 
-local adjust_roll_offset_based_on_distance = function(roll_offset, distance_left)
-    local capped_distance_left = math.min(distance_left, START_RECOVERY_DODGE_AT_DISTANCE) / START_RECOVERY_DODGE_AT_DISTANCE
-    local adjusted_roll_offset = roll_offset * capped_distance_left
-    return adjusted_roll_offset
-end
-
-local adjust_roll_offset_based_on_speed = function(roll_offset, speed)
-    local capped_speed = math.min(speed, START_RECOVERY_SLIDE_AT_SPEED) / START_RECOVERY_SLIDE_AT_SPEED
-    local adjusted_roll_offset = roll_offset * capped_speed
+local calculate_smooth_recovery = function(roll_offset, remaining, start_recovery)
+    local capped_remaining = math.min(remaining, start_recovery) / start_recovery
+    local adjusted_roll_offset = roll_offset * capped_remaining ^ CURVE_RECOVERY_FACTOR
     return adjusted_roll_offset
 end
 
@@ -140,8 +136,8 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
             local roll_offset = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
-            -- Adjust roll offset based on distance_left
-            roll_offset = adjust_roll_offset_based_on_distance(roll_offset, dodge_character_state_component.distance_left)
+            -- Smooth ending roll offset based on distance_left
+            roll_offset = calculate_smooth_recovery(roll_offset, dodge_character_state_component.distance_left, START_RECOVERY_DODGE_AT_DISTANCE)
 
             mod.roll_offset_damping = DAMPING_MOVE
             mod.roll_offset_target = roll_offset
@@ -197,8 +193,8 @@ mod:hook_safe("PlayerCharacterStateSliding", "_check_transition", function(self,
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
             local roll_offset = calculate_roll_offset(mod.settings["tilt_factor_slide"])
-            -- Adjust roll offset based on current_speed
-            roll_offset = adjust_roll_offset_based_on_speed(roll_offset, current_speed)
+            -- Smooth ending roll offset based on current_speed
+            roll_offset = calculate_smooth_recovery(roll_offset, current_speed, START_RECOVERY_SLIDE_AT_SPEED)
 
             mod.roll_offset_damping = DAMPING_MOVE
             mod.roll_offset_target = roll_offset
