@@ -64,10 +64,11 @@ local debug = {
 --------------------------
 
 mod.settings = {
-    inverted_dodge_angle       = mod:get("inverted_dodge_angle"),
-    tilt_factor_dodge          = mod:get("tilt_factor_dodge"),
-    tilt_factor_slide          = mod:get("tilt_factor_slide"),
-    enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
+    inverted_dodge_angle         = mod:get("inverted_dodge_angle"),
+    inverted_dodging_slide_angle = mod:get("inverted_dodging_slide_angle"),
+    tilt_factor_dodge            = mod:get("tilt_factor_dodge"),
+    tilt_factor_slide            = mod:get("tilt_factor_slide"),
+    enable_debug_modding_tools   = mod:get("enable_debug_modding_tools"),
 }
 
 mod.on_setting_changed = function(setting_id)
@@ -169,7 +170,9 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self
             local unit_rotation = self._first_person_component.rotation
             local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
             local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-            -- Store the move_direction in the box
+            if not mod.settings["inverted_dodging_slide_angle"] then
+                move_direction = move_direction * -1
+            end
             move_direction_box:store(move_direction)
             if modding_tools then debug:print_mod("SLIDE!!!  " .. tostring(move_direction)) end
         end
@@ -182,7 +185,6 @@ mod:hook("PlayerCharacterStateSprinting", "_check_transition", function(func, se
     local out = func(self, unit, t, next_state_params, input_source, decreasing_speed, action_move_speed_modifier, sprint_momentum, wants_slide, wants_to_stop, has_weapon_action_input, weapon_action_input, move_direction, move_speed_without_weapon_actions)
     if self._player.viewport_name == "player1" then
         if out == "sliding" then
-            -- Store the move_direction in the box
             move_direction_box:store(move_direction)
             if modding_tools then debug:print_mod("SLIDE!!!  " .. tostring(move_direction)) end
         end

@@ -17,6 +17,11 @@ return {
 		ru = "Инвертированный угол уклонения",
 		["zh-cn"] = "反向闪避角度",
 	},
+	inverted_dodging_slide_angle = {
+		en = "Inverted Dodging Slide Angle",
+		ru = "Инвертированный угол скольжения при уклонении",
+		["zh-cn"] = "反向闪避滑行角度",
+	},
 	tilt_factor_dodge = {
 		en = "Dodge Strength",
 		ru = "Наклон при уклонении",

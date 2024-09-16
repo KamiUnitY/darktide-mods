@@ -12,6 +12,11 @@ return {
 				default_value = false,
 			},
 			{
+				setting_id      = "inverted_dodging_slide_angle",
+				type = "checkbox",
+				default_value = false,
+			},
+			{
 				setting_id      = "tilt_factor_dodge",
 				type            = "numeric",
 				default_value   = 0.050,
