@@ -14,7 +14,7 @@ return {
 			{
 				setting_id      = "tilt_factor_dodge",
 				type            = "numeric",
-				default_value   = 0.075,
+				default_value   = 0.050,
 				range           = { 0.0, 0.5 },
 				decimals_number = 3,
 			},
