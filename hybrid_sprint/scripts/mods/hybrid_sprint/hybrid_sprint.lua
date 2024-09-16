@@ -173,6 +173,12 @@ end)
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.wants_to_stop = true
+        if mod.keep_sprint then
+            if mod.settings["enable_keep_sprint_after_weapon_actions"] then
+                setPromise("enter_walking")
+            end
+            mod.keep_sprint = false
+        end
         if modding_tools then debug:print_mod("wants_to_stop") end
     end
 end)
