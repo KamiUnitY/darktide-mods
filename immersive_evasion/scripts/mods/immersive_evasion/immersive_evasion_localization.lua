@@ -12,15 +12,15 @@ return {
 		ru = "Поворачивает камеру под углом при уклонениях и подкатах, для приближения к реальности",
 		["zh-cn"] = "闪避和滑铲时倾斜视角，以获得更沉浸的体验",
 	},
-	inverted_dodge_angle = {
-		en = "Inverted Dodge Angle",
-		ru = "Инвертированный угол уклонения",
-		["zh-cn"] = "反向闪避角度",
+	invert_dodge_angle = {
+		en = "Invert Dodge Angle",
+		ru = "Инвертировать угол уклонения",
+		["zh-cn"] = "反转闪避角度",
 	},
-	inverted_dodging_slide_angle = {
-		en = "Inverted Dodging Slide Angle",
-		ru = "Инвертированный угол скольжения при уклонении",
-		["zh-cn"] = "反向闪避滑行角度",
+	invert_dodging_slide_angle = {
+		en = "Invert Dodging Slide Angle",
+		ru = "Инвертировать угол скольжения при уклонении",
+		["zh-cn"] = "反转闪避滑行角度",
 	},
 	tilt_factor_dodge = {
 		en = "Dodge Strength",

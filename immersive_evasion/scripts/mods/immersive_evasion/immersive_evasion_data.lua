@@ -7,12 +7,12 @@ return {
 	options = {
 		widgets = {
 			{
-				setting_id      = "inverted_dodge_angle",
+				setting_id      = "invert_dodge_angle",
 				type = "checkbox",
 				default_value = false,
 			},
 			{
-				setting_id      = "inverted_dodging_slide_angle",
+				setting_id      = "invert_dodging_slide_angle",
 				type = "checkbox",
 				default_value = false,
 			},

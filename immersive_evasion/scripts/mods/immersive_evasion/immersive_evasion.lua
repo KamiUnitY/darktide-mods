@@ -64,8 +64,8 @@ local debug = {
 --------------------------
 
 mod.settings = {
-    inverted_dodge_angle         = mod:get("inverted_dodge_angle"),
-    inverted_dodging_slide_angle = mod:get("inverted_dodging_slide_angle"),
+    invert_dodge_angle         = mod:get("invert_dodge_angle"),
+    invert_dodging_slide_angle = mod:get("invert_dodging_slide_angle"),
     tilt_factor_dodge            = mod:get("tilt_factor_dodge"),
     tilt_factor_slide            = mod:get("tilt_factor_slide"),
     enable_debug_modding_tools   = mod:get("enable_debug_modding_tools"),
@@ -132,7 +132,7 @@ mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, uni
         local unit_rotation = self._first_person_component.rotation
         local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
         local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-        if not mod.settings["inverted_dodge_angle"] then
+        if not mod.settings["invert_dodge_angle"] then
             move_direction = move_direction * -1
         end
         move_direction_box:store(move_direction)
@@ -170,7 +170,7 @@ mod:hook("PlayerCharacterStateDodging", "_check_transition", function(func, self
             local unit_rotation = self._first_person_component.rotation
             local flat_unit_rotation = Quaternion.look(Vector3.normalize(Vector3.flat(Quaternion.forward(unit_rotation))), Vector3.up())
             local move_direction = Quaternion.rotate(flat_unit_rotation, dodge_character_state_component.dodge_direction)
-            if not mod.settings["inverted_dodging_slide_angle"] then
+            if not mod.settings["invert_dodging_slide_angle"] then
                 move_direction = move_direction * -1
             end
             move_direction_box:store(move_direction)
