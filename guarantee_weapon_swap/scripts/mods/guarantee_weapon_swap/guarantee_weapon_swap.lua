@@ -188,12 +188,15 @@ end)
 
 -- CLEAR PROMISE ON SUCCESSFULLY CHANGE WEAPON
 
-local function _on_slot_wielded(self, slot_name)
-    if slot_name ~= current_slot then
-        previous_slot = current_slot
-        current_slot = slot_name
+local function _on_slot_wielded(self)
+    local inventory_component = self._inventory_component
+    local wielded_slot = inventory_component.wielded_slot
 
-        local slot_weapon = self._weapons[slot_name]
+    if wielded_slot ~= current_slot then
+        previous_slot = current_slot
+        current_slot = wielded_slot
+
+        local slot_weapon = self._weapons[current_slot]
         local weapon_template = slot_weapon and slot_weapon.weapon_template
         local weapon_keywords = weapon_template and weapon_template.keywords
         is_attack_prevent_weapon = weapon_keywords and (
@@ -202,7 +205,7 @@ local function _on_slot_wielded(self, slot_name)
         )
 
         clearPromise("quick")
-        clearPromise(PROMISE_SLOT_MAP[slot_name])
+        clearPromise(PROMISE_SLOT_MAP[current_slot])
 
         if current_slot ~= "" and previous_slot ~= "" then
             if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
@@ -215,22 +218,19 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
         mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
     end
     if self._player.viewport_name == "player1" then
-        local wielded_slot = inventory_component.wielded_slot
-        _on_slot_wielded(self, wielded_slot)
+        _on_slot_wielded(self)
     end
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if self._player.viewport_name == "player1" then
-        _on_slot_wielded(self, slot_name)
+        _on_slot_wielded(self)
     end
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", function(self, unit)
     if self._player.viewport_name == "player1" then
-        local inventory_component = self._inventory_component
-        local wielded_slot = inventory_component.wielded_slot
-        _on_slot_wielded(self, wielded_slot)
+        _on_slot_wielded(self)
     end
 end)
 
