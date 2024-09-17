@@ -293,31 +293,38 @@ end)
 
 -- ONLY ALLOW PROMISE ON WEAPON THAT HAVE THE ACTION AND CLEAR PROMISE ON CHANGE WEAPON
 
-local function _on_slot_wielded(self, slot_name)
-    current_slot = slot_name
-    local slot_weapon = self._weapons[slot_name]
-    if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
-        weapon_template = slot_weapon.weapon_template
-        local _weapon_data = WEAPONS[weapon_template.name] or {}
+local function _on_slot_wielded(self)
+    local inventory_component = self._inventory_component
+    local wielded_slot = inventory_component.wielded_slot
 
-        mod.ignore_active_special = _weapon_data.ignore_active_special or false
-        mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
-        mod.is_ammo_special = _weapon_data.special_ammo or false
-        mod.is_parry_special = _weapon_data.special_parry or false
-        mod.pressing_buffer = _weapon_data.pressing_buffer or nil
-        mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
-        mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-        do_special_release.action_one = _weapon_data.special_releases_action_one or false
-        do_special_release.action_two = _weapon_data.special_releases_action_two or false
+    if wielded_slot ~= current_slot then
+        current_slot = wielded_slot
 
-        action_states["action_reload"].allowed_set_promise = weapon_template.action_input_hierarchy.reload ~= nil
-        action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
+        local slot_weapon = self._weapons[current_slot]
+        if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
+            weapon_template = slot_weapon.weapon_template
+            local _weapon_data = WEAPONS[weapon_template.name] or {}
 
-        mod.is_toggle_special = false
-        for _, action in pairs(weapon_template.actions) do
-            if action.kind == "toggle_special" then
-                mod.is_toggle_special = true
-                break
+            clearAllPromises("on_slot_wielded")
+            mod.ignore_active_special = _weapon_data.ignore_active_special or false
+            mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
+            mod.is_ammo_special = _weapon_data.special_ammo or false
+            mod.is_parry_special = _weapon_data.special_parry or false
+            mod.pressing_buffer = _weapon_data.pressing_buffer or nil
+            mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
+            mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+            do_special_release.action_one = _weapon_data.special_releases_action_one or false
+            do_special_release.action_two = _weapon_data.special_releases_action_two or false
+
+            action_states["action_reload"].allowed_set_promise = weapon_template.action_input_hierarchy.reload ~= nil
+            action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
+
+            mod.is_toggle_special = false
+            for _, action in pairs(weapon_template.actions) do
+                if action.kind == "toggle_special" then
+                    mod.is_toggle_special = true
+                    break
+                end
             end
         end
     end
@@ -328,17 +335,19 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
         mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
     end
     if self._player.viewport_name == "player1" then
-        local wielded_slot = inventory_component.wielded_slot
-        if wielded_slot ~= nil and wielded_slot ~= current_slot then
-            _on_slot_wielded(self, wielded_slot)
-        end
+        _on_slot_wielded(self)
     end
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if self._player.viewport_name == "player1" then
-        clearAllPromises("on_slot_wielded")
-        _on_slot_wielded(self, slot_name)
+        _on_slot_wielded(self)
+    end
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", function(self, unit)
+    if self._player.viewport_name == "player1" then
+        _on_slot_wielded(self)
     end
 end)
 

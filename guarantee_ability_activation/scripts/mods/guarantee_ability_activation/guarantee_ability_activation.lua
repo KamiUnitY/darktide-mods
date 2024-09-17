@@ -287,14 +287,19 @@ end)
 
 -- UPDATE WEAPON TEMPLATE VARIABLE & CLEAR PROMISE ON WIELDING ABILITY
 
-local function _on_slot_wielded(self, slot_name)
-    current_slot = slot_name
-    local slot_weapon = self._weapons[slot_name]
-    if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
-        weapon_template = slot_weapon.weapon_template.name
-    end
-    if slot_name == "slot_combat_ability" then
-        clearPromise("on " .. slot_name)
+local function _on_slot_wielded(self)
+    local inventory_component = self._inventory_component
+    local wielded_slot = inventory_component.wielded_slot
+
+    if wielded_slot ~= current_slot then
+        current_slot = wielded_slot
+        local slot_weapon = self._weapons[current_slot]
+        if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
+            weapon_template = slot_weapon.weapon_template.name
+        end
+        if current_slot == "slot_combat_ability" then
+            clearPromise("on " .. current_slot)
+        end
     end
 end
 
@@ -305,14 +310,20 @@ mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inv
     if self._player.viewport_name == "player1" then
         local wielded_slot = inventory_component.wielded_slot
         if wielded_slot ~= nil and wielded_slot ~= current_slot then
-            _on_slot_wielded(self, wielded_slot)
+            _on_slot_wielded(self)
         end
     end
 end)
 
 mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
     if self._player.viewport_name == "player1" then
-        _on_slot_wielded(self, slot_name)
+        _on_slot_wielded(self)
+    end
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", function(self, unit)
+    if self._player.viewport_name == "player1" then
+        _on_slot_wielded(self)
     end
 end)
 
