@@ -47,7 +47,7 @@ local character_state = ""
 local current_slot = ""
 
 local combat_ability = ""
-local weapon_template = ""
+local weapon_template_name = ""
 
 local last_set_promise = 0
 
@@ -294,9 +294,7 @@ local function _on_slot_wielded(self)
     if wielded_slot ~= current_slot then
         current_slot = wielded_slot
         local slot_weapon = self._weapons[current_slot]
-        if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
-            weapon_template = slot_weapon.weapon_template.name
-        end
+        weapon_template_name = slot_weapon and slot_weapon.weapon_template and slot_weapon.weapon_template.name
         if current_slot == "slot_combat_ability" then
             clearPromise("on " .. current_slot)
         end
@@ -304,14 +302,11 @@ local function _on_slot_wielded(self)
 end
 
 mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
-    if current_slot ~= "" and weapon_template ~= "" then
+    if current_slot ~= "" and weapon_template_name ~= "" then
         mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
     end
     if self._player.viewport_name == "player1" then
-        local wielded_slot = inventory_component.wielded_slot
-        if wielded_slot ~= nil and wielded_slot ~= current_slot then
-            _on_slot_wielded(self)
-        end
+        _on_slot_wielded(self)
     end
 end)
 
@@ -401,7 +396,7 @@ local _input_hook = function(func, self, action_name)
 
     -- Fixing Heavy Sword + Relic Bug
     if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-        if mod.promise_ability and string.find(weapon_template, "combatsword_p2") and string.find(combat_ability, "zealot_relic") then
+        if mod.promise_ability and string.find(weapon_template_name, "combatsword_p2") and string.find(combat_ability, "zealot_relic") then
             return true
         end
         return out

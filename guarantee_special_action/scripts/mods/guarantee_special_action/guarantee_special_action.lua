@@ -301,8 +301,8 @@ local function _on_slot_wielded(self)
         current_slot = wielded_slot
 
         local slot_weapon = self._weapons[current_slot]
-        if slot_weapon ~= nil and slot_weapon.weapon_template ~= nil then
-            weapon_template = slot_weapon.weapon_template
+        weapon_template = slot_weapon and slot_weapon.weapon_template
+        if weapon_template then
             local _weapon_data = WEAPONS[weapon_template.name] or {}
 
             clearAllPromises("on_slot_wielded")
