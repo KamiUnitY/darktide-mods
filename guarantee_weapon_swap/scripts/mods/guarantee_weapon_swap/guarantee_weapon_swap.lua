@@ -166,12 +166,11 @@ end
 local function isPromised(action)
     local promise = mod.promises[action]
 
-    if current_slot == SLOT_ACTION_MAP[action] then
-        clearPromise(action)
-        return false
-    end
-
     if promise then
+        if current_slot == SLOT_ACTION_MAP[action] then
+            clearPromise(action)
+            return false
+        end
         if modding_tools then debug:print_mod("Attempting to switch weapon !!!") end
     end
 
