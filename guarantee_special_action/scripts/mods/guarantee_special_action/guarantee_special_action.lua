@@ -258,19 +258,22 @@ local function clearAllPromises(from)
     end
 end
 
-local function isPromised(action, promise)
-    local interval_do_promise = mod.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-    if elapsed(action_states[action].last_do_promise) < interval_do_promise then
-        return false
-    end
-    if elapsed(action_states[action].last_set_promise) >= mod.promise_buffer then
-        clearPromise(action, "buffer_timeout")
-        return false
-    end
+local function isPromised(action)
+    local promise = mod.promises[action]
+
     if promise then
+        local interval_do_promise = mod.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+        if elapsed(action_states[action].last_do_promise) < interval_do_promise then
+            return false
+        end
+        if elapsed(action_states[action].last_set_promise) >= mod.promise_buffer then
+            clearPromise(action, "buffer_timeout")
+            return false
+        end
         action_states[action].last_do_promise = time_now()
         if modding_tools then debug:print_mod("Attempting to do " .. action .. " action !!!") end
     end
+
     return promise
 end
 
@@ -491,8 +494,7 @@ local _input_hook = function(func, self, action_name)
         if promise_action == "action_special" and not allowed_chain_special then
             return false
         end
-        local promise = mod.promises[promise_action]
-        return out or (promise and isPromised(promise_action, promise))
+        return out or isPromised(promise_action)
     end
 
     -- Cancel promise on action two pressed

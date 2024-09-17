@@ -163,7 +163,9 @@ local function clearAllPromises()
     end
 end
 
-local function isPromised(action, promise)
+local function isPromised(action)
+    local promise = mod.promises[action]
+
     if current_slot == SLOT_ACTION_MAP[action] then
         clearPromise(action)
         return false
@@ -172,6 +174,7 @@ local function isPromised(action, promise)
     if promise then
         if modding_tools then debug:print_mod("Attempting to switch weapon !!!") end
     end
+
     return promise
 end
 
@@ -348,8 +351,7 @@ local _input_hook = function(func, self, action_name)
                 end
             end
         end
-        local promise = mod.promises[promise_action]
-        return out or (promise and isPromised(promise_action, promise))
+        return out or isPromised(promise_action)
     end
 
     if mod.promise_exist and is_attack_prevent_weapon then

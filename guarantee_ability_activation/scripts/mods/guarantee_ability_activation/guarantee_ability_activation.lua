@@ -155,22 +155,24 @@ local function clearPromise(from)
     end
 end
 
-local function isPromised(promise)
-    if not promise then
-        return false
-    end
-    if not _is_available_ability_charges() then
-        clearPromise("empty_ability_charges")
-        return false
-    end
-    if IS_DASH_ABILITY[combat_ability] then
-        -- DELAY_ABILITY is a hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
-        if not (ALLOWED_DASH_STATE[character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then
+local function isPromised()
+    local promise = mod.promise_ability
+
+    if promise then
+        if not _is_available_ability_charges() then
+            clearPromise("empty_ability_charges")
             return false
         end
+        if IS_DASH_ABILITY[combat_ability] then
+            -- DELAY_ABILITY is a hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
+            if not (ALLOWED_DASH_STATE[character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then
+                return false
+            end
+        end
+        if modding_tools then debug:print_mod("Attempting to activate combat ability for you !!!") end
     end
-    if modding_tools then debug:print_mod("Attempting to activate combat ability for you !!!") end
-    return true
+
+    return promise
 end
 
 ----------------
@@ -361,8 +363,7 @@ local _input_hook = function(func, self, action_name)
         if IS_DASH_ABILITY[combat_ability] and character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
             return false
         end
-        local promise = mod.promise_ability
-        return out or (promise and isPromised(promise))
+        return out or isPromised()
     end
 
     if action_name == "combat_ability_release" then
