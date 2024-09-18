@@ -330,9 +330,9 @@ local function _on_slot_wielded(self)
     end
 end
 
-mod:hook_safe("PlayerUnitWeaponExtension", "_wielded_weapon", function(self, inventory_component, weapons)
+mod:hook_safe("PlayerUnitWeaponExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
     if current_slot ~= "" and weapon_template ~= nil then
-        mod:hook_disable("PlayerUnitWeaponExtension", "_wielded_weapon")
+        mod:hook_disable("PlayerUnitWeaponExtension", "fixed_update")
     end
     if self._player.viewport_name == "player1" then
         _on_slot_wielded(self)
