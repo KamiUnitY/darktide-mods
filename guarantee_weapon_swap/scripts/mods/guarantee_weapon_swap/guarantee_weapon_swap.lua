@@ -98,9 +98,6 @@ local _is_in_hub = function()
     return game_mode_name == "hub"
 end
 
----@class tablelib
----@field contains function
-
 --------------------------
 -- MOD SETTINGS CACHING --
 --------------------------
