@@ -295,7 +295,7 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
-    if action_name == "move_backward" and pressed then
+    if action_name == "move_backward" then
         -- On pressing backward
         if pressed and not movement_pressed["move_backward"] then
             clearPromise("Pressed Backward")
