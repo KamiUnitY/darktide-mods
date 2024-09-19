@@ -3,6 +3,7 @@
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
 local guarantee_special_action = get_mod("guarantee_special_action")
+local toggle_alt_fire = get_mod("ToggleAltFire")
 
 ---------------
 -- CONSTANTS --
@@ -35,6 +36,8 @@ mod.promise_sprint = false
 
 mod.wants_to_stop = false
 mod.keep_sprint = false
+
+local action_pressed = {}
 
 local movement_pressed = {
     move_forward  = false,
@@ -262,6 +265,8 @@ local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
 
+    action_pressed[action_name] = pressed
+
     -- While on hub
     if is_in_hub and MOVEMENT_ACTIONS[action_name] then
         -- On releasing movement
@@ -305,6 +310,10 @@ local _input_hook = function(func, self, action_name)
         end
         -- Compatibility with Guarantee Special Action
         if guarantee_special_action and guarantee_special_action.promise_exist and guarantee_special_action.interrupt_sprinting_special then
+            return false
+        end
+        -- Compatibility with ToggleAltFire
+        if toggle_alt_fire and action_pressed["action_two_hold"] then
             return false
         end
         -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
