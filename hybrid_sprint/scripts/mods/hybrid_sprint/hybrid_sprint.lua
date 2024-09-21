@@ -34,7 +34,6 @@ local MOVEMENT_ACTIONS = {
 
 mod.promise_sprint = false
 
-mod.wants_to_stop = false
 mod.keep_sprint = false
 
 local action_pressed = {}
@@ -89,7 +88,6 @@ mod.settings = {
 
 mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
-    mod.wants_to_stop = false
     mod.keep_sprint = false
 end
 
@@ -103,7 +101,6 @@ mod.on_all_mods_loaded = function()
 
     -- WATCHER
     -- modding_tools:watch("character_state", mod, "character_state")
-    -- modding_tools:watch("wants_to_stop", mod, "wants_to_stop")
     -- modding_tools:watch("keep_sprint", mod, "keep_sprint")
 end
 
@@ -178,14 +175,18 @@ end)
 
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        mod.wants_to_stop = true
-        if mod.keep_sprint then
-            if mod.settings["enable_keep_sprint_after_weapon_actions"] then
-                setPromise("enter_walking")
+        if mod.promise_sprint then
+            local weapon_template_name = self._weapon_action_component.template_name or ""
+            if not string.find(weapon_template_name, "combatknife")
+                or not (
+                    string.find(previous_action, "heavy") or
+                    string.find(current_action, "heavy")
+                )
+            then
+                clearPromise("wants_to_stop")
+                mod.keep_sprint = true
             end
-            mod.keep_sprint = false
         end
-        if modding_tools then debug:print_mod("wants_to_stop") end
     end
 end)
 
@@ -201,17 +202,6 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if mod.wants_to_stop then
-            if mod.promise_sprint and (reason == "new_interrupting_action" or reason == "started_sprint") then
-                local component = handler_data.component
-                local weapon_template = component.template_name or ""
-                if not string.find(weapon_template, "combatknife") or not (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
-                    clearPromise(reason)
-                end
-                mod.keep_sprint = true
-            end
-            mod.wants_to_stop = false
-        end
         if mod.keep_sprint and (reason == "action_complete" or reason == "hold_input_released") then
             if mod.settings["enable_keep_sprint_after_weapon_actions"] then
                 setPromise(reason)
