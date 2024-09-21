@@ -186,6 +186,9 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
                 clearPromise("wants_to_stop")
                 mod.keep_sprint = true
             end
+            if previous_state == "sliding" then
+                setPromise("was_sliding")
+            end
         end
     end
 end)
