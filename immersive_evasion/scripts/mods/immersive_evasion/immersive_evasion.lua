@@ -66,9 +66,9 @@ local debug = {
 mod.settings = {
     invert_dodge_angle         = mod:get("invert_dodge_angle"),
     invert_dodging_slide_angle = mod:get("invert_dodging_slide_angle"),
-    tilt_factor_dodge            = mod:get("tilt_factor_dodge"),
-    tilt_factor_slide            = mod:get("tilt_factor_slide"),
-    enable_debug_modding_tools   = mod:get("enable_debug_modding_tools"),
+    tilt_factor_dodge          = mod:get("tilt_factor_dodge"),
+    tilt_factor_slide          = mod:get("tilt_factor_slide"),
+    enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
 }
 
 mod.on_setting_changed = function(setting_id)
