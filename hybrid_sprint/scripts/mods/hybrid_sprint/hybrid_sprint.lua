@@ -181,17 +181,18 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
             clearPromise("wants_to_stop")
             mod.keep_sprint = true
 
-            if previous_state == "sliding" then
-                setPromise("was_sliding")
-            end
-
-            if string.find(weapon_template_name, "combatknife")
-                and (
-                    string.find(previous_action, "heavy") or
-                    string.find(current_action, "heavy")
-                )
-            then
-                setPromise("knife_heavy")
+            if not mod.promise_sprint then
+                if previous_state == "sliding" then
+                    setPromise("was_sliding")
+                end
+                if string.find(weapon_template_name, "combatknife")
+                    and (
+                        string.find(previous_action, "heavy") or
+                        string.find(current_action, "heavy")
+                    )
+                then
+                    setPromise("knife_heavy")
+                end
             end
         end
     end
