@@ -147,6 +147,21 @@ local function isPromised()
     return promise
 end
 
+------------------------------
+-- ON USER SETTINGS REQUIRE --
+------------------------------
+
+-- REMOVE HOLD SPRINT FROM VANILLA SETTINGS --
+
+mod:hook_require("scripts/settings/options/input_settings", function(instance)
+    for i, setting in ipairs(instance.settings) do
+        if setting.id == "hold_to_sprint" then
+            table.remove(instance.settings, i)
+            break
+        end
+    end
+end)
+
 ----------------
 -- ON TRIGGER --
 ----------------
@@ -159,17 +174,6 @@ end)
 
 mod:hook_safe("GameplayStateRun", "on_exit", function(...)
     clearPromise("EXIT_GAMEPLAY")
-end)
-
--- REMOVE HOLD SPRINT FROM VANILLA SETTINGS --
-
-mod:hook_require("scripts/settings/options/input_settings", function(instance)
-    for i, setting in ipairs(instance.settings) do
-        if setting.id == "hold_to_sprint" then
-            table.remove(instance.settings, i)
-            break
-        end
-    end
 end)
 
 -- CLEARING PROMISE ON WEAPON ACTION
