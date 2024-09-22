@@ -181,23 +181,22 @@ end)
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if mod.promise_sprint then
-            local weapon_template_name = self._weapon_action_component.template_name or ""
-
             clearPromise("wants_to_stop")
             mod.keep_sprint = true
-
-            if not mod.promise_sprint then
-                if CONTINUE_SPRINT_CHARACTER_STATE[previous_state] then
-                    setPromise("was_" .. previous_state)
-                end
-                if string.find(weapon_template_name, "combatknife")
-                    and (
-                        string.find(previous_action, "heavy") or
-                        string.find(current_action, "heavy")
-                    )
-                then
-                    setPromise("knife_heavy")
-                end
+        end
+        if mod.keep_sprint then
+            local weapon_template_name = self._weapon_action_component.template_name or ""
+            if CONTINUE_SPRINT_CHARACTER_STATE[previous_state] then
+                setPromise("was_" .. previous_state)
+                mod.keep_sprint = false
+            elseif string.find(weapon_template_name, "combatknife")
+                and (
+                    string.find(previous_action, "heavy") or
+                    string.find(current_action, "heavy")
+                )
+            then
+                setPromise("knife_heavy")
+                mod.keep_sprint = false
             end
         end
     end
@@ -215,11 +214,13 @@ end)
 
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        if mod.keep_sprint and (reason == "action_complete" or reason == "hold_input_released") then
-            if mod.settings["enable_keep_sprint_after_weapon_actions"] then
-                setPromise(reason)
+        if mod.keep_sprint then
+            if reason == "action_complete" or reason == "hold_input_released" then
+                if mod.settings["enable_keep_sprint_after_weapon_actions"] then
+                    setPromise(reason)
+                end
+                mod.keep_sprint = false
             end
-            mod.keep_sprint = false
         end
         previous_action = current_action
         current_action = "none"
