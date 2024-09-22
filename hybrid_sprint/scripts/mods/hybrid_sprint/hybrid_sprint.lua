@@ -227,7 +227,7 @@ end)
 
 local _on_character_state_change = function (self)
     character_state = self._state_current.name
-    if not ALLOWED_CHARACTER_STATE[character_state] then
+    if not ALLOWED_CHARACTER_STATE[character_state] and not is_in_hub then
         clearPromise("Unallowed Character State")
     end
 end
