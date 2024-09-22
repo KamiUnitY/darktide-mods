@@ -21,11 +21,6 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
-local CONTINUE_SPRINT_CHARACTER_STATE = {
-    sliding = true,
-    stunned = true,
-}
-
 local MOVEMENT_ACTIONS = {
     move_forward  = true,
     move_backward = true,
@@ -129,6 +124,7 @@ end
 local function setPromise(from)
     if not mod.promise_sprint and (ALLOWED_CHARACTER_STATE[character_state] or is_in_hub) then
         mod.promise_sprint = true
+        mod.keep_sprint = false
         if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
     end
 end
@@ -181,12 +177,12 @@ end)
 mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt, t, previous_state, params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if mod.promise_sprint then
-            clearPromise("wants_to_stop")
+            clearPromise("wants_to_stop_by_" .. previous_state)
             mod.keep_sprint = true
         end
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
-            if CONTINUE_SPRINT_CHARACTER_STATE[previous_state] then
+            if ALLOWED_CHARACTER_STATE[previous_state] and previous_state ~= "sprinting" then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
             elseif string.find(weapon_template_name, "combatknife")
