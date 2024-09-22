@@ -21,6 +21,11 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
+local CONTINUE_SPRINT_CHARACTER_STATE = {
+    sliding = true,
+    stunned = true,
+}
+
 local MOVEMENT_ACTIONS = {
     move_forward  = true,
     move_backward = true,
@@ -182,8 +187,8 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
             mod.keep_sprint = true
 
             if not mod.promise_sprint then
-                if previous_state == "sliding" then
-                    setPromise("was_sliding")
+                if CONTINUE_SPRINT_CHARACTER_STATE[previous_state] then
+                    setPromise("was_" .. previous_state)
                 end
                 if string.find(weapon_template_name, "combatknife")
                     and (
