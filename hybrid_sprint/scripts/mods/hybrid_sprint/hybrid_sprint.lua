@@ -186,7 +186,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
         end
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
-            if ALLOWED_CHARACTER_STATE[previous_state] and previous_state ~= "sprinting" then
+            if previous_state ~= "sprinting" then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
             elseif string.find(weapon_template_name, "combatknife")
