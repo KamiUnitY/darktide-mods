@@ -299,28 +299,28 @@ local function _on_slot_wielded(self)
 
     if wielded_slot ~= current_slot then
         current_slot = wielded_slot
-
         local slot_weapon = self._weapons[current_slot]
         weapon_template = slot_weapon and slot_weapon.weapon_template
+        local _weapon_data = weapon_template and WEAPONS[weapon_template.name] or {}
+
+        clearAllPromises("on_slot_wielded")
+
+        mod.ignore_active_special = _weapon_data.ignore_active_special or false
+        mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
+        mod.is_ammo_special = _weapon_data.special_ammo or false
+        mod.is_parry_special = _weapon_data.special_parry or false
+        mod.pressing_buffer = _weapon_data.pressing_buffer or nil
+        mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
+        mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+        do_special_release.action_one = _weapon_data.special_releases_action_one or false
+        do_special_release.action_two = _weapon_data.special_releases_action_two or false
+
+        action_states["action_reload"].allowed_set_promise = weapon_template and weapon_template.action_input_hierarchy.reload ~= nil or false
+        action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
+
+        mod.is_toggle_special = false
         if weapon_template then
-            local _weapon_data = WEAPONS[weapon_template.name] or {}
-
-            clearAllPromises("on_slot_wielded")
-            mod.ignore_active_special = _weapon_data.ignore_active_special or false
-            mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
-            mod.is_ammo_special = _weapon_data.special_ammo or false
-            mod.is_parry_special = _weapon_data.special_parry or false
-            mod.pressing_buffer = _weapon_data.pressing_buffer or nil
-            mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
-            mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-            do_special_release.action_one = _weapon_data.special_releases_action_one or false
-            do_special_release.action_two = _weapon_data.special_releases_action_two or false
-
-            action_states["action_reload"].allowed_set_promise = weapon_template.action_input_hierarchy.reload ~= nil
-            action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
-
-            mod.is_toggle_special = false
-            for _, action in pairs(weapon_template.actions) do
+            for _, action in pairs(weapon_template.actions or {}) do
                 if action.kind == "toggle_special" then
                     mod.is_toggle_special = true
                     break
