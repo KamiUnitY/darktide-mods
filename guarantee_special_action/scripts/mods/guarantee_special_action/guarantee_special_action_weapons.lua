@@ -192,12 +192,6 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
-    powermaul_p1_m3 = {
-        action_special              = true,
-        special_releases_action_one = true,
-        special_releases_action_two = false,
-        promise_buffer              = 1.0,
-    },
     powermaul_2h_p1_m1 = {
         action_special              = true,
         ignore_active_special       = true,
