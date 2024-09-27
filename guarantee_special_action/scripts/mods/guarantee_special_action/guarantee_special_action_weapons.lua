@@ -176,6 +176,7 @@ local weapons = {
     },
     forcesword_p1_m3 = {
         action_special              = true,
+        ignore_active_special       = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.0,
