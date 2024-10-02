@@ -1,4 +1,4 @@
--- Hybrid Sprint by KamiUnitY. Ver. 1.2.4
+-- Hybrid Sprint by KamiUnitY. Ver. 1.2.5
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
