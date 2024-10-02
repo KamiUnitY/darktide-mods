@@ -82,7 +82,7 @@ end
 
 mod.settings = {
     enable_hold_to_sprint                   = mod:get("enable_hold_to_sprint"),
-    enable_keep_sprint_after_weapon_actions = mod:get("enable_keep_sprint_after_weapon_actions"),
+    enable_keep_sprint_after_weapon_action  = mod:get("enable_keep_sprint_after_weapon_action"),
     enable_debug_modding_tools              = mod:get("enable_debug_modding_tools"),
 }
 
@@ -216,7 +216,7 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if mod.keep_sprint then
             if reason == "action_complete" or reason == "hold_input_released" then
-                if mod.settings["enable_keep_sprint_after_weapon_actions"] then
+                if mod.settings["enable_keep_sprint_after_weapon_action"] then
                     setPromise(reason)
                 end
                 mod.keep_sprint = false
