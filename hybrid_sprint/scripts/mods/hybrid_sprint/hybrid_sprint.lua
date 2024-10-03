@@ -199,10 +199,13 @@ local function setPromise(from)
 end
 
 local function clearPromise(from)
-    if mod.promise_sprint or mod.keep_sprint then
+    if mod.promise_sprint then
         mod.promise_sprint = false
-        mod.keep_sprint = false
         if modding_tools then debug:print_mod("clearPromiseFrom: " .. from) end
+    end
+    if mod.keep_sprint then
+        mod.keep_sprint = false
+        if modding_tools then debug:print_mod("clearKeepSprintFrom: " .. from) end
     end
 end
 
@@ -257,7 +260,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
         end
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
-            if previous_state ~= "sprinting" then
+            if previous_state ~= "sprinting" and not string.find(current_action, "action_melee_start") then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
             elseif string.find(weapon_template_name, "combatknife")
@@ -274,24 +277,38 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
 end)
 
 -- CLEAR PROMISED DODGE ON DODGE
+
 mod:hook_safe("PlayerCharacterStateDodging", "on_enter", function(self, unit, dt, t, previous_state, params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         mod.promise_dodge = false
     end
 end)
 
--- UPDATE CURRENT ACTION
+-- DO STUFF ON ACTION CHANGE
+
+local function _on_action_change(self)
+    local registered_components = self._registered_components
+    local handler_data = registered_components["weapon_action"]
+    local running_action = handler_data and handler_data.running_action
+    local action_settings = running_action and running_action._action_settings
+    local new_action = action_settings and action_settings.name or "none"
+
+    if handler_data and current_action ~= new_action then
+        previous_action = current_action ~= "none" and current_action or previous_action
+        current_action = new_action
+    end
+end
 
 mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
     if self._unit_data_extension._player.viewport_name == 'player1' then
-        current_action = action_name
+        _on_action_change(self)
     end
 end)
 
--- KEEPING SPRINT AFTER FINISHING WEAPON ACTION
-
 mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
     if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_action_change(self)
+
         if mod.keep_sprint then
             if reason == "action_complete" or reason == "hold_input_released" then
                 if mod.settings["enable_keep_sprint_after_weapon_action"] then
@@ -300,8 +317,12 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
                 mod.keep_sprint = false
             end
         end
-        previous_action = current_action
-        current_action = "none"
+    end
+end)
+
+mod:hook_safe("ActionHandler", "server_correction_occurred", function(self, id, action_objects, action_params, actions)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        _on_action_change(self)
     end
 end)
 
