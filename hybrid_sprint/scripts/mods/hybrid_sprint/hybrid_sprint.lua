@@ -23,6 +23,11 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
+local TRAVELING_CHARACTER_STATE = {
+    sprinting = true,
+    walking   = true,
+}
+
 local MOVEMENT_ACTIONS = {
     move_forward  = true,
     move_backward = true,
@@ -46,6 +51,7 @@ local DODGE_PRESS_BUFFER = 0.05
 mod.promise_sprint = false
 
 mod.keep_sprint = false
+mod.super_keep_sprint = false
 
 local action_pressed = {}
 
@@ -171,6 +177,7 @@ mod.on_all_mods_loaded = function()
     -- WATCHER
     -- modding_tools:watch("character_state", mod, "character_state")
     -- modding_tools:watch("keep_sprint", mod, "keep_sprint")
+    -- modding_tools:watch("super_keep_sprint", mod, "super_keep_sprint")
 end
 
 ---------------------------
@@ -243,11 +250,13 @@ end)
 mod:hook_safe("GameplayStateRun", "on_enter", function(...)
     clearPromise("ENTER_GAMEPLAY")
     mod.promise_dodge = false
+    mod.super_keep_sprint = false
 end)
 
 mod:hook_safe("GameplayStateRun", "on_exit", function(...)
     clearPromise("EXIT_GAMEPLAY")
     mod.promise_dodge = false
+    mod.super_keep_sprint = false
 end)
 
 -- CLEARING PROMISE ON WEAPON ACTION
@@ -260,7 +269,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
         end
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
-            if previous_state ~= "sprinting" and not string.find(current_action, "action_melee_start") then
+            if previous_state ~= "sprinting" and (mod.super_keep_sprint or not string.find(current_action, "action_melee_start")) then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
             elseif string.find(weapon_template_name, "combatknife")
@@ -333,6 +342,9 @@ local _on_character_state_change = function (self)
     if not ALLOWED_CHARACTER_STATE[character_state] and not is_in_hub then
         clearPromise("Unallowed Character State")
         mod.promise_dodge = false
+    end
+    if TRAVELING_CHARACTER_STATE[character_state] then
+        mod.super_keep_sprint = false
     end
 end
 
@@ -430,6 +442,9 @@ local _input_hook = function(func, self, action_name)
         -- Promise sprinting
         if pressed and not mod.settings["enable_hold_to_sprint"] then
             setPromise("Pressed Sprint")
+            if ALLOWED_CHARACTER_STATE[character_state] and not TRAVELING_CHARACTER_STATE[character_state] then
+                mod.super_keep_sprint = true
+            end
         end
         -- Compatibility with Guarantee Special Action
         if guarantee_special_action and guarantee_special_action.promise_exist and guarantee_special_action.interrupt_sprinting_special then
