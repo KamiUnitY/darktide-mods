@@ -5,6 +5,8 @@ local modding_tools = get_mod("modding_tools")
 local guarantee_special_action = get_mod("guarantee_special_action")
 local toggle_alt_fire = get_mod("ToggleAltFire")
 
+local InputDevice = require("scripts/managers/input/input_device")
+
 ---------------
 -- CONSTANTS --
 ---------------
@@ -27,6 +29,15 @@ local MOVEMENT_ACTIONS = {
     move_left     = true,
     move_right    = true,
 }
+
+local DEVICE_TYPE_MAP_ALIASES = {
+    mouse           = 1,
+    keyboard        = 1,
+    ps4_controller  = 2,
+    xbox_controller = 3,
+}
+
+local DODGE_PRESS_BUFFER = 0.05
 
 ---------------
 -- VARIABLES --
@@ -52,6 +63,10 @@ local character_state = ""
 local current_action = ""
 local previous_action = ""
 
+mod.promise_dodge = false
+
+local last_press_dodge = 0
+
 ---------------
 -- UTILITIES --
 ---------------
@@ -70,10 +85,63 @@ local debug = {
     end,
 }
 
+-- Function provided by the author of the no_dodge_jump mod, Jaemn
+local player_movement_valid_for_dodge = function()
+    local player = Managers.player:local_player(1)
+    if player == nil then return false end
+
+    local player_unit = player.player_unit
+    local archetype = player:profile().archetype
+    local dodge_template = archetype.dodge
+
+    local input_extension = ScriptUnit.extension(player_unit, "input_system")
+    if input_extension == nil then return false end
+
+    local move = input_extension:get("move")
+    local allow_diagonal_forward_dodge = input_extension:get("diagonal_forward_dodge")
+    local allow_stationary_dodge = input_extension:get("stationary_dodge")
+    local move_length = Vector3.length(move)
+
+    if not allow_stationary_dodge and move_length < dodge_template.minimum_dodge_input then
+        return false
+    end
+
+    local moving_forward = move.y > 0
+    local allow_dodge_while_moving_forward = allow_diagonal_forward_dodge
+    local allow_always_dodge = input_extension:get("always_dodge")
+    allow_dodge_while_moving_forward = allow_dodge_while_moving_forward or allow_always_dodge
+
+    if not allow_dodge_while_moving_forward and moving_forward then
+        return false
+    elseif move_length == 0 then
+        return true
+    else
+        local normalized_move = move / move_length
+        local x = normalized_move.x
+        local y = normalized_move.y
+
+        return allow_always_dodge or y <= 0 or math.abs(x) > 0.707
+    end
+end
+
+local same_dodge_jump_bind = function(self)
+    local aliases = self._aliases
+    local device_type = DEVICE_TYPE_MAP_ALIASES[InputDevice.last_pressed_device.device_type]
+    return aliases.jump[device_type] == aliases.dodge[device_type]
+end
+
 local _is_in_hub = function()
     local game_mode_manager = Managers.state.game_mode
     local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
     return game_mode_name == "hub"
+end
+
+local time_now = function()
+    return Managers.time and Managers.time:time("main")
+end
+
+local elapsed = function(time)
+    return time_now() - time
 end
 
 --------------------------
@@ -82,6 +150,7 @@ end
 
 mod.settings = {
     enable_hold_to_sprint                   = mod:get("enable_hold_to_sprint"),
+    enable_dodge_on_diagonal_sprint         = mod:get("enable_dodge_on_diagonal_sprint"),
     enable_keep_sprint_after_weapon_action  = mod:get("enable_keep_sprint_after_weapon_action"),
     enable_debug_modding_tools              = mod:get("enable_debug_modding_tools"),
 }
@@ -170,10 +239,12 @@ end)
 
 mod:hook_safe("GameplayStateRun", "on_enter", function(...)
     clearPromise("ENTER_GAMEPLAY")
+    mod.promise_dodge = false
 end)
 
 mod:hook_safe("GameplayStateRun", "on_exit", function(...)
     clearPromise("EXIT_GAMEPLAY")
+    mod.promise_dodge = false
 end)
 
 -- CLEARING PROMISE ON WEAPON ACTION
@@ -199,6 +270,13 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
                 mod.keep_sprint = false
             end
         end
+    end
+end)
+
+-- CLEAR PROMISED DODGE ON DODGE
+mod:hook_safe("PlayerCharacterStateDodging", "on_enter", function(self, unit, dt, t, previous_state, params)
+    if self._unit_data_extension._player.viewport_name == 'player1' then
+        mod.promise_dodge = false
     end
 end)
 
@@ -233,6 +311,7 @@ local _on_character_state_change = function (self)
     character_state = self._state_current.name
     if not ALLOWED_CHARACTER_STATE[character_state] and not is_in_hub then
         clearPromise("Unallowed Character State")
+        mod.promise_dodge = false
     end
 end
 
@@ -307,6 +386,25 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
+    -- Buffer pressing dodge and record last_press_dodge
+    if action_name == "dodge" then
+        if pressed then
+            mod.promise_dodge = true
+            last_press_dodge = time_now()
+        end
+        return out or mod.promise_dodge and elapsed(last_press_dodge) < DODGE_PRESS_BUFFER
+    end
+
+    -- Prevent jumping on valid dodge
+    if action_name == "jump" then
+        if mod.settings["enable_dodge_on_diagonal_sprint"] then
+            if character_state == "sprinting" and same_dodge_jump_bind(self) and player_movement_valid_for_dodge() then
+                return false
+            end
+        end
+        return out
+    end
+
     if action_name == "sprinting" then
         -- Promise sprinting
         if pressed and not mod.settings["enable_hold_to_sprint"] then
@@ -323,6 +421,12 @@ local _input_hook = function(func, self, action_name)
         -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
         if character_state == "lunging" then
             return false
+        end
+        -- Prevent sprinting on pressing dodge
+        if mod.settings["enable_dodge_on_diagonal_sprint"] then
+            if elapsed(last_press_dodge) < DODGE_PRESS_BUFFER then
+                return false
+            end
         end
         -- Do sprinting if promised
         return out or isPromised()

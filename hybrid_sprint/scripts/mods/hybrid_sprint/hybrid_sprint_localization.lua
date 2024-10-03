@@ -22,6 +22,16 @@ return {
 		ru = "Бежать только удерживая кнопку. Проще тогда отключить этот мод.",
 		["zh-cn"] = "仅在长按时疾跑，相当于禁用此模组。",
 	},
+	enable_dodge_on_diagonal_sprint = {
+		en = "Dodge on Diagonal Sprint",
+		ru = "Уклонение при диагональном беге",
+		["zh-cn"] = "在斜跑时进行闪避",
+	},
+	enable_dodge_on_diagonal_sprint_description = {
+		en = "Perform dodge instead of jump on diagonal sprint",
+		ru = "Выполняйте уклонение вместо прыжка при диагональном беге",
+		["zh-cn"] = "在斜跑时执行闪避而不是跳跃",
+	},
 	experimental_group = {
 		en = "Experimental",
 		ru = "Экспериментальное",
