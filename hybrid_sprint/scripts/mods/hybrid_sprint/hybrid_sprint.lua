@@ -269,16 +269,14 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
         end
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
-            if previous_state ~= "sprinting" and (mod.super_keep_sprint or not string.find(current_action, "action_melee_start")) then
+            local is_agile_weapon = string.find(weapon_template_name, "combatknife") or string.find(weapon_template_name, "combatsword_p3")
+
+            if previous_state ~= "sprinting" and (mod.super_keep_sprint or is_agile_weapon or not string.find(current_action, "action_melee_start")) then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
-            elseif string.find(weapon_template_name, "combatknife")
-                and (
-                    string.find(previous_action, "heavy") or
-                    string.find(current_action, "heavy")
-                )
+            elseif is_agile_weapon and (string.find(previous_action, "heavy") or string.find(current_action, "heavy"))
             then
-                setPromise("knife_heavy")
+                setPromise("agile_weapon_heavy")
                 mod.keep_sprint = false
             end
         end
