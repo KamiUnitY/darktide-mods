@@ -35,6 +35,17 @@ local MOVEMENT_ACTIONS = {
     move_right    = true,
 }
 
+local IS_AGILE_WEAPON = {
+    combatknife_p1_m1 = true,
+    combatknife_p1_m2 = true,
+    combataxe_p2_m1   = true,
+    combataxe_p2_m2   = true,
+    combataxe_p2_m3   = true,
+    combatsword_p3_m1 = true,
+    combatsword_p3_m2 = true,
+    combatsword_p3_m3 = true,
+}
+
 local DEVICE_TYPE_MAP_ALIASES = {
     mouse           = 1,
     keyboard        = 1,
@@ -269,7 +280,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
         end
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
-            local is_agile_weapon = string.find(weapon_template_name, "combatknife") or string.find(weapon_template_name, "combatsword_p3")
+            local is_agile_weapon = IS_AGILE_WEAPON[weapon_template_name]
 
             if previous_state ~= "sprinting" and (mod.super_keep_sprint or is_agile_weapon or not string.find(current_action, "action_melee_start")) then
                 setPromise("was_" .. previous_state)
