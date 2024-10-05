@@ -38,9 +38,6 @@ local MOVEMENT_ACTIONS = {
 local IS_AGILE_WEAPON = {
     combatknife_p1_m1 = true,
     combatknife_p1_m2 = true,
-    combatsword_p3_m1 = true,
-    combatsword_p3_m2 = true,
-    combatsword_p3_m3 = true,
 }
 
 local DEVICE_TYPE_MAP_ALIASES = {
