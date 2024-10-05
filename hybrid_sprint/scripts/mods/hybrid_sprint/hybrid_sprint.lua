@@ -439,9 +439,11 @@ local _input_hook = function(func, self, action_name)
 
     -- Prevent jumping on valid dodge
     if action_name == "jump" then
-        if mod.settings["enable_dodge_on_diagonal_sprint"] then
-            if character_state == "sprinting" and same_dodge_jump_bind(self) and player_movement_valid_for_dodge() then
-                return false
+        if pressed then
+            if mod.settings["enable_dodge_on_diagonal_sprint"] then
+                if character_state == "sprinting" and same_dodge_jump_bind(self) and player_movement_valid_for_dodge() then
+                    return false
+                end
             end
         end
         return out
