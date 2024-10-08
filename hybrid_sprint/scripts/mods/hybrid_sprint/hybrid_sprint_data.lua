@@ -12,6 +12,13 @@ return {
 				default_value = false,
 			},
 			{
+				setting_id = "start_sprint_buffer",
+				type            = "numeric",
+				default_value   = 1.0,
+				range           = { 0.0, 5.0 },
+				decimals_number = 1,
+			},
+			{
 				setting_id = "enable_dodge_on_diagonal_sprint",
 				type = "checkbox",
 				default_value = true,

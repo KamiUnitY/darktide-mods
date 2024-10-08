@@ -55,6 +55,8 @@ local DODGE_PRESS_BUFFER = 0.05
 
 mod.promise_sprint = false
 
+local last_press_sprinting = 0
+
 mod.keep_sprint = false
 mod.super_keep_sprint = false
 
@@ -95,6 +97,17 @@ local debug = {
         end
     end,
 }
+
+local has_any_movement_pressed = function()
+    local any_movement_pressed = false
+    for _, value in pairs(movement_pressed) do
+        if value then
+            any_movement_pressed = true
+            break
+        end
+    end
+    return any_movement_pressed
+end
 
 -- Function provided by the author of the no_dodge_jump mod, Jaemn
 local player_movement_valid_for_dodge = function()
@@ -155,15 +168,20 @@ local elapsed = function(time)
     return time_now() - time
 end
 
+local should_sprint_timeout = function ()
+    return elapsed(last_press_sprinting) > mod.settings["start_sprint_buffer"]
+end
+
 --------------------------
 -- MOD SETTINGS CACHING --
 --------------------------
 
 mod.settings = {
-    enable_hold_to_sprint                   = mod:get("enable_hold_to_sprint"),
-    enable_dodge_on_diagonal_sprint         = mod:get("enable_dodge_on_diagonal_sprint"),
-    enable_keep_sprint_after_weapon_action  = mod:get("enable_keep_sprint_after_weapon_action"),
-    enable_debug_modding_tools              = mod:get("enable_debug_modding_tools"),
+    enable_hold_to_sprint                  = mod:get("enable_hold_to_sprint"),
+    start_sprint_buffer                    = mod:get("start_sprint_buffer"),
+    enable_dodge_on_diagonal_sprint        = mod:get("enable_dodge_on_diagonal_sprint"),
+    enable_keep_sprint_after_weapon_action = mod:get("enable_keep_sprint_after_weapon_action"),
+    enable_debug_modding_tools             = mod:get("enable_debug_modding_tools"),
 }
 
 mod.on_setting_changed = function(setting_id)
@@ -225,6 +243,17 @@ local function isPromised()
     local promise = mod.promise_sprint
 
     if promise then
+        if is_in_hub then
+            if not has_any_movement_pressed() and should_sprint_timeout() then
+                clearPromise("Promised Hub Sprint Timeout")
+                return false
+            end
+        else
+            if not movement_pressed.move_forward and should_sprint_timeout() then
+                clearPromise("Promised Sprint Timeout")
+                return false
+            end
+        end
         if modding_tools then debug:print_mod("Attempting to sprint for you !!!") end
     end
 
@@ -388,37 +417,32 @@ local _input_hook = function(func, self, action_name)
 
     -- While on hub
     if is_in_hub and MOVEMENT_ACTIONS[action_name] then
+        local last_pressed = movement_pressed[action_name]
+        movement_pressed[action_name] = pressed
         -- On releasing movement
-        if not pressed and movement_pressed[action_name] then
-            local any_movement_pressed = false
-            for key, value in pairs(movement_pressed) do
-                if key ~= action_name and value then
-                    any_movement_pressed = true
-                    break
-                end
-            end
-            if not any_movement_pressed then
+        if not pressed and last_pressed then
+            if not has_any_movement_pressed() then
                 clearPromise("Released All Movement")
             end
         end
-        movement_pressed[action_name] = pressed
         return out
     end
 
     if action_name == "move_forward" then
         -- On releasing forward
-        if not pressed and movement_pressed["move_forward"] then
+        if not pressed and movement_pressed.move_forward then
             clearPromise("Realeased Forward")
         end
-        movement_pressed["move_forward"] = pressed
+        movement_pressed.move_forward = pressed
         return out
     end
 
     if action_name == "move_backward" then
         -- On pressing backward
-        if pressed and not movement_pressed["move_backward"] then
+        if pressed and not movement_pressed.move_backward then
             clearPromise("Pressed Backward")
         end
+        movement_pressed.move_backward = pressed
         return out
     end
 
@@ -447,6 +471,7 @@ local _input_hook = function(func, self, action_name)
         -- Promise sprinting
         if pressed and not mod.settings["enable_hold_to_sprint"] then
             setPromise("Pressed Sprint")
+            last_press_sprinting = time_now()
             if ALLOWED_CHARACTER_STATE[character_state] and not TRAVELING_CHARACTER_STATE[character_state] then
                 mod.super_keep_sprint = true
             end

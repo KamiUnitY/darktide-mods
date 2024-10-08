@@ -17,6 +17,16 @@ return {
 		ru = "Удерживать бег",
 		["zh-cn"] = "长按疾跑",
 	},
+	start_sprint_buffer = {
+		en = "Starting Sprint Buffer",
+		ru = "Буфер запуска спринта",
+		["zh-cn"] = "启动冲刺缓冲",
+	},
+	start_sprint_buffer_description = {
+		en = "The duration in seconds for allowing sprint after pressing sprint, prior to pressing forward.",
+		ru = "Длительность в секундах, позволяющая спринт после нажатия кнопки спринта, перед нажатием вперед.",
+		["zh-cn"] = "按下冲刺键后，按下前进键之前允许冲刺的持续时间（以秒为单位）。",
+	},
 	enable_hold_to_sprint_description = {
 		en = "Only Sprint while holding the button, Basically disable this mod.",
 		ru = "Бежать только удерживая кнопку. Проще тогда отключить этот мод.",
