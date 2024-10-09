@@ -32,7 +32,6 @@ local IS_DASH_ABILITY = {
     ogryn_charge_increased_distance      = true,
 }
 
-local DELAY_ABILITY = 0.2
 
 ---------------
 -- VARIABLES --
@@ -164,8 +163,7 @@ local function isPromised()
             return false
         end
         if IS_DASH_ABILITY[combat_ability] then
-            -- DELAY_ABILITY is a hacky solution for double dashing bug when pressed only once, need can_use_ability function so I can replace this
-            if not (ALLOWED_DASH_STATE[character_state] and elapsed(last_set_promise) > DELAY_ABILITY) then
+            if not ALLOWED_DASH_STATE[character_state] then
                 return false
             end
         end
@@ -247,14 +245,31 @@ mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_ac
                     end
                 end
                 if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
-            else
-                if IS_AIM_DASH[action_settings.kind] then
-                    setPromise("promise_dash")
-                    return
-                end
             end
         end
     end
+end)
+
+-- SET PROMISE ON ABILITY FAILING TO CHANGE CHARACTER STATE
+
+mod:hook("ActionCharacterStateChange", "finish", function(func, self, reason, data, t, time_in_action)
+    if self._player.viewport_name == "player1" then
+        local action_settings = self._action_settings
+        if action_settings and action_settings.ability_type == "combat_ability" then
+            local current_state = self._character_sate_component.state_name
+            local wanted_state = self._wanted_state_name
+            local is_in_wanted_state = current_state == wanted_state
+
+            local use_ability_charge = action_settings.use_ability_charge
+            local ability_interrupted_reasons = action_settings.ability_interrupted_reasons
+            local should_use_charge = (not ability_interrupted_reasons or not ability_interrupted_reasons[reason]) and is_in_wanted_state
+
+            if not (use_ability_charge and should_use_charge) then
+                setPromise("state_change_failed")
+            end
+        end
+    end
+    func(self, reason, data, t, time_in_action)
 end)
 
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
