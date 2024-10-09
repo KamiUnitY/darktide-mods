@@ -32,6 +32,11 @@ local IS_DASH_ABILITY = {
     ogryn_charge_increased_distance      = true,
 }
 
+local IS_WEAPON_ABILITY = {
+    zealot_relic            = true,
+    psyker_force_field      = true,
+    psyker_force_field_dome = true,
+}
 
 ---------------
 -- VARIABLES --
@@ -411,10 +416,20 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
-    -- Fixing Heavy Sword + Relic Bug
+    -- Release Mouse on using Weapon Ability
+    if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+        if mod.promise_ability and IS_WEAPON_ABILITY[combat_ability] then
+            return false
+        end
+        return out
+    end
+
     if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-        if mod.promise_ability and string.find(weapon_template_name, "combatsword_p2") and string.find(combat_ability, "zealot_relic") then
-            return true
+        if mod.promise_ability and IS_WEAPON_ABILITY[combat_ability] then
+            if string.find(weapon_template_name, "combatsword_p2") then
+                return true -- Bandage Fix for Heavy Sword Special Bug
+            end
+            return false
         end
         return out
     end
