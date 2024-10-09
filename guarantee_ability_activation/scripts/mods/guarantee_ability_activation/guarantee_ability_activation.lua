@@ -214,11 +214,6 @@ local IS_AIM_CANCEL = {
     [AIM_CANCEL_WITH_SPRINT] = true,
 }
 
-local IS_AIM_DASH = {
-    targeted_dash_aim    = true,
-    directional_dash_aim = true,
-}
-
 local PREVENT_CANCEL_DURATION = 0.3
 
 -- HANDLE PROMISE ON START HOLDING ABILITY
@@ -270,7 +265,10 @@ mod:hook("ActionCharacterStateChange", "finish", function(func, self, reason, da
             local should_use_charge = (not ability_interrupted_reasons or not ability_interrupted_reasons[reason]) and is_in_wanted_state
 
             if not (use_ability_charge and should_use_charge) then
+                debug:print("FAILED!!!!!!!!!!!!!!!!!!!!!!!!")
                 setPromise("state_change_failed")
+            else
+                debug:print("YESSSS!!!!!!!!!!!!!!!!!!!!!!!!")
             end
         end
     end
