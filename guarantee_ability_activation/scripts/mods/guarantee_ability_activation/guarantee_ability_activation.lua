@@ -265,10 +265,7 @@ mod:hook("ActionCharacterStateChange", "finish", function(func, self, reason, da
             local should_use_charge = (not ability_interrupted_reasons or not ability_interrupted_reasons[reason]) and is_in_wanted_state
 
             if not (use_ability_charge and should_use_charge) then
-                debug:print("FAILED!!!!!!!!!!!!!!!!!!!!!!!!")
                 setPromise("state_change_failed")
-            else
-                debug:print("YESSSS!!!!!!!!!!!!!!!!!!!!!!!!")
             end
         end
     end
