@@ -236,13 +236,15 @@ mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_ac
         local action_settings = self._action_settings
         if action_settings and action_settings.ability_type == "combat_ability" then
             if IS_AIM_CANCEL[reason] then
-                if reason == AIM_CANCEL_WITH_SPRINT then
-                    setPromise("AIM_CANCEL_WITH_SPRINT")
-                    return
-                end
-                if elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
-                    setPromise("AIM_CANCEL_NORMAL")
-                    return
+                if action_settings.start_input then
+                    if reason == AIM_CANCEL_WITH_SPRINT then
+                        setPromise("AIM_CANCEL_WITH_SPRINT")
+                        return
+                    end
+                    if elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
+                        setPromise("AIM_CANCEL_NORMAL")
+                        return
+                    end
                 end
                 if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
             else
