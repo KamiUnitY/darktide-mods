@@ -126,7 +126,7 @@ end
 -------------------------
 
 -- SET ROLL OFFSET WHILE DODGING
-mod:hook_safe("PlayerCharacterStateDodging", "_update_dodge", function(self, unit, dt, time_in_dodge, has_slide_input)
+mod:hook_safe("PlayerCharacterStateDodging", "_check_transition", function(self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     if self._player.viewport_name == "player1" then
         local dodge_character_state_component = self._dodge_character_state_component
         local unit_rotation = self._first_person_component.rotation
