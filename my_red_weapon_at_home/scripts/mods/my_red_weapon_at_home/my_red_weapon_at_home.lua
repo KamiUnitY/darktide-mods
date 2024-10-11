@@ -71,9 +71,9 @@ mod:hook("ViewElementGrid", "_create_entry_widget_from_config", function(func, s
 		local tag_color = widget.style.rarity_tag.color
 		local name_color = widget.style.rarity_name.text_color
 
-		bg_color[2], bg_color[3], bg_color[4] = 255, 20, 20
-		tag_color[2], tag_color[3], tag_color[4] = 255, 20, 20
-		name_color[2], name_color[3], name_color[4] = 255, 20, 20
+		bg_color[2], bg_color[3], bg_color[4] = 220, 20, 20
+		tag_color[2], tag_color[3], tag_color[4] = 220, 20, 20
+		name_color[2], name_color[3], name_color[4] = 220, 20, 20
 
 		widget.content.rarity_name = "Relic"
 	end
@@ -161,8 +161,8 @@ mod:hook(package.loaded, "scripts/ui/view_content_blueprints/item_stats_blueprin
             local bg_color = widget.style.gradient_background.color
             local name_color = widget.style.rarity_name.text_color
 
-            bg_color[1], bg_color[2], bg_color[3], bg_color[4] = 150, 255, 20, 20
-            name_color[2], name_color[3], name_color[4] = 255, 20, 20
+            bg_color[2], bg_color[3], bg_color[4] = 120, 20, 20
+            name_color[2], name_color[3], name_color[4] = 220, 20, 20
 
             widget.content.rarity_name = "Relic"
         end
