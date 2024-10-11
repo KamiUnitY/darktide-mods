@@ -51,8 +51,8 @@ local debug = {
 -- ITEM GRID --
 ---------------
 
-mod:hook("ViewElementGrid", "_create_entry_widget_from_config", function(func, self, config, suffix, callback_name, secondary_callback_name, double_click_callback_name)
-	local widget, alignment_widget = func(self, config, suffix, callback_name, secondary_callback_name, double_click_callback_name)
+mod:hook("ViewElementGrid", "_create_entry_widget_from_config", function(func, self, ...)
+	local widget, alignment_widget = func(self, ...)
 
 	if not widget or (widget.type ~= "item" and widget.type ~= "store_item") then
 		return widget, alignment_widget
@@ -81,7 +81,33 @@ mod:hook("ViewElementGrid", "_create_entry_widget_from_config", function(func, s
 	return widget, alignment_widget
 end)
 
+mod:hook_safe("InventoryView", "_update_blueprint_widgets", function(self, ...)
+    for _, widget in pairs(self._loadout_widgets) do
+		if not widget or (widget.type ~= "item_slot") then
+            break
+        end
 
+        local item = widget.content and widget.content.item
+        if not item then
+            break
+        end
+
+        local rarity = item.__master_item.rarity
+        local level = item.__master_item.baseItemLevel
+
+        if rarity == 5 and level >= 380 then
+            local bg_color = widget.style.background_gradient.color
+            local tag_color = widget.style.rarity_tag.color
+            local name_color = widget.style.rarity_name.text_color
+
+            bg_color[2], bg_color[3], bg_color[4] = 220, 20, 20
+            tag_color[2], tag_color[3], tag_color[4] = 220, 20, 20
+            name_color[2], name_color[3], name_color[4] = 220, 20, 20
+
+            widget.content.rarity_name = "Relic"
+        end
+	end
+end)
 
 mod:hook(package.loaded, "scripts/ui/view_content_blueprints/item_stats_blueprints", function(generate_blueprints_function, grid_size, optional_item)
     local blueprints = generate_blueprints_function(grid_size, optional_item)
@@ -170,6 +196,3 @@ mod:hook(package.loaded, "scripts/ui/view_content_blueprints/item_stats_blueprin
 
     return blueprints
 end)
-
-
-
