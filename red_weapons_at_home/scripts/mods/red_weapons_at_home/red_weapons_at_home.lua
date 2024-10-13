@@ -1,9 +1,13 @@
 local mod = get_mod("red_weapons_at_home")
 local modding_tools = get_mod("modding_tools")
 
+local Items = require("scripts/utilities/items")
+
 ---------------
 -- CONSTANTS --
 ---------------
+
+local MAX_EXPERTISE_LEVEL = tostring(Items.max_expertise_level())
 
 local COLOR = {255, 210, 30, 30}
 local COLOR_DARK = {255, 120, 20, 20}
@@ -46,7 +50,7 @@ end
 
 
 local function is_sainted_item(item)
-    return item and item.__master_item.rarity == 5 and item.__master_item.baseItemLevel >= 380
+    return item and item.rarity == 5 and Items.expertise_level(item, true) == MAX_EXPERTISE_LEVEL
 end
 
 ---------------
