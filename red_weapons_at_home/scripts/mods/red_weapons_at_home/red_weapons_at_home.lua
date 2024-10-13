@@ -78,33 +78,24 @@ require("scripts/ui/view_content_blueprints/item_stats_blueprints")
 mod:hook(package.loaded, "scripts/ui/view_content_blueprints/item_stats_blueprints", function(func, ...)
     local blueprints = func(...)
 
-    local function hook_weapon_header_init(blueprints)
-        local _weapon_header_init = blueprints.weapon_header.init
-        blueprints.weapon_header.init = function(parent, widget, element, callback_name, _, ui_renderer)
-            _weapon_header_init(parent, widget, element, callback_name, _, ui_renderer)
+    local _weapon_header_init = blueprints.weapon_header.init
+    blueprints.weapon_header.init = function(parent, widget, element, callback_name, _, ui_renderer)
+        _weapon_header_init(parent, widget, element, callback_name, _, ui_renderer)
 
-            local item = element.item
-            if is_sainted_item(item) then
-                apply_sainted_theme(widget)
-            end
+        local item = element.item
+        if is_sainted_item(item) then
+            apply_sainted_theme(widget)
         end
     end
 
-    local function hook_extended_weapon_stats_header_init(blueprints)
-        local _extended_weapon_stats_header_init = blueprints.extended_weapon_stats_header.init
-        blueprints.extended_weapon_stats_header.init = function(parent, widget, element, callback_name)
-            _extended_weapon_stats_header_init(parent, widget, element, callback_name)
+    local _extended_weapon_stats_header_init = blueprints.extended_weapon_stats_header.init
+    blueprints.extended_weapon_stats_header.init = function(parent, widget, element, callback_name)
+        _extended_weapon_stats_header_init(parent, widget, element, callback_name)
 
-            local item = element.item
-            if is_sainted_item(item) then
-                apply_sainted_theme(widget)
-            end
+        local item = element.item
+        if is_sainted_item(item) then
+            apply_sainted_theme(widget)
         end
-    end
-
-    if blueprints.weapon_header and blueprints.extended_weapon_stats_header then
-        hook_weapon_header_init(blueprints)
-        hook_extended_weapon_stats_header_init(blueprints)
     end
 
     return blueprints
