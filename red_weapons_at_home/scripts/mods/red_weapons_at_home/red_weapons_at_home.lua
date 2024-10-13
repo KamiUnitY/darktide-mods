@@ -8,6 +8,8 @@ local modding_tools = get_mod("modding_tools")
 local COLOR = {255, 210, 30, 30}
 local COLOR_DARK = {255, 120, 20, 20}
 
+local NOTIFICATION_BG_COLOR = {191, 120, 20, 20}
+
 -------------------------
 -- MODDING TOOLS DEBUG --
 -------------------------
@@ -21,9 +23,9 @@ local debug = {
     end,
 }
 
--------------------
--- HELPER METHOD --
--------------------
+---------------
+-- UTILITIES --
+---------------
 
 local function set_color(target, color)
     if target then
@@ -131,4 +133,22 @@ mod:hook_require("scripts/ui/views/inventory_view/inventory_view_content_bluepri
             apply_sainted_theme(widget)
         end
     end
+end)
+
+-----------------------
+-- ITEM NOTIFICATION --
+-----------------------
+
+mod:hook("ConstantElementNotificationFeed", "_generate_notification_data", function(func, self, message_type, data)
+    local notification = func(self, message_type, data)
+    if message_type == "item_granted" then
+        if is_sainted_item(notification.item) then
+            notification.color = NOTIFICATION_BG_COLOR
+            notification.line_color = COLOR
+            notification.texts[1].color = COLOR
+            notification.texts[2].color = COLOR
+            notification.texts[2].display_name = Localize("loc_item_weapon_rarity_6")
+        end
+    end
+    return notification
 end)
