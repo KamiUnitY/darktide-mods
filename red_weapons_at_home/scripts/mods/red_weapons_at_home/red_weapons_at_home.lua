@@ -8,8 +8,6 @@ local modding_tools = get_mod("modding_tools")
 local COLOR = {255, 210, 30, 30}
 local COLOR_DARK = {255, 120, 20, 20}
 
-local NOTIFICATION_BG_COLOR = {191, 120, 20, 20}
-
 -------------------------
 -- MODDING TOOLS DEBUG --
 -------------------------
@@ -143,10 +141,14 @@ mod:hook("ConstantElementNotificationFeed", "_generate_notification_data", funct
     local notification = func(self, message_type, data)
     if message_type == "item_granted" then
         if is_sainted_item(notification.item) then
-            notification.color = NOTIFICATION_BG_COLOR
-            notification.line_color = COLOR
-            notification.texts[1].color = COLOR
-            notification.texts[2].color = COLOR
+            local rarity_color = table.clone(COLOR)
+            local background_rarity_color = table.clone(COLOR_DARK)
+			background_rarity_color[1] = background_rarity_color[1] * 0.75
+
+            notification.color = background_rarity_color
+            notification.line_color = rarity_color
+            notification.texts[1].color = rarity_color
+            notification.texts[2].color = rarity_color
             notification.texts[2].display_name = Localize("loc_item_weapon_rarity_6")
         end
     end
