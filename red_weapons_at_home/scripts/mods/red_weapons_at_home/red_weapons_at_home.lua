@@ -1,3 +1,5 @@
+-- Red Weapons at Home by KamiUnitY. Ver. 1.0.0
+
 local mod = get_mod("red_weapons_at_home")
 local modding_tools = get_mod("modding_tools")
 
