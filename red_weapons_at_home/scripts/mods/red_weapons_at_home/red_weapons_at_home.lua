@@ -25,22 +25,21 @@ local debug = {
 -- UTILITIES --
 ---------------
 
-local function set_color(target, color)
-    if target then
-        target[1], target[2], target[3], target[4] = color[1], color[2], color[3], color[4]
-    end
-end
-
 local function apply_sainted_theme(widget)
-    local rarity_tag = widget.style.rarity_tag and widget.style.rarity_tag.color
-    local rarity_name = widget.style.rarity_name and widget.style.rarity_name.text_color
-    local background_gradient = widget.style.background_gradient and widget.style.background_gradient.color
-    local gradient_background = widget.style.gradient_background and widget.style.gradient_background.color
+    local style = widget.style
 
-    set_color(rarity_tag, COLOR)
-    set_color(rarity_name, COLOR)
-    set_color(background_gradient, COLOR)
-    set_color(gradient_background, COLOR_DARK)
+    if style.rarity_tag then
+        style.rarity_tag.color = table.clone(COLOR)
+    end
+    if style.rarity_name then
+        style.rarity_name.text_color = table.clone(COLOR)
+    end
+    if style.background_gradient then
+        style.background_gradient.color = table.clone(COLOR)
+    end
+    if style.gradient_background then
+        style.gradient_background.color = table.clone(COLOR_DARK)
+    end
 
     widget.content.rarity_name = Localize("loc_item_weapon_rarity_6")
 end
