@@ -5,7 +5,7 @@ local modding_tools = get_mod("modding_tools")
 -- CONSTANTS --
 ---------------
 
-local COLOR = {255, 200, 25, 25}
+local COLOR = {255, 210, 30, 30}
 local COLOR_DARK = {255, 120, 20, 20}
 
 -------------------------
