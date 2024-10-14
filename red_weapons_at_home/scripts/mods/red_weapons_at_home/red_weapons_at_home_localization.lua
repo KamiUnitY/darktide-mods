@@ -3,6 +3,6 @@ return {
 		en = "Red Weapons at Home",
 	},
 	mod_description = {
-		en = "Display weapons as red when they reach their maximum potential",
+		en = "Display weapons as red when they reach their maximum potential of base stats",
 	},
 }
