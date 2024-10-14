@@ -4,6 +4,7 @@ local mod = get_mod("red_weapons_at_home")
 local modding_tools = get_mod("modding_tools")
 
 local Items = require("scripts/utilities/items")
+local ConstantElementNotificationFeedSettings = require("scripts/ui/constant_elements/elements/notification_feed/constant_element_notification_feed_settings")
 
 ---------------
 -- CONSTANTS --
@@ -139,7 +140,7 @@ mod:hook("ConstantElementNotificationFeed", "_generate_notification_data", funct
         if is_sainted_item(notification.item) then
             local rarity_color = table.clone(COLOR)
             local background_rarity_color = table.clone(COLOR_DARK)
-			background_rarity_color[1] = background_rarity_color[1] * 0.75
+			background_rarity_color[1] = background_rarity_color[1] * ConstantElementNotificationFeedSettings.default_alpha_value
 
             notification.color = background_rarity_color
             notification.line_color = rarity_color
