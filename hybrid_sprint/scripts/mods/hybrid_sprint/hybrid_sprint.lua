@@ -80,6 +80,8 @@ mod.promise_dodge = false
 
 local last_press_dodge = 0
 
+local is_action_allowed_during_sprint = true
+
 ---------------
 -- UTILITIES --
 ---------------
@@ -305,7 +307,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
             local weapon_template_name = self._weapon_action_component.template_name or ""
             local is_agile_weapon = IS_AGILE_WEAPON[weapon_template_name]
 
-            if previous_state ~= "sprinting" and (mod.super_keep_sprint or is_agile_weapon or not string.find(current_action, "action_melee_start")) then
+            if previous_state ~= "sprinting" and (is_action_allowed_during_sprint or mod.super_keep_sprint or is_agile_weapon) then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
             elseif is_agile_weapon and (string.find(previous_action, "heavy") or string.find(current_action, "heavy"))
@@ -337,6 +339,14 @@ local function _on_action_change(self)
     if handler_data and current_action ~= new_action then
         previous_action = current_action ~= "none" and current_action or previous_action
         current_action = new_action
+
+        if current_action ~= "none" then
+            -- START ACTION
+            is_action_allowed_during_sprint = action_settings.allowed_during_sprint
+        else
+            -- FINISH ACTION
+            is_action_allowed_during_sprint = true
+        end
     end
 end
 
