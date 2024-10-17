@@ -307,7 +307,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
             local weapon_template_name = self._weapon_action_component.template_name or ""
             local is_agile_weapon = IS_AGILE_WEAPON[weapon_template_name]
 
-            if previous_state ~= "sprinting" and (is_action_allowed_during_sprint or mod.super_keep_sprint or is_agile_weapon) then
+            if previous_state ~= "sprinting" and (current_action == "none" or mod.super_keep_sprint or is_agile_weapon) then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
             elseif is_agile_weapon and (string.find(previous_action, "heavy") or string.find(current_action, "heavy"))
