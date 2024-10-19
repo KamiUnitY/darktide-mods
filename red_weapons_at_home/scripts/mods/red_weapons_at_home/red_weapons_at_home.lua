@@ -14,8 +14,7 @@ local ConstantElementNotificationFeedSettings = require("scripts/ui/constant_ele
 
 local MAX_EXPERTISE_LEVEL = Items.max_expertise_level()
 
-local COLOR = {255, 210, 30, 30}
-local COLOR_DARK = {255, 120, 20, 20}
+local DARKEN_FACTOR = 0.4
 
 local TRAIT_BUFF_MAPPING = {
 	gadget_stamina_increase           = "stamina_modifier",
@@ -30,6 +29,23 @@ local TRAIT_MAX_VALUE = {
 	gadget_innate_health_increase     = 21,
 	gadget_innate_max_wounds_increase = 1,
 }
+
+---------------
+-- VARIABLES --
+---------------
+
+local rarity_color = {255, 210, 30, 40}
+
+local function darken_color(color)
+    local darkened_color = {}
+    darkened_color[1] = color[1]
+    for i = 2, #color do
+        darkened_color[i] = color[i] * (1 - DARKEN_FACTOR)
+    end
+    return darkened_color
+end
+
+local rarity_color_dark = darken_color(rarity_color)
 
 -------------------------
 -- MODDING TOOLS DEBUG --
@@ -122,7 +138,7 @@ mod:hook_require("scripts/utilities/items", function(Items)
     Items.rarity_color = function(item)
         local original_color, original_color_dark = Items.original_rarity_color(item)
         if mod:is_enabled() and is_sainted_item(item) then
-            return COLOR, COLOR_DARK
+            return rarity_color, rarity_color_dark
         end
         return original_color, original_color_dark
     end
