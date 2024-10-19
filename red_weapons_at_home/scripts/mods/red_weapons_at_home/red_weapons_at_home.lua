@@ -51,9 +51,6 @@ local rarity_color_dark = darken_color(rarity_color)
 -------------------------
 
 local debug = {
-    is_enabled = function(self)
-        return modding_tools and modding_tools:is_enabled()
-    end,
     print = function(self, text)
         pcall(function() modding_tools:console_print(text) end)
     end,
