@@ -6,7 +6,6 @@ local modding_tools = get_mod("modding_tools")
 local Items = require("scripts/utilities/items")
 local MasterItems = require("scripts/backend/master_items")
 local BuffTemplates = require("scripts/settings/buff/buff_templates")
-local ConstantElementNotificationFeedSettings = require("scripts/ui/constant_elements/elements/notification_feed/constant_element_notification_feed_settings")
 
 ---------------
 -- CONSTANTS --
