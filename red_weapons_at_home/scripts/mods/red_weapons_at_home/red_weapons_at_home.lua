@@ -120,19 +120,19 @@ end
 mod:hook_require("scripts/utilities/items", function(Items)
     Items.original_rarity_color = Items.original_rarity_color or Items.rarity_color
     Items.rarity_color = function(item)
-        local _color, _color_dark = Items.original_rarity_color(item)
+        local original_color, original_color_dark = Items.original_rarity_color(item)
         if mod:is_enabled() and is_sainted_item(item) then
             return COLOR, COLOR_DARK
         end
-        return _color, _color_dark
+        return original_color, original_color_dark
     end
 
     Items.original_rarity_display_name = Items.original_rarity_display_name or Items.rarity_display_name
     Items.rarity_display_name = function(item)
-        local _name = Items.original_rarity_display_name(item)
+        local original_rarity_name = Items.original_rarity_display_name(item)
         if mod:is_enabled() and is_sainted_item(item) then
             return Localize("loc_item_weapon_rarity_6")
         end
-        return _name
+        return original_rarity_name
     end
 end)
