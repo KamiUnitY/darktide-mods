@@ -111,7 +111,7 @@ end
 -- FIND SAINTED --
 ------------------
 
-local function is_sainted_item(item)
+mod.is_sainted_item = function(item)
     local expertise_level_text = Items.expertise_level(item, true)
     local expertise_level = type(expertise_level_text) == "string" and tonumber(expertise_level_text)
 
@@ -136,7 +136,7 @@ mod:hook_require("scripts/utilities/items", function(Items)
     Items.original_rarity_color = Items.original_rarity_color or Items.rarity_color
     Items.rarity_color = function(item)
         local original_color, original_color_dark = Items.original_rarity_color(item)
-        if mod:is_enabled() and is_sainted_item(item) then
+        if mod:is_enabled() and mod.is_sainted_item(item) then
             return rarity_color, rarity_color_dark
         end
         return original_color, original_color_dark
@@ -145,7 +145,7 @@ mod:hook_require("scripts/utilities/items", function(Items)
     Items.original_rarity_display_name = Items.original_rarity_display_name or Items.rarity_display_name
     Items.rarity_display_name = function(item)
         local original_rarity_name = Items.original_rarity_display_name(item)
-        if mod:is_enabled() and is_sainted_item(item) then
+        if mod:is_enabled() and mod.is_sainted_item(item) then
             return Localize("loc_item_weapon_rarity_6")
         end
         return original_rarity_name
