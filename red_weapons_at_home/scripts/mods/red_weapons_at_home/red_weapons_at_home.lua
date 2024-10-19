@@ -33,18 +33,8 @@ local TRAIT_MAX_VALUE = {
 -- VARIABLES --
 ---------------
 
-local rarity_color = {255, 210, 30, 40}
-
-local function darken_color(color)
-    local darkened_color = {}
-    darkened_color[1] = color[1]
-    for i = 2, #color do
-        darkened_color[i] = color[i] * (1 - DARKEN_FACTOR)
-    end
-    return darkened_color
-end
-
-local rarity_color_dark = darken_color(rarity_color)
+local rarity_color = { 0, 0, 0, 0 }
+local rarity_color_dark = { 0, 0, 0, 0 }
 
 -------------------------
 -- MODDING TOOLS DEBUG --
@@ -59,6 +49,20 @@ local debug = {
 ---------------
 -- UTILITIES --
 ---------------
+
+local function darken_color(color)
+    local darkened_color = {}
+    darkened_color[1] = color[1]
+    for i = 2, #color do
+        darkened_color[i] = color[i] * (1 - DARKEN_FACTOR)
+    end
+    return darkened_color
+end
+
+local function fetch_rarity_color()
+    rarity_color = { 255, mod.settings["rarity_color_6_red"], mod.settings["rarity_color_6_green"], mod.settings["rarity_color_6_blue"], }
+    rarity_color_dark = darken_color(rarity_color)
+end
 
 local function _get_lerp_stepped_value(range, lerp_value)
 	local min = 1
@@ -102,6 +106,29 @@ local function get_trait_data(id, value)
 		end
 	end
 	return trait, output
+end
+
+--------------------------
+-- MOD SETTINGS CACHING --
+--------------------------
+
+mod.settings = {
+    rarity_color_6_red   = mod:get("rarity_color_6_red"),
+    rarity_color_6_green = mod:get("rarity_color_6_green"),
+    rarity_color_6_blue  = mod:get("rarity_color_6_blue"),
+}
+
+mod.on_setting_changed = function(setting_id)
+    mod.settings[setting_id] = mod:get(setting_id)
+    fetch_rarity_color()
+end
+
+------------------------
+-- ON ALL MODS LOADED --
+------------------------
+
+mod.on_all_mods_loaded = function()
+    fetch_rarity_color()
 end
 
 ------------------
