@@ -80,12 +80,12 @@ local function get_trait_data(id, value)
 
 	local template = BuffTemplates[trait]
 	if not template then
-		return output
+		return trait, output
 	end
 
 	local localization_info = template.localization_info
 	if not localization_info then
-		return output
+		return trait, output
 	end
 
 	local buff_name = TRAIT_BUFF_MAPPING[trait]
