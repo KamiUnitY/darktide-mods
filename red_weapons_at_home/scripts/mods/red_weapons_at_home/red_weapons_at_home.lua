@@ -136,19 +136,20 @@ end
 ------------------
 
 mod.is_sainted_item = function(item)
-    local expertise_level_text = Items.expertise_level(item, true)
-    local expertise_level = type(expertise_level_text) == "string" and tonumber(expertise_level_text)
+    if item then
+        local expertise_level_text = Items.expertise_level(item, true)
+        local expertise_level = tonumber(expertise_level_text)
 
-    if item and item.rarity == 5 and expertise_level then
-        if item.item_type == "GADGET" then
-            local trait = item.traits[1]
-            local trait_type, trait_value = get_trait_data(trait.id, trait.value)
-            return expertise_level >= 400 and trait_value >= TRAIT_MAX_VALUE[trait_type]
-        else
-            return expertise_level == MAX_EXPERTISE_LEVEL
+        if item.rarity == 5 and expertise_level then
+            if item.item_type == "GADGET" then
+                local trait = item.traits[1]
+                local trait_type, trait_value = get_trait_data(trait.id, trait.value)
+                return expertise_level >= 400 and trait_value >= TRAIT_MAX_VALUE[trait_type]
+            else
+                return expertise_level == MAX_EXPERTISE_LEVEL
+            end
         end
     end
-
     return false
 end
 
