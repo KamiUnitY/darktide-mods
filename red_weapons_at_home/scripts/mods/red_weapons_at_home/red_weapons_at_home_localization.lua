@@ -9,14 +9,18 @@ return {
 	},
 	rarity_color_6 = {
 		en = "Rarity Color",
+		ru = "Цвет редкости",
 	},
 	rarity_color_6_red = {
 		en = "Red",
+		ru = "Красный",
 	},
 	rarity_color_6_green = {
 		en = "Green",
+		ru = "Зелёный",
 	},
 	rarity_color_6_blue = {
 		en = "Blue",
+		ru = "Синий",
 	},
 }
