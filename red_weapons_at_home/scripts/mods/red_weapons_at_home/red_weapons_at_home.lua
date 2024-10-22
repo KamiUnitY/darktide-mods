@@ -29,6 +29,8 @@ local TRAIT_MAX_VALUE = {
 	gadget_innate_max_wounds_increase = 1,
 }
 
+local RARITY_6_DISPLAY_NAME = Localize("loc_item_weapon_rarity_6")
+
 ---------------
 -- VARIABLES --
 ---------------
@@ -171,7 +173,7 @@ mod:hook_require("scripts/utilities/items", function(Items)
     Items.rarity_display_name = function(item)
         local original_rarity_name = Items.original_rarity_display_name(item)
         if mod:is_enabled() and mod.is_sainted_item(item) then
-            return Localize("loc_item_weapon_rarity_6")
+            return RARITY_6_DISPLAY_NAME
         end
         return original_rarity_name
     end
