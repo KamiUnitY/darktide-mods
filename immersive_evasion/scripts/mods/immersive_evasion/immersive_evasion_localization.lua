@@ -29,7 +29,7 @@ return {
 	},
 	tilt_factor_dodging_slide = {
 		en = "Dodging Slide Strength",
-		ru = "Сила наклона при уклонении в подкате",
+		ru = "Сила скольжения при уклонении",
 		["zh-cn"] = "闪避滑铲强度",
 	},
 	tilt_factor_slide = {
