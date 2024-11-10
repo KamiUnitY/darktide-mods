@@ -27,6 +27,11 @@ return {
 		ru = "Наклон при уклонении",
 		["zh-cn"] = "闪避强度",
 	},
+	tilt_factor_dodging_slide = {
+		en = "Dodging Slide Strength",
+		ru = "Сила наклона при уклонении в подкате",
+		["zh-cn"] = "闪避滑铲强度",
+	},
 	tilt_factor_slide = {
 		en = "Slide Strength",
 		ru = "Наклон при подкате",

@@ -38,6 +38,8 @@ mod.roll_offset_damping = DAMPING_MOVE
 mod.roll_offset = 0
 mod.roll_offset_target = 0
 
+mod.tilt_factor = 0
+
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
 
@@ -67,6 +69,7 @@ mod.settings = {
     invert_dodge_angle         = mod:get("invert_dodge_angle"),
     invert_dodging_slide_angle = mod:get("invert_dodging_slide_angle"),
     tilt_factor_dodge          = mod:get("tilt_factor_dodge"),
+    tilt_factor_dodging_slide  = mod:get("tilt_factor_dodging_slide"),
     tilt_factor_slide          = mod:get("tilt_factor_slide"),
     enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
 }
@@ -125,6 +128,13 @@ end
 -- DODGE RELATED HOOKS --
 -------------------------
 
+-- SET TILT FACTOR
+mod:hook_safe("PlayerCharacterStateDodging", "on_enter", function(self, unit, dt, t, previous_state, params)
+    if self._player.viewport_name == "player1" then
+        mod.tilt_factor = mod.settings["tilt_factor_dodge"]
+    end
+end)
+
 -- SET ROLL OFFSET WHILE DODGING
 mod:hook_safe("PlayerCharacterStateDodging", "_check_transition", function(self, unit, t, input_extension, next_state_params, still_dodging, wants_slide)
     if self._player.viewport_name == "player1" then
@@ -139,7 +149,7 @@ mod:hook_safe("PlayerCharacterStateDodging", "_check_transition", function(self,
         if modding_tools then debug:print_mod("DODGE!!!  " .. tostring(move_direction)) end
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
-            local roll_offset = calculate_roll_offset(mod.settings["tilt_factor_dodge"])
+            local roll_offset = calculate_roll_offset(mod.tilt_factor)
             -- Smooth ending roll offset based on distance_left
             roll_offset = calculate_smooth_recovery(roll_offset, dodge_character_state_component.distance_left, START_RECOVERY_DODGE_AT_DISTANCE)
 
@@ -168,9 +178,12 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_enter", function(self, unit, dt
         local rotation = self._first_person_component.rotation
         local move_direction = Quaternion.rotate(rotation, move_input)
         if previous_state == "dodging" then
+            mod.tilt_factor = mod.settings["tilt_factor_dodging_slide"]
             if not mod.settings["invert_dodging_slide_angle"] then
                 move_direction = move_direction * -1
             end
+        else
+            mod.tilt_factor = mod.settings["tilt_factor_slide"]
         end
         move_direction_box:store(move_direction)
         if modding_tools then debug:print_mod("SLIDE!!!  " .. tostring(move_direction)) end
@@ -182,7 +195,7 @@ mod:hook_safe("PlayerCharacterStateSliding", "_check_transition", function(self,
     if self._player.viewport_name == "player1" then
         if move_direction_box and look_direction_box then
             -- Calculate roll_offset using the stored vectors
-            local roll_offset = calculate_roll_offset(mod.settings["tilt_factor_slide"])
+            local roll_offset = calculate_roll_offset(mod.tilt_factor)
             -- Smooth ending roll offset based on current_speed
             roll_offset = calculate_smooth_recovery(roll_offset, current_speed, START_RECOVERY_SLIDE_AT_SPEED)
 
