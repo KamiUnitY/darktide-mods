@@ -1,4 +1,4 @@
--- Immersive Evasion by KamiUnitY. Ver. 1.1.1
+-- Immersive Evasion by KamiUnitY. Ver. 1.1.2
 
 local mod = get_mod("immersive_evasion")
 local modding_tools = get_mod("modding_tools")

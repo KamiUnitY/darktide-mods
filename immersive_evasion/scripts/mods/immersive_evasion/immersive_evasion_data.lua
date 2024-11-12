@@ -26,7 +26,7 @@ return {
 			{
 				setting_id      = "tilt_factor_dodging_slide",
 				type            = "numeric",
-				default_value   = 0.120,
+				default_value   = 0.110,
 				range           = { 0.0, 0.5 },
 				decimals_number = 3,
 			},
