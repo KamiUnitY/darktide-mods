@@ -6,7 +6,7 @@ return {
 	},
 	mod_description = {
 		en = "Display weapons as red when they reach their maximum potential of base stats",
-		ru = "Red Weapons at Home - Делает фон оружия красным, когда оно достигает максимального потенциала базовых характеристик.",
+		ru = "Делает фон оружия красным, когда оно достигает максимального потенциала базовых характеристик.",
 		["zh-cn"] = "如果装备达到最大潜力值，则显示为红装",
 	},
 	rarity_color_6 = {
