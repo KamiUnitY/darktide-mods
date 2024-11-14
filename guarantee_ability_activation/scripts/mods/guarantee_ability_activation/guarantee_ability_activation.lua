@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.3
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.4
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -102,9 +102,9 @@ end
 --------------------------
 
 mod.settings = {
-    enable_prevent_double_dashing                = mod:get("enable_prevent_double_dashing"),
-    enable_prevent_ability_aiming                = mod:get("enable_prevent_ability_aiming"),
-    enable_debug_modding_tools                   = mod:get("enable_debug_modding_tools"),
+    enable_prevent_double_dashing = mod:get("enable_prevent_double_dashing"),
+    enable_prevent_ability_aiming = mod:get("enable_prevent_ability_aiming"),
+    enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
 }
 
 mod.on_setting_changed = function(setting_id)
@@ -311,7 +311,7 @@ local function _on_slot_wielded(self)
     if wielded_slot ~= current_slot then
         current_slot = wielded_slot
         local slot_weapon = self._weapons[current_slot]
-        weapon_template_name = slot_weapon and slot_weapon.weapon_template and slot_weapon.weapon_template.name
+        weapon_template_name = (slot_weapon and slot_weapon.weapon_template and slot_weapon.weapon_template.name) or ""
         if current_slot == "slot_combat_ability" then
             clearPromise("on " .. current_slot)
         end
