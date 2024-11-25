@@ -17,6 +17,11 @@ return {
 				default_value = false,
 			},
 			{
+				setting_id = "enable_prevent_relic_cancel",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
 				setting_id  = "debug_group",
 				type        = "group",
 				sub_widgets = {

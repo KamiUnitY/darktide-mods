@@ -27,6 +27,11 @@ return {
 		ru = "Отключение функции удержания способности",
 		["zh-cn"] = "禁用技能键按住功能",
 	},
+	enable_prevent_relic_cancel = {
+		en = "Prevent Chorus cancel from ability key",
+		ru = "Предотвращение отмены Хора при нажатии клавиши способности",
+		["zh-cn"] = "防止按下技能键时取消圣咏",
+	},
 	debug_group = {
 		en = "Debug",
 		ru = "Отладка",

@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.4
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.5
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -104,6 +104,7 @@ end
 mod.settings = {
     enable_prevent_double_dashing = mod:get("enable_prevent_double_dashing"),
     enable_prevent_ability_aiming = mod:get("enable_prevent_ability_aiming"),
+    enable_prevent_relic_cancel   = mod:get("enable_prevent_relic_cancel"),
     enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
 }
 
@@ -142,9 +143,7 @@ local function setPromise(from)
         return
     end
     if not mod.promise_ability then
-        if ALLOWED_CHARACTER_STATE[character_state]
-            and (character_state ~= "lunging" or not mod.settings["enable_prevent_double_dashing"])
-        then
+        if ALLOWED_CHARACTER_STATE[character_state] then
             mod.promise_ability = true
             last_set_promise = time_now()
             if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
@@ -380,11 +379,14 @@ local _input_hook = function(func, self, action_name)
 
     if action_name == "combat_ability_pressed" then
         if pressed then
+            if mod.settings["enable_prevent_relic_cancel"] and combat_ability == "zealot_relic" and current_slot == "slot_combat_ability" then
+                return false
+            end
+            if mod.settings["enable_prevent_double_dashing"] and IS_DASH_ABILITY[combat_ability] and character_state == "lunging" then
+                return false
+            end
             setPromise("pressed")
             if modding_tools then debug:print_mod("Player pressed " .. action_name) end
-        end
-        if IS_DASH_ABILITY[combat_ability] and character_state == "lunging" and mod.settings["enable_prevent_double_dashing"] then
-            return false
         end
         return out or isPromised()
     end
