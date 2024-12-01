@@ -540,8 +540,10 @@ local _input_hook = function(func, self, action_name)
             end
         end
         if mod.promises.action_special then
-            if action_name == "action_two_hold" then
-                return true
+            if character_state ~= "sprinting" then
+                if action_name == "action_two_hold" then
+                    return true
+                end
             end
         end
     end
