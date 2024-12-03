@@ -419,9 +419,6 @@ local _input_hook = function(func, self, action_name)
             return false
         end
         if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-            if string.find(weapon_template_name, "combatsword_p2") then
-                return true -- Bandage Fix for Heavy Sword Special Bug
-            end
             return false
         end
     end
