@@ -181,6 +181,18 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
+    forcesword_2h_p1_m1 = {
+        action_special              = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
+    forcesword_2h_p1_m2 = {
+        action_special              = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
     powermaul_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
@@ -210,6 +222,18 @@ local weapons = {
     powersword_p1_m2 = {
         action_special              = true,
         ignore_active_special       = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
+    powersword_2h_p1_m1 = {
+        action_special              = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
+    powersword_2h_p1_m2 = {
+        action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.0,
@@ -570,6 +594,24 @@ local weapons = {
         special_releases_action_one = true,
         special_releases_action_two = true,
         promise_buffer              = 0.7,
+    },
+    ogryn_heavystubber_p2_m1 = {
+        action_special              = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
+    ogryn_heavystubber_p2_m2 = {
+        action_special              = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
+    ogryn_heavystubber_p2_m3 = {
+        action_special              = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
     },
     ogryn_rippergun_p1_m1 = {
         action_special              = true,
