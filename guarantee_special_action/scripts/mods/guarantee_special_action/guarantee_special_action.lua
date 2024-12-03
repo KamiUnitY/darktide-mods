@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.1.3
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.4
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -315,7 +315,7 @@ local function _on_slot_wielded(self)
         do_special_release.action_one = _weapon_data.special_releases_action_one or false
         do_special_release.action_two = _weapon_data.special_releases_action_two or false
 
-        action_states["action_reload"].allowed_set_promise = weapon_template and weapon_template.action_input_hierarchy.reload ~= nil or false
+        action_states["action_reload"].allowed_set_promise = weapon_template and weapon_template.action_inputs.reload ~= nil or false
         action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
 
         mod.is_toggle_special = false
