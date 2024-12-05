@@ -399,7 +399,7 @@ local function _on_action_change(self)
     end
 end
 
-mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, transition_type, condition_func_params, automatic_input, reset_combo_override)
+mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects, action_name, action_params, action_settings, used_input, t, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         _on_action_change(self)
 
@@ -413,7 +413,7 @@ mod:hook_safe("ActionHandler", "start_action", function(self, id, action_objects
     end
 end)
 
-mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, next_action_params)
+mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, reason, data, t, ...)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         _on_action_change(self)
     end
