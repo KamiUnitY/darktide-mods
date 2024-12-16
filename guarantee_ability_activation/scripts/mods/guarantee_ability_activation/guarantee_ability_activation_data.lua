@@ -12,14 +12,14 @@ return {
 				default_value = false,
 			},
 			{
-				setting_id = "enable_prevent_ability_aiming",
+				setting_id = "enable_prevent_relic_cancel",
 				type = "checkbox",
 				default_value = false,
 			},
 			{
-				setting_id = "enable_prevent_relic_cancel",
+				setting_id = "enable_prevent_ability_aiming",
 				type = "checkbox",
-				default_value = true,
+				default_value = false,
 			},
 			{
 				setting_id  = "debug_group",

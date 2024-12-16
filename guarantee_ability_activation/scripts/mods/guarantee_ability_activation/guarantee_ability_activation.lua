@@ -103,8 +103,8 @@ end
 
 mod.settings = {
     enable_prevent_double_dashing = mod:get("enable_prevent_double_dashing"),
-    enable_prevent_ability_aiming = mod:get("enable_prevent_ability_aiming"),
     enable_prevent_relic_cancel   = mod:get("enable_prevent_relic_cancel"),
+    enable_prevent_ability_aiming = mod:get("enable_prevent_ability_aiming"),
     enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
 }
 
