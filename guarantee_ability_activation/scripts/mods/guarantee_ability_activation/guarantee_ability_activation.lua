@@ -353,7 +353,7 @@ mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit,
     end
 end)
 
-mod:hook_safe("PlayerUnitAbilityExtension", "equip_ability", function(self, ability_type, ability, fixed_t)
+mod:hook_safe("PlayerUnitAbilityExtension", "_equip_ability", function(self, ability_type, ability, fixed_t, from_server_correction)
     if self._player.viewport_name == "player1" then
         if ability_type == "combat_ability" then
             combat_ability = ability.name
