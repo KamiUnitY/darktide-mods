@@ -18,9 +18,9 @@ return {
 		["zh-cn"] = "防止二次冲锋",
 	},
 	enable_prevent_double_dashing_description = {
-		en = "Blocking ability key press while dashing. Shouldn't be necessary to enable this if you could change the habit of key spamming.",
-		ru = "Блокировка нажатия клавиши способности во время рывка. Не обязательно включать это, если вы можете изменить привычку спамить клавишами.",
-		["zh-cn"] = "在冲锋过程中阻止技能键。如果你能改掉连续按技能键的习惯，则不需要启用。",
+		en = "Blocking ability key press while dashing",
+		ru = "Блокировка нажатия клавиши способности во время рывка",
+		["zh-cn"] = "在冲锋过程中阻止技能键",
 	},
 	enable_prevent_relic_cancel = {
 		en = "Prevent chorus cancel from ability key",
