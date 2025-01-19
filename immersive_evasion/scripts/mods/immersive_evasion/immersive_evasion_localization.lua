@@ -1,4 +1,4 @@
--- ru localization by xsSplatter
+-- ru localization by xsSplater
 -- zh-cn localization by deluxghost
 
 return {
