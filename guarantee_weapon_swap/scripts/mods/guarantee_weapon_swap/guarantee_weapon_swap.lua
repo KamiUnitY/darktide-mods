@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.2
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.3
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")

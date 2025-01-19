@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.5
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.6
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -339,7 +339,6 @@ mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", functio
         _on_slot_wielded(self)
     end
 end)
-
 
 -- UPDATE CHARACTER ABILITY VARIABLE
 
