@@ -67,6 +67,7 @@ local is_attack_prevent_weapon = false
 
 local is_in_hub = false
 
+local combat_ability = ""
 local grenade_ability = ""
 
 local current_slot = ""
@@ -294,25 +295,28 @@ mod:hook_safe("CharacterStateMachine", "server_correction_occurred", function(se
     end
 end)
 
--- UPDATE GRENADE ABILITY VARIABLE
+-- UPDATE CHARACTER ABILITY VARIABLE
+
+local _on_ability_equip = function (self)
+    local _equipped_abilities = self._equipped_abilities
+    if _equipped_abilities then
+        combat_ability = _equipped_abilities.combat_ability and _equipped_abilities.combat_ability.name
+        grenade_ability = _equipped_abilities.grenade_ability and _equipped_abilities.grenade_ability.name
+    end
+end
 
 mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
-    if grenade_ability ~= "" then
+    if combat_ability ~= "" and grenade_ability ~= "" then
         mod:hook_disable("PlayerUnitAbilityExtension", "fixed_update")
     end
     if self._player.viewport_name == "player1" then
-        local _grenade_ability = self._equipped_abilities.grenade_ability
-        if _grenade_ability ~= nil then
-            grenade_ability = _grenade_ability.name
-        end
+        _on_ability_equip(self)
     end
 end)
 
 mod:hook_safe("PlayerUnitAbilityExtension", "_equip_ability", function(self, ability_type, ability, fixed_t, from_server_correction)
     if self._player.viewport_name == "player1" then
-        if ability_type == "grenade_ability" then
-            grenade_ability = ability.name
-        end
+        _on_ability_equip(self)
     end
 end)
 

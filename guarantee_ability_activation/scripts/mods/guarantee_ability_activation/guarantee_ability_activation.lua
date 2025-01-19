@@ -51,6 +51,8 @@ local character_state = ""
 local current_slot = ""
 
 local combat_ability = ""
+local grenade_ability = ""
+
 local weapon_template_name = ""
 
 local last_set_promise = 0
@@ -339,25 +341,28 @@ mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", functio
 end)
 
 
--- UPDATE COMBAT ABILITY VARIABLE
+-- UPDATE CHARACTER ABILITY VARIABLE
+
+local _on_ability_equip = function (self)
+    local _equipped_abilities = self._equipped_abilities
+    if _equipped_abilities then
+        combat_ability = _equipped_abilities.combat_ability and _equipped_abilities.combat_ability.name
+        grenade_ability = _equipped_abilities.grenade_ability and _equipped_abilities.grenade_ability.name
+    end
+end
 
 mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
-    if combat_ability ~= "" then
+    if combat_ability ~= "" and grenade_ability ~= "" then
         mod:hook_disable("PlayerUnitAbilityExtension", "fixed_update")
     end
     if self._player.viewport_name == "player1" then
-        local _combat_ability = self._equipped_abilities.combat_ability
-        if _combat_ability ~= nil then
-            combat_ability = _combat_ability.name
-        end
+        _on_ability_equip(self)
     end
 end)
 
 mod:hook_safe("PlayerUnitAbilityExtension", "_equip_ability", function(self, ability_type, ability, fixed_t, from_server_correction)
     if self._player.viewport_name == "player1" then
-        if ability_type == "combat_ability" then
-            combat_ability = ability.name
-        end
+        _on_ability_equip(self)
     end
 end)
 
