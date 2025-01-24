@@ -201,6 +201,9 @@ local function setPromise(action, from)
                     if mod.is_ammo_special and wieldable_component.current_ammunition_reserve == 0 then
                         return
                     end
+                    if wieldable_component.overheat_state == "lockout" then
+                        return
+                    end
                 elseif action == "action_reload" then
                     if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
                         return
