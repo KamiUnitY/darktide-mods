@@ -9,7 +9,7 @@ return {
 			{
 				setting_id = "enable_prevent_double_dashing",
 				type = "checkbox",
-				default_value = false,
+				default_value = true,
 			},
 			{
 				setting_id = "enable_prevent_relic_cancel",
