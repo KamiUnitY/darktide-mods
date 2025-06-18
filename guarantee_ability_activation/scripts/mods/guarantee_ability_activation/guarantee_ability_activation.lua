@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.7
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.8
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -38,11 +38,15 @@ local IS_WEAPON_ABILITY = {
     psyker_force_field_dome = true,
 }
 
+local INTERVAL_DO_PROMISE = 0.05
+
 ---------------
 -- VARIABLES --
 ---------------
 
 mod.promise_ability = false
+
+mod.last_do_promise = 0
 
 local is_in_hub = false
 
@@ -164,6 +168,9 @@ local function isPromised()
     local promise = mod.promise_ability
 
     if promise then
+        if elapsed(mod.last_do_promise) < INTERVAL_DO_PROMISE then
+            return false
+        end
         if not _is_available_ability_charges() then
             clearPromise("empty_ability_charges")
             return false
@@ -173,6 +180,7 @@ local function isPromised()
                 return false
             end
         end
+        mod.last_do_promise = time_now()
         if modding_tools then debug:print_mod("Attempting to activate combat ability for you !!!") end
     end
 

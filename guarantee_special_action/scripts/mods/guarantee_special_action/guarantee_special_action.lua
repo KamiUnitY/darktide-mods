@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.1.5
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.6
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -29,10 +29,9 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
+local INTERVAL_DO_PROMISE = 0.05
 
 local DEFAULT_PROMISE_BUFFER = 0.7
-
-local DEFAULT_INTERVAL_DO_PROMISE = 0.1
 
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
@@ -56,8 +55,6 @@ mod.promises = {
     action_special = false,
     action_reload  = false,
 }
-
-mod.interval_do_promise = DEFAULT_INTERVAL_DO_PROMISE
 
 local is_in_hub = false
 
@@ -265,8 +262,7 @@ local function isPromised(action)
     local promise = mod.promises[action]
 
     if promise then
-        local interval_do_promise = mod.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-        if elapsed(action_states[action].last_do_promise) < interval_do_promise then
+        if elapsed(action_states[action].last_do_promise) < INTERVAL_DO_PROMISE then
             return false
         end
         if elapsed(action_states[action].last_set_promise) >= mod.promise_buffer then
@@ -314,7 +310,6 @@ local function _on_slot_wielded(self)
         mod.is_parry_special = _weapon_data.special_parry or false
         mod.pressing_buffer = _weapon_data.pressing_buffer or nil
         mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
-        mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
         do_special_release.action_one = _weapon_data.special_releases_action_one or false
         do_special_release.action_two = _weapon_data.special_releases_action_two or false
 

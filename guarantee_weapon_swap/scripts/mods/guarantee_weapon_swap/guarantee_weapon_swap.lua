@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.3
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.4
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -47,6 +47,8 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
+local INTERVAL_DO_PROMISE = 0.05
+
 ---------------
 -- VARIABLES --
 ---------------
@@ -62,6 +64,8 @@ mod.promises = {
     device           = false,
     grenade          = false,
 }
+
+mod.last_do_promise = 0
 
 local is_attack_prevent_weapon = false
 
@@ -97,6 +101,14 @@ local _is_in_hub = function()
     local game_mode_manager = Managers.state.game_mode
     local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
     return game_mode_name == "hub"
+end
+
+local time_now = function()
+    return Managers.time and Managers.time:time("main")
+end
+
+local elapsed = function(time)
+    return time_now() - time
 end
 
 --------------------------
@@ -165,10 +177,14 @@ local function isPromised(action)
     local promise = mod.promises[action]
 
     if promise then
+        if elapsed(mod.last_do_promise) < INTERVAL_DO_PROMISE then
+            return false
+        end
         if current_slot == SLOT_ACTION_MAP[action] then
             clearPromise(action)
             return false
         end
+        mod.last_do_promise = time_now()
         if modding_tools then debug:print_mod("Attempting to switch weapon !!!") end
     end
 
