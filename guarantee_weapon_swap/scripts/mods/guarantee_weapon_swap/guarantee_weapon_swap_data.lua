@@ -7,6 +7,12 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id = "queue_limit",
+				type            = "numeric",
+				default_value   = 3,
+				range           = { 1, 5 }
+			},
+			{
 				setting_id = "enable_zealot_throwing_knives",
 				type = "checkbox",
 				default_value = true,

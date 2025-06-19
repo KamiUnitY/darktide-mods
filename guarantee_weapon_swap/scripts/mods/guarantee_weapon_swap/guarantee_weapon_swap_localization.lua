@@ -12,6 +12,11 @@ return {
 		ru = "Гарантированная смена оружия, когда игрок пытается сменить оружие в середине анимации",
 		["zh-cn"] = "确保玩家在动画中途能成功切换武器",
 	},
+	queue_limit = {
+		en = "Queue Limit",
+		ru = "Лимит очереди",
+		["zh-cn"] = "队列上限",
+	},
 	enable_zealot_throwing_knives = {
 		en = "Zealot's Blades of Faith",
 		ru = "«Клинки веры» изувера",

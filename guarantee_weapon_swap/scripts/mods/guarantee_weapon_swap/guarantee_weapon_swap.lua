@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.3.4
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.0
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -55,15 +55,7 @@ local INTERVAL_DO_PROMISE = 0.05
 
 mod.promise_exist = false
 
-mod.promises = {
-    quick            = false,
-    primary          = false,
-    secondary        = false,
-    pocketable       = false,
-    pocketable_small = false,
-    device           = false,
-    grenade          = false,
-}
+mod.promises = {}
 
 mod.last_do_promise = 0
 
@@ -116,8 +108,9 @@ end
 --------------------------
 
 mod.settings = {
-    enable_zealot_throwing_knives = mod:get("enable_zealot_throwing_knives"),
-    enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
+    queue_limit                     = mod:get("queue_limit"),
+    enable_zealot_throwing_knives   = mod:get("enable_zealot_throwing_knives"),
+    enable_debug_modding_tools      = mod:get("enable_debug_modding_tools"),
 }
 
 mod.on_setting_changed = function(setting_id)
@@ -151,32 +144,34 @@ end
 -----------------------
 
 local function setPromise(action)
-    if not mod.promises[action] then
-        mod.promises[action] = true
-        mod.promise_exist = true
+    table.insert(mod.promises, action)
+
+    if #mod.promises > mod.settings["queue_limit"] then
+        table.remove(mod.promises, 1)
     end
+
+    mod.promise_exist = true
 end
 
 local function clearPromise(action)
-    if mod.promises[action] then
-        mod.promises[action] = false
-        mod.promise_exist = table.contains(mod.promises, true)
+    for i, promise in ipairs(mod.promises) do
+        if promise == action then
+            table.remove(mod.promises, i)
+            mod.promise_exist = #mod.promises > 0
+            return
+        end
     end
 end
 
 local function clearAllPromises()
     if mod.promise_exist then
-        for key in pairs(mod.promises) do
-            mod.promises[key] = false
-        end
+        table.clear(mod.promises)
         mod.promise_exist = false
     end
 end
 
 local function isPromised(action)
-    local promise = mod.promises[action]
-
-    if promise then
+    if mod.promises[1] == action then
         if elapsed(mod.last_do_promise) < INTERVAL_DO_PROMISE then
             return false
         end
@@ -186,9 +181,10 @@ local function isPromised(action)
         end
         mod.last_do_promise = time_now()
         if modding_tools then debug:print_mod("Attempting to switch weapon !!!") end
+        return true
     end
 
-    return promise
+    return false
 end
 
 ----------------
@@ -355,8 +351,7 @@ local _input_hook = function(func, self, action_name)
     local promise_action = PROMISE_ACTION_MAP[action_name]
     if promise_action then
         if pressed then
-            clearAllPromises()
-            if current_slot ~= SLOT_ACTION_MAP[promise_action] and ALLOWED_CHARACTER_STATE[character_state] then
+            if ALLOWED_CHARACTER_STATE[character_state] then
                 if action_name ~= "grenade_ability_pressed"
                     or (
                         (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"])
