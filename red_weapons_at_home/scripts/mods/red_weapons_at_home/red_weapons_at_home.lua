@@ -1,4 +1,4 @@
--- Red Weapons at Home by KamiUnitY. Ver. 1.2.2
+-- Red Weapons at Home by KamiUnitY. Ver. 1.2.3
 
 local mod = get_mod("red_weapons_at_home")
 local modding_tools = get_mod("modding_tools")
@@ -27,6 +27,13 @@ local TRAIT_MAX_VALUE = {
 	gadget_innate_toughness_increase  = 17,
 	gadget_innate_health_increase     = 21,
 	gadget_innate_max_wounds_increase = 1,
+}
+
+local TRAIT_REQUIRED_EXPERTISE = {
+	gadget_stamina_increase           = 410,
+	gadget_innate_toughness_increase  = nil,
+	gadget_innate_health_increase     = nil,
+	gadget_innate_max_wounds_increase = 400,
 }
 
 local RARITY_6_DISPLAY_NAME = Localize("loc_item_weapon_rarity_6")
@@ -146,7 +153,12 @@ mod.is_sainted_item = function(item)
             if item.item_type == "GADGET" then
                 local trait = item.traits[1]
                 local trait_type, trait_value = get_trait_data(trait.id, trait.value)
-                return expertise_level >= 400 and trait_value >= TRAIT_MAX_VALUE[trait_type]
+                return
+                    (
+                        TRAIT_REQUIRED_EXPERTISE[trait_type] == nil or
+                        TRAIT_REQUIRED_EXPERTISE[trait_type] <= expertise_level
+                    ) and
+                    trait_value >= TRAIT_MAX_VALUE[trait_type]
             else
                 return expertise_level == MAX_EXPERTISE_LEVEL
             end
