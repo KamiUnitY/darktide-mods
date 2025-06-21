@@ -31,8 +31,8 @@ local TRAIT_MAX_VALUE = {
 
 local TRAIT_REQUIRED_EXPERTISE = {
 	gadget_stamina_increase           = 410,
-	gadget_innate_toughness_increase  = nil,
-	gadget_innate_health_increase     = nil,
+	gadget_innate_toughness_increase  = 0,
+	gadget_innate_health_increase     = 0,
 	gadget_innate_max_wounds_increase = 400,
 }
 
@@ -153,13 +153,7 @@ mod.is_sainted_item = function(item)
             if item.item_type == "GADGET" then
                 local trait = item.traits[1]
                 local trait_type, trait_value = get_trait_data(trait.id, trait.value)
-                return (
-                    (
-                        TRAIT_REQUIRED_EXPERTISE[trait_type] == nil or
-                        TRAIT_REQUIRED_EXPERTISE[trait_type] <= expertise_level
-                    ) and
-                    trait_value >= TRAIT_MAX_VALUE[trait_type]
-                )
+                return expertise_level >= TRAIT_REQUIRED_EXPERTISE[trait_type] and trait_value >= TRAIT_MAX_VALUE[trait_type]
             else
                 return expertise_level == MAX_EXPERTISE_LEVEL
             end
