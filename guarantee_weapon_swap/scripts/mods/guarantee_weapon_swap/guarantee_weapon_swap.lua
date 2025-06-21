@@ -352,11 +352,13 @@ local _input_hook = function(func, self, action_name)
     if promise_action then
         if pressed then
             if ALLOWED_CHARACTER_STATE[character_state] then
-                if action_name ~= "grenade_ability_pressed"
-                    or (
-                        (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"])
-                        and current_slot ~= "slot_luggable"
+                if (
+                    action_name ~= "grenade_ability_pressed" or
+                    (
+                        (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"]) and
+                        current_slot ~= "slot_luggable"
                     )
+                )
                 then
                     setPromise(promise_action)
                 end

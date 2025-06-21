@@ -153,12 +153,13 @@ mod.is_sainted_item = function(item)
             if item.item_type == "GADGET" then
                 local trait = item.traits[1]
                 local trait_type, trait_value = get_trait_data(trait.id, trait.value)
-                return
+                return (
                     (
                         TRAIT_REQUIRED_EXPERTISE[trait_type] == nil or
                         TRAIT_REQUIRED_EXPERTISE[trait_type] <= expertise_level
                     ) and
                     trait_value >= TRAIT_MAX_VALUE[trait_type]
+                )
             else
                 return expertise_level == MAX_EXPERTISE_LEVEL
             end
