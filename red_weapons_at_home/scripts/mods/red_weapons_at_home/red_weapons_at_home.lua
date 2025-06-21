@@ -33,7 +33,7 @@ local TRAIT_REQUIRED_EXPERTISE = {
 	gadget_stamina_increase           = 410,
 	gadget_innate_toughness_increase  = 0,
 	gadget_innate_health_increase     = 0,
-	gadget_innate_max_wounds_increase = 410,
+	gadget_innate_max_wounds_increase = nil, --mod.settings["gadget_wound_required_expertise"]
 }
 
 local RARITY_6_DISPLAY_NAME = Localize("loc_item_weapon_rarity_6")
@@ -71,6 +71,10 @@ end
 local function fetch_rarity_color()
     rarity_color = { 255, mod.settings["rarity_color_6_red"], mod.settings["rarity_color_6_green"], mod.settings["rarity_color_6_blue"], }
     rarity_color_dark = darken_color(rarity_color)
+end
+
+local function fetch_curios_settings()
+    TRAIT_REQUIRED_EXPERTISE["gadget_innate_max_wounds_increase"] = mod.settings["gadget_wound_required_expertise"]
 end
 
 local function _get_lerp_stepped_value(range, lerp_value)
@@ -122,14 +126,16 @@ end
 --------------------------
 
 mod.settings = {
-    rarity_color_6_red   = mod:get("rarity_color_6_red"),
-    rarity_color_6_green = mod:get("rarity_color_6_green"),
-    rarity_color_6_blue  = mod:get("rarity_color_6_blue"),
+    gadget_wound_required_expertise = mod:get("gadget_wound_required_expertise"),
+    rarity_color_6_red              = mod:get("rarity_color_6_red"),
+    rarity_color_6_green            = mod:get("rarity_color_6_green"),
+    rarity_color_6_blue             = mod:get("rarity_color_6_blue"),
 }
 
 mod.on_setting_changed = function(setting_id)
     mod.settings[setting_id] = mod:get(setting_id)
     fetch_rarity_color()
+    fetch_curios_settings()
 end
 
 ------------------------
@@ -138,6 +144,7 @@ end
 
 mod.on_all_mods_loaded = function()
     fetch_rarity_color()
+    fetch_curios_settings()
 end
 
 ------------------

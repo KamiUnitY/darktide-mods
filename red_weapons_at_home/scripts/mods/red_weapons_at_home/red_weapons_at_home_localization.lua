@@ -9,6 +9,12 @@ return {
 		ru = "Делает фон оружия красным, когда оно достигает максимального потенциала базовых характеристик.",
 		["zh-cn"] = "如果装备达到最大潜力值，则显示为红装",
 	},
+	gadget_settings = {
+		en = "Curios",
+	},
+	gadget_wound_required_expertise = {
+		en = "Wound Required Rating"
+	},
 	rarity_color_6 = {
 		en = "Rarity Color",
 		ru = "Цвет редкости",

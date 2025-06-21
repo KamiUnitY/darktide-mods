@@ -7,6 +7,18 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id  = "gadget_settings",
+				type        = "group",
+				sub_widgets = {
+					{
+						setting_id = "gadget_wound_required_expertise",
+						type = "numeric",
+						default_value = 410,
+						range = { 100, 430 }
+					},
+				}
+			},
+			{
 				setting_id  = "rarity_color_6",
 				type        = "group",
 				sub_widgets = {
