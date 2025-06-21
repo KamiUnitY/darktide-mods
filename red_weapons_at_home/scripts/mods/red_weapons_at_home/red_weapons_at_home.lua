@@ -1,4 +1,4 @@
--- Red Weapons at Home by KamiUnitY. Ver. 1.2.3
+-- Red Weapons at Home by KamiUnitY. Ver. 1.2.4
 
 local mod = get_mod("red_weapons_at_home")
 local modding_tools = get_mod("modding_tools")
@@ -33,7 +33,7 @@ local TRAIT_REQUIRED_EXPERTISE = {
 	gadget_stamina_increase           = 410,
 	gadget_innate_toughness_increase  = 0,
 	gadget_innate_health_increase     = 0,
-	gadget_innate_max_wounds_increase = 400,
+	gadget_innate_max_wounds_increase = 410,
 }
 
 local RARITY_6_DISPLAY_NAME = Localize("loc_item_weapon_rarity_6")
