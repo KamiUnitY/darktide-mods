@@ -29,7 +29,7 @@ local ALLOWED_SLOT = {
     slot_secondary = true,
 }
 
-local INTERVAL_DO_PROMISE = 0.05
+local DEFAULT_INTERVAL_DO_PROMISE = 0.05
 
 local DEFAULT_PROMISE_BUFFER = 0.7
 
@@ -42,14 +42,17 @@ local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_s
 mod.promise_exist = false
 
 mod.is_toggle_special = false
-mod.is_ammo_special = false
 mod.is_parry_special = false
 
+mod.special_requires_ammo = false
+mod.special_needs_charges = nil
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
 
 mod.pressing_buffer = nil
 mod.promise_buffer = DEFAULT_PROMISE_BUFFER
+
+mod.interval_do_promise = DEFAULT_INTERVAL_DO_PROMISE
 
 mod.promises = {
     action_special = false,
@@ -195,10 +198,13 @@ local function setPromise(action, from)
                     if not mod.ignore_active_special and not mod.is_toggle_special and wieldable_component.special_active then
                         return
                     end
-                    if mod.is_ammo_special and wieldable_component.current_ammunition_reserve == 0 then
+                    if mod.special_requires_ammo and wieldable_component.current_ammunition_reserve == 0 then
                         return
                     end
                     if wieldable_component.overheat_state == "lockout" then
+                        return
+                    end
+                    if mod.special_needs_charges and wieldable_component.num_special_charges < mod.special_needs_charges then
                         return
                     end
                 elseif action == "action_reload" then
@@ -262,7 +268,8 @@ local function isPromised(action)
     local promise = mod.promises[action]
 
     if promise then
-        if elapsed(action_states[action].last_do_promise) < INTERVAL_DO_PROMISE then
+        local interval_do_promise = mod.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
+        if elapsed(action_states[action].last_do_promise) < interval_do_promise then
             return false
         end
         if elapsed(action_states[action].last_set_promise) >= mod.promise_buffer then
@@ -306,14 +313,16 @@ local function _on_slot_wielded(self)
 
         mod.ignore_active_special = _weapon_data.ignore_active_special or false
         mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
-        mod.is_ammo_special = _weapon_data.special_ammo or false
+        mod.special_needs_charges = _weapon_data.special_needs_charges or nil
+        mod.special_requires_ammo = _weapon_data.special_requires_ammo or false
         mod.is_parry_special = _weapon_data.special_parry or false
         mod.pressing_buffer = _weapon_data.pressing_buffer or nil
         mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
+        mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
         do_special_release.action_one = _weapon_data.special_releases_action_one or false
         do_special_release.action_two = _weapon_data.special_releases_action_two or false
 
-        action_states["action_reload"].allowed_set_promise = weapon_template and weapon_template.action_inputs.reload ~= nil or false
+        action_states["action_reload"].allowed_set_promise = _weapon_data.action_reload or false
         action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
 
         mod.is_toggle_special = false
