@@ -13,7 +13,7 @@ return {
 					{
 						setting_id = "gadget_wound_required_expertise",
 						type = "numeric",
-						default_value = 410,
+						default_value = 400,
 						range = { 0, 430 }
 					},
 				}
