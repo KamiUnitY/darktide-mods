@@ -1,8 +1,9 @@
--- Hybrid Sprint by KamiUnitY. Ver. 1.3.1
+-- Hybrid Sprint by KamiUnitY. Ver. 1.3.2
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
 local guarantee_special_action = get_mod("guarantee_special_action")
+local guarantee_ability_activation = get_mod("guarantee_ability_activation")
 local toggle_alt_fire = get_mod("ToggleAltFire")
 
 local InputDevice = require("scripts/managers/input/input_device")
@@ -72,6 +73,11 @@ local movement_pressed = {
 local is_in_hub = false
 
 local character_state = ""
+
+local current_slot = ""
+
+local combat_ability = ""
+local grenade_ability = ""
 
 local current_action = ""
 local previous_action = ""
@@ -377,7 +383,7 @@ mod:hook_safe("ActionHandler", "server_correction_occurred", function(self, id, 
     end
 end)
 
--- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
+-- UPDATE CHARACTER STATE VARIABLE
 
 local _on_character_state_change = function (self)
     character_state = self._state_current.name
@@ -408,6 +414,63 @@ end)
 mod:hook_safe("CharacterStateMachine", "server_correction_occurred", function(self, unit)
     if self._unit_data_extension._player.viewport_name == 'player1' then
         _on_character_state_change(self)
+    end
+end)
+
+-- UPDATE WEAPON TEMPLATE VARIABLE
+
+local function _on_slot_wielded(self)
+    local inventory_component = self._inventory_component
+    local wielded_slot = inventory_component.wielded_slot
+
+    if wielded_slot ~= current_slot then
+        current_slot = wielded_slot
+    end
+end
+
+mod:hook_safe("PlayerUnitWeaponExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
+    if current_slot ~= "" then
+        mod:hook_disable("PlayerUnitWeaponExtension", "fixed_update")
+    end
+    if self._player.viewport_name == "player1" then
+        _on_slot_wielded(self)
+    end
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "on_slot_wielded", function(self, slot_name, t, skip_wield_action)
+    if self._player.viewport_name == "player1" then
+        _on_slot_wielded(self)
+    end
+end)
+
+mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", function(self, unit)
+    if self._player.viewport_name == "player1" then
+        _on_slot_wielded(self)
+    end
+end)
+
+-- UPDATE CHARACTER ABILITY VARIABLE
+
+local _on_ability_equip = function (self)
+    local _equipped_abilities = self._equipped_abilities
+    if _equipped_abilities then
+        combat_ability = _equipped_abilities.combat_ability and _equipped_abilities.combat_ability.name
+        grenade_ability = _equipped_abilities.grenade_ability and _equipped_abilities.grenade_ability.name
+    end
+end
+
+mod:hook_safe("PlayerUnitAbilityExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
+    if combat_ability ~= "" and grenade_ability ~= "" then
+        mod:hook_disable("PlayerUnitAbilityExtension", "fixed_update")
+    end
+    if self._player.viewport_name == "player1" then
+        _on_ability_equip(self)
+    end
+end)
+
+mod:hook_safe("PlayerUnitAbilityExtension", "_equip_ability", function(self, ability_type, ability, fixed_t, from_server_correction)
+    if self._player.viewport_name == "player1" then
+        _on_ability_equip(self)
     end
 end)
 
@@ -487,12 +550,24 @@ local _input_hook = function(func, self, action_name)
             end
         end
         -- Compatibility with Guarantee Special Action
-        if guarantee_special_action and guarantee_special_action.promise_exist and guarantee_special_action.interrupt_sprinting_special then
-            return false
+        if guarantee_special_action then
+            if guarantee_special_action.promise_exist and guarantee_special_action.interrupt_sprinting_special then
+                return false
+            end
+        end
+        -- Compatibility with Guarantee Ability Activation
+        if guarantee_ability_activation then
+            if combat_ability == "adamant_area_buff_drone" then
+                if current_slot == "slot_combat_ability" or guarantee_ability_activation.promise_ability then
+                    return false
+                end
+            end
         end
         -- Compatibility with ToggleAltFire
-        if toggle_alt_fire and action_pressed["action_two_hold"] then
-            return false
+        if toggle_alt_fire then
+            if action_pressed["action_two_hold"] then
+                return false
+            end
         end
         -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
         if character_state == "lunging" then

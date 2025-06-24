@@ -30,12 +30,14 @@ local IS_DASH_ABILITY = {
     zealot_targeted_dash_improved_double = true,
     ogryn_charge                         = true,
     ogryn_charge_increased_distance      = true,
+    adamant_charge                       = true,
 }
 
 local IS_WEAPON_ABILITY = {
     zealot_relic            = true,
     psyker_force_field      = true,
     psyker_force_field_dome = true,
+    adamant_area_buff_drone = true,
 }
 
 local INTERVAL_DO_PROMISE = 0.05
@@ -60,6 +62,8 @@ local grenade_ability = ""
 local weapon_template_name = ""
 
 local last_set_promise = 0
+
+local last_slot_combat_ability = 0
 
 ---------------
 -- UTILITIES --
@@ -322,6 +326,7 @@ local function _on_slot_wielded(self)
         local slot_weapon = self._weapons[current_slot]
         weapon_template_name = (slot_weapon and slot_weapon.weapon_template and slot_weapon.weapon_template.name) or ""
         if current_slot == "slot_combat_ability" then
+            last_slot_combat_ability = time_now()
             clearPromise("on " .. current_slot)
         end
     end
@@ -387,6 +392,27 @@ local _input_hook = function(func, self, action_name)
 
     if is_in_hub then
         return out
+    end
+
+    if combat_ability == "adamant_area_buff_drone" then
+        -- While sprinting if press ability too short the drone will be cancel, This should prevent it
+        if action_name == "combat_ability_hold" then
+            if current_slot == "slot_combat_ability" and elapsed(last_slot_combat_ability) < 0.1 then
+                return true
+            end
+        -- Using movement key while in mid air after sprinting jump will block drone, This should prevent it
+        elseif action_name == "move_forward" or action_name == "move_left" or action_name == "move_right" then
+            if current_slot == "slot_combat_ability" or mod.promise_ability then
+                if character_state == "jumping" or character_state == "falling" then
+                    return false
+                end
+            end
+        -- Sprint while releasing drone will cancel ability, This should prevent it
+        elseif action_name == "sprinting" then
+            if current_slot == "slot_combat_ability" or mod.promise_ability then
+                return false
+            end
+        end
     end
 
     if action_name == "combat_ability_pressed" then
