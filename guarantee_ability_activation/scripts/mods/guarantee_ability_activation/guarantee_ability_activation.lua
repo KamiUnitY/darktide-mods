@@ -59,8 +59,6 @@ local current_slot = ""
 local combat_ability = ""
 local grenade_ability = ""
 
-local weapon_template_name = ""
-
 local last_set_promise = 0
 
 local last_slot_combat_ability = 0
@@ -323,8 +321,6 @@ local function _on_slot_wielded(self)
 
     if wielded_slot ~= current_slot then
         current_slot = wielded_slot
-        local slot_weapon = self._weapons[current_slot]
-        weapon_template_name = (slot_weapon and slot_weapon.weapon_template and slot_weapon.weapon_template.name) or ""
         if current_slot == "slot_combat_ability" then
             last_slot_combat_ability = time_now()
             clearPromise("on " .. current_slot)
@@ -333,7 +329,7 @@ local function _on_slot_wielded(self)
 end
 
 mod:hook_safe("PlayerUnitWeaponExtension", "fixed_update", function(self, unit, dt, t, fixed_frame)
-    if current_slot ~= "" and weapon_template_name ~= "" then
+    if current_slot ~= "" then
         mod:hook_disable("PlayerUnitWeaponExtension", "fixed_update")
     end
     if self._player.viewport_name == "player1" then
