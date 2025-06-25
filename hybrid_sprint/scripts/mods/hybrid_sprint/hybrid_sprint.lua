@@ -383,7 +383,7 @@ mod:hook_safe("ActionHandler", "server_correction_occurred", function(self, id, 
     end
 end)
 
--- UPDATE CHARACTER STATE VARIABLE
+-- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 local _on_character_state_change = function (self)
     character_state = self._state_current.name
