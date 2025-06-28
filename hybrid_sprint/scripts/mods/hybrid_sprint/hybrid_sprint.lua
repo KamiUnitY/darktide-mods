@@ -1,4 +1,4 @@
--- Hybrid Sprint by KamiUnitY. Ver. 1.3.2
+-- Hybrid Sprint by KamiUnitY. Ver. 1.3.3
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
@@ -39,6 +39,12 @@ local MOVEMENT_ACTIONS = {
 local IS_AGILE_WEAPON = {
     combatknife_p1_m1 = true,
     combatknife_p1_m2 = true,
+    combatsword_p3_m1 = true,
+    combatsword_p3_m2 = true,
+    combatsword_p3_m3 = true,
+    combataxe_p2_m1   = true,
+    combataxe_p2_m2   = true,
+    combataxe_p2_m3   = true,
 }
 
 local DEVICE_TYPE_MAP_ALIASES = {
@@ -312,6 +318,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
             local is_agile_weapon = IS_AGILE_WEAPON[weapon_template_name]
+            debug:print(weapon_template_name)
 
             if previous_state ~= "sprinting" and (current_action == "none" or mod.super_keep_sprint or is_agile_weapon) then
                 setPromise("was_" .. previous_state)
