@@ -1,3 +1,7 @@
+-- ru localization by xsSplater
+-- zh-cn localization by deluxghost
+-- zh-tw localization by SyuanTsai
+
 return {
 	mod_name = {
 		en = "Red Weapons at Home",
