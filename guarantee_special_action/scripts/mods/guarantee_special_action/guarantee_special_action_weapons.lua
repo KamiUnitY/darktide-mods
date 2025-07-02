@@ -215,7 +215,7 @@ local weapons = {
         action_special              = true,
         ignore_active_special       = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     powermaul_shield_p1_m1 = {
