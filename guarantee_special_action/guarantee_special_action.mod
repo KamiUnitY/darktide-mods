@@ -12,6 +12,7 @@ return {
 		-- "ChatBlock", -- Already ordered by alphabetical order
 		"modding_tools",
 		"MultiBind",
+		"Skitarius",
 		"ToggleAltFire",
 		"weapon_customization",
 		"weapon_customization_syn_edits",
