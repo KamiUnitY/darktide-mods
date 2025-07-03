@@ -462,7 +462,7 @@ local weapons = {
         promise_buffer              = 0.7,
     },
     bolter_p1_m1 = {
-        interval_do_promise         = 0.2, -- Without this, Weapon will stuck on sight when immediately do special after shooting
+        interval_do_promise         = 0.25, -- Without this, Weapon will stuck on sight even released right click when immediately do special after shooting
         action_special              = true,
         action_reload               = true,
         special_releases_action_one = true,
@@ -472,7 +472,7 @@ local weapons = {
         promise_buffer              = 0.7,
     },
     boltpistol_p1_m1 = {
-        interval_do_promise         = 0.2, -- Without this, Weapon will stuck on sight when immediately do special after shooting
+        interval_do_promise         = 0.25, -- Without this, Weapon will stuck on sight even released right click when immediately do special after shooting
         action_special              = true,
         action_reload               = true,
         special_releases_action_one = true,
