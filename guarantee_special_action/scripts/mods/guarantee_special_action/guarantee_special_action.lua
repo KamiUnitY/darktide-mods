@@ -49,6 +49,11 @@ mod.special_needs_charges = nil
 mod.ignore_active_special = false
 mod.interrupt_sprinting_special = false
 
+mod.special_releases_action_one = false
+mod.special_releases_action_two = false
+mod.reload_releases_action_one  = false
+mod.reload_releases_action_two  = false
+
 mod.pressing_buffer = nil
 mod.promise_buffer = DEFAULT_PROMISE_BUFFER
 
@@ -77,11 +82,6 @@ local doing_melee_start = false
 local doing_push = false
 
 local prevent_attack_while_parry = false
-
-local do_special_release = {
-    action_one = false,
-    action_two = false,
-}
 
 local action_states = {
     action_special = {
@@ -319,8 +319,10 @@ local function _on_slot_wielded(self)
         mod.pressing_buffer = _weapon_data.pressing_buffer or nil
         mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
         mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
-        do_special_release.action_one = _weapon_data.special_releases_action_one or false
-        do_special_release.action_two = _weapon_data.special_releases_action_two or false
+        mod.special_releases_action_one = _weapon_data.special_releases_action_one or false
+        mod.special_releases_action_two = _weapon_data.special_releases_action_two or false
+        mod.reload_releases_action_one = _weapon_data.reload_releases_action_one or false
+        mod.reload_releases_action_two = _weapon_data.reload_releases_action_two or false
 
         action_states["action_reload"].allowed_set_promise = _weapon_data.action_reload or false
         action_states["action_special"].allowed_set_promise = _weapon_data.action_special or false
@@ -567,14 +569,20 @@ local _input_hook = function(func, self, action_name)
             return out
         end
 
-        if do_special_release.action_one then
-            if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+        if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+            if mod.special_releases_action_one and mod.promises.action_special then
+                return false
+            end
+            if mod.reload_releases_action_one and mod.promises.action_reload then
                 return false
             end
         end
 
-        if do_special_release.action_two then
-            if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+        if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+            if mod.special_releases_action_two and mod.promises.action_special then
+                return false
+            end
+            if mod.reload_releases_action_two and mod.promises.action_reload then
                 return false
             end
         end
