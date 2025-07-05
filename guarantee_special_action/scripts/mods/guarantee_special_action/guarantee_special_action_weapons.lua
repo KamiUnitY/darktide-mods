@@ -378,7 +378,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p1_m2 = {
         action_special              = true,
@@ -387,7 +387,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p1_m3 = {
         action_special              = true,
@@ -396,7 +396,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p2_m1 = {
         action_special              = true,
@@ -405,7 +405,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p2_m2 = {
         action_special              = true,
@@ -414,7 +414,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p2_m3 = {
         action_special              = true,
@@ -423,7 +423,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p3_m1 = {
         action_special              = true,
@@ -432,7 +432,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p3_m2 = {
         action_special              = true,
@@ -441,7 +441,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autogun_p3_m3 = {
         action_special              = true,
@@ -450,7 +450,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     autopistol_p1_m1 = {
         action_special              = true,
@@ -459,7 +459,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     bolter_p1_m1 = {
         interval_do_promise         = 0.25, -- Without this, Weapon will stuck on sight even released right click when immediately do special after shooting
@@ -469,7 +469,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     boltpistol_p1_m1 = {
         interval_do_promise         = 0.25, -- Without this, Weapon will stuck on sight even released right click when immediately do special after shooting
@@ -479,7 +479,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     flamer_p1_m1 = {
         action_special              = true,
@@ -488,31 +488,31 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = false,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     forcestaff_p1_m1 = {
         action_special              = true,
         special_releases_action_one = false,
         special_releases_action_two = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     forcestaff_p2_m1 = {
         action_special              = true,
         special_releases_action_one = false,
         special_releases_action_two = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     forcestaff_p3_m1 = {
         action_special              = true,
         special_releases_action_one = false,
         special_releases_action_two = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     forcestaff_p4_m1 = {
         action_special              = true,
         special_releases_action_one = false,
         special_releases_action_two = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p1_m1 = {
         action_special              = true,
@@ -521,7 +521,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p1_m2 = {
         action_special              = true,
@@ -530,7 +530,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p1_m3 = {
         action_special              = true,
@@ -539,7 +539,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p2_m1 = {
         action_special              = true,
@@ -548,7 +548,7 @@ local weapons = {
         special_releases_action_two = true,
         reload_releases_action_one  = false,
         reload_releases_action_two  = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p2_m2 = {
         action_special              = true,
@@ -557,7 +557,7 @@ local weapons = {
         special_releases_action_two = true,
         reload_releases_action_one  = false,
         reload_releases_action_two  = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p2_m3 = {
         action_special              = true,
@@ -566,7 +566,7 @@ local weapons = {
         special_releases_action_two = true,
         reload_releases_action_one  = false,
         reload_releases_action_two  = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p3_m1 = {
         action_special              = true,
@@ -575,7 +575,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p3_m2 = {
         action_special              = true,
@@ -584,7 +584,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     lasgun_p3_m3 = {
         action_special              = true,
@@ -593,7 +593,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     laspistol_p1_m1 = {
         action_special              = true,
@@ -603,7 +603,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     laspistol_p1_m3 = {
         action_special              = true,
@@ -613,7 +613,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     plasmagun_p1_m1 = {
         action_special              = false,
@@ -694,7 +694,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     stubrevolver_p1_m2 = {
         action_special              = true,
@@ -703,7 +703,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = true,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     shotpistol_shield_p1_m1 = {
         action_special              = true,
@@ -712,7 +712,7 @@ local weapons = {
         special_releases_action_two = true,
         reload_releases_action_one  = true,
         reload_releases_action_two  = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     ogryn_gauntlet_p1_m1 = {
         action_special              = true,
@@ -730,7 +730,7 @@ local weapons = {
         special_releases_action_two = true,
         reload_releases_action_one  = true,
         reload_releases_action_two  = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     ogryn_heavystubber_p1_m2 = {
         action_special              = true,
@@ -739,7 +739,7 @@ local weapons = {
         special_releases_action_two = true,
         reload_releases_action_one  = true,
         reload_releases_action_two  = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     ogryn_heavystubber_p1_m3 = {
         action_special              = true,
@@ -748,7 +748,7 @@ local weapons = {
         special_releases_action_two = true,
         reload_releases_action_one  = true,
         reload_releases_action_two  = true,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     ogryn_heavystubber_p2_m1 = {
         action_special              = true,
@@ -811,7 +811,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = false,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
     ogryn_thumper_p1_m2 = {
         action_special              = true,
@@ -820,7 +820,7 @@ local weapons = {
         special_releases_action_two = false,
         reload_releases_action_one  = false,
         reload_releases_action_two  = false,
-        promise_buffer              = 0.7,
+        promise_buffer              = 1.0,
     },
 }
 

@@ -31,7 +31,7 @@ local ALLOWED_SLOT = {
 
 local DEFAULT_INTERVAL_DO_PROMISE = 0.05
 
-local DEFAULT_PROMISE_BUFFER = 0.7
+local DEFAULT_PROMISE_BUFFER = 1.0
 
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
