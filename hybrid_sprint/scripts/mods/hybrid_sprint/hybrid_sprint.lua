@@ -334,6 +334,7 @@ mod:hook_safe("GameplayStateRun", "on_enter", function(...)
     clearPromise("ENTER_GAMEPLAY")
     mod.promise_sprint = false
     mod.promise_dodge = false
+    mod.keep_sprint = false
     mod.keep_sprint_press = false
     mod.keep_sprint_empty_reload = false
 end)
@@ -342,6 +343,7 @@ mod:hook_safe("GameplayStateRun", "on_exit", function(...)
     clearPromise("EXIT_GAMEPLAY")
     mod.promise_sprint = false
     mod.promise_dodge = false
+    mod.keep_sprint = false
     mod.keep_sprint_press = false
     mod.keep_sprint_empty_reload = false
 end)
