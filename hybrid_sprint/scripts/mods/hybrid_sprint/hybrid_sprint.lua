@@ -64,7 +64,7 @@ mod.promise_sprint = false
 local last_press_sprinting = 0
 
 mod.keep_sprint = false
-mod.super_keep_sprint = false
+mod.keep_sprint_press = false
 mod.keep_sprint_empty_reload = false
 
 local action_pressed = {}
@@ -209,7 +209,7 @@ mod.on_all_mods_loaded = function()
     -- WATCHER
     -- modding_tools:watch("character_state", mod, "character_state")
     -- modding_tools:watch("keep_sprint", mod, "keep_sprint")
-    -- modding_tools:watch("super_keep_sprint", mod, "super_keep_sprint")
+    -- modding_tools:watch("keep_sprint_press", mod, "keep_sprint_press")
 end
 
 ---------------------------
@@ -334,7 +334,7 @@ mod:hook_safe("GameplayStateRun", "on_enter", function(...)
     clearPromise("ENTER_GAMEPLAY")
     mod.promise_sprint = false
     mod.promise_dodge = false
-    mod.super_keep_sprint = false
+    mod.keep_sprint_press = false
     mod.keep_sprint_empty_reload = false
 end)
 
@@ -342,7 +342,7 @@ mod:hook_safe("GameplayStateRun", "on_exit", function(...)
     clearPromise("EXIT_GAMEPLAY")
     mod.promise_sprint = false
     mod.promise_dodge = false
-    mod.super_keep_sprint = false
+    mod.keep_sprint_press = false
     mod.keep_sprint_empty_reload = false
 end)
 
@@ -358,7 +358,7 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
             local weapon_template_name = self._weapon_action_component.template_name or ""
             local is_agile_weapon = IS_AGILE_WEAPON[weapon_template_name]
 
-            if previous_state ~= "sprinting" and (current_action == "none" or mod.super_keep_sprint or is_agile_weapon) then
+            if previous_state ~= "sprinting" and (current_action == "none" or mod.keep_sprint_press or is_agile_weapon) then
                 setPromise("was_" .. previous_state)
                 mod.keep_sprint = false
             elseif is_agile_weapon and (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
@@ -439,7 +439,7 @@ local _on_character_state_change = function (self)
         mod.promise_dodge = false
     end
     if TRAVELING_CHARACTER_STATE[character_state] then
-        mod.super_keep_sprint = false
+        mod.keep_sprint_press = false
     end
     if character_state == "sprinting" then
         mod.keep_sprint_empty_reload = false
@@ -548,7 +548,7 @@ local _input_hook = function(func, self, action_name)
             setPromise("Pressed Sprint")
             last_press_sprinting = time_now()
             if ALLOWED_CHARACTER_STATE[character_state] and not TRAVELING_CHARACTER_STATE[character_state] then
-                mod.super_keep_sprint = true
+                mod.keep_sprint_press = true
             end
         end
         -- Compatibility with Guarantee Special Action
