@@ -392,7 +392,7 @@ local _input_hook = function(func, self, action_name)
             if mod.settings["enable_prevent_relic_cancel"] and combat_ability == "zealot_relic" and current_slot == "slot_combat_ability" then
                 return false
             end
-            if mod.settings["enable_prevent_double_dashing"] and IS_DASH_ABILITY[combat_ability] and character_state == "lunging" then
+            if IS_DASH_ABILITY[combat_ability] and character_state == "lunging" then
                 return false
             end
             setPromise("pressed")

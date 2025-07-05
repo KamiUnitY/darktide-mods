@@ -15,18 +15,6 @@ return {
 		["zh-cn"] = "确保玩家在动画中途能成功激活主动技能",
 		["zh-tw"] = "確保玩家在動畫中途能成功啟用主動技能",
 	},
-	enable_prevent_double_dashing = {
-		en = "Prevent double dashing",
-		ru = "Предотвращение двойного рывка",
-		["zh-cn"] = "防止二次冲锋",
-		["zh-tw"] = "防止二次衝鋒",
-	},
-	enable_prevent_double_dashing_description = {
-		en = "Blocking ability key press while dashing",
-		ru = "Блокировка нажатия клавиши способности во время рывка",
-		["zh-cn"] = "在冲锋过程中阻止技能键",
-		["zh-tw"] = "在衝鋒過程中阻止技能鍵",
-	},
 	enable_prevent_relic_cancel = {
 		en = "Prevent chorus cancel from ability key",
 		ru = "Предотвращение отмены Хора при нажатии клавиши способности",
