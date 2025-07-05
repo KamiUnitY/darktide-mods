@@ -232,9 +232,9 @@ end
 local function setPromise(from)
     if not mod.promise_sprint and (ALLOWED_CHARACTER_STATE[character_state] or is_in_hub) then
         mod.promise_sprint = true
-        mod.keep_sprint = false
         if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
     end
+    mod.keep_sprint = false
 end
 
 local function clearPromise(from)
@@ -292,7 +292,6 @@ local function empty_reload_sprint_check()
                     local wieldable_component = visual_loadout_extension._wieldable_slot_components[wielded_slot]
                     if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
                         setPromise("empty_reload_pressed")
-                        mod.keep_sprint = false
                         mod.keep_sprint_empty_reload = true
                     end
                 elseif weapon_has_vent then
@@ -300,7 +299,6 @@ local function empty_reload_sprint_check()
 				    local warp_charge_percentage = warp_charge_component and warp_charge_component.current_percentage
                     if warp_charge_percentage == 0 then
                         setPromise("empty_reload_pressed")
-                        mod.keep_sprint = false
                         mod.keep_sprint_empty_reload = true
                     end
                 end
@@ -354,7 +352,9 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
     if self._unit_data_extension._player.viewport_name == 'player1' then
         if mod.promise_sprint then
             clearPromise("wants_to_stop_by_" .. previous_state)
-            mod.keep_sprint = true
+            if mod.settings["enable_keep_sprint_after_weapon_action"] then
+                mod.keep_sprint = true
+            end
         end
         if mod.keep_sprint then
             local weapon_template_name = self._weapon_action_component.template_name or ""
@@ -362,13 +362,10 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
 
             if previous_state ~= "sprinting" and (current_action == "none" or mod.keep_sprint_press or is_agile_weapon) then
                 setPromise("was_" .. previous_state)
-                mod.keep_sprint = false
             elseif is_agile_weapon and (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
                 setPromise("agile_weapon_heavy")
-                mod.keep_sprint = false
             elseif mod.keep_sprint_empty_reload then
                 setPromise("empty_reload")
-                mod.keep_sprint = false
             end
         end
     end
@@ -417,10 +414,7 @@ mod:hook_safe("ActionHandler", "_finish_action", function(self, handler_data, re
 
         if mod.keep_sprint then
             if reason == "action_complete" or reason == "hold_input_released" then
-                if mod.settings["enable_keep_sprint_after_weapon_action"] then
-                    setPromise(reason)
-                end
-                mod.keep_sprint = false
+                setPromise(reason)
             end
         end
     end
