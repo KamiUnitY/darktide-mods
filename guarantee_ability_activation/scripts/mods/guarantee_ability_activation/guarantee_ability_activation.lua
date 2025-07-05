@@ -415,14 +415,6 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
-    if action_name == "sprinting" then
-        -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
-        if character_state == "lunging" then
-            return false
-        end
-        return out
-    end
-
     -- Release Mouse on using Weapon Ability
     if mod.promise_ability and IS_WEAPON_ABILITY[combat_ability] then
         if action_name == "action_one_pressed" or action_name == "action_one_hold" then

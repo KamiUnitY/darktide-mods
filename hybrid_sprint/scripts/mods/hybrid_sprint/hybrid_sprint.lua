@@ -504,10 +504,6 @@ local _input_hook = function(func, self, action_name)
                 return false
             end
         end
-        -- Vanilla workaround bugfix for 2nd dash ability not seemlessly continues
-        if character_state == "lunging" then
-            return false
-        end
         -- Prevent sprinting on pressing dodge
         if mod.settings["enable_dodge_on_diagonal_sprint"] then
             if elapsed(last_press_dodge) < DODGE_PRESS_BUFFER then
