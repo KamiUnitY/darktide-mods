@@ -15,8 +15,6 @@ return {
 		"Skitarius",
 		"ToggleAltFire",
 		"weapon_customization",
-		"weapon_customization_syn_edits",
-		"weapon_customization_mt_stuff",
 	},
 	packages = {},
 }
