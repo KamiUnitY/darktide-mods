@@ -657,6 +657,7 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     shotgun_p2_m1 = {
+        pressing_buffer             = 0.2,
         action_special              = true,
         action_reload               = true,
         special_releases_action_one = true,
