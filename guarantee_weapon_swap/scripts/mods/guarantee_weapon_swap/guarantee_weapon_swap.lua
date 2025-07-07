@@ -89,7 +89,7 @@ local debug = {
     end,
 }
 
-local _is_in_hub = function()
+local check_is_in_hub = function()
     local game_mode_manager = Managers.state.game_mode
     local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
     return game_mode_name == "hub"
@@ -123,7 +123,7 @@ end
 
 mod.on_all_mods_loaded = function()
     -- Update is_in_hub
-    is_in_hub = _is_in_hub()
+    is_in_hub = check_is_in_hub()
 
     -- WATCHER
     -- modding_tools:watch("promise_exist",mod,"promise_exist")
@@ -136,7 +136,7 @@ end
 
 mod.on_game_state_changed = function(status, state_name)
     -- Update is_in_hub
-    is_in_hub = _is_in_hub()
+    is_in_hub = check_is_in_hub()
 end
 
 -----------------------
