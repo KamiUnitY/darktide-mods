@@ -54,8 +54,7 @@ local DODGE_PRESS_BUFFER = 0.05
 ---------------
 
 mod.promise_sprint = false
-
-local last_press_sprinting = 0
+mod.promise_dodge = false
 
 mod.keep_sprint = false
 mod.keep_sprint_press = false
@@ -70,16 +69,15 @@ local movement_pressed = {
     move_right    = false,
 }
 
+local last_press_sprinting = 0
+local last_press_dodge = 0
+
 local is_in_hub = false
 
 local character_state = ""
 
 local current_action = ""
 local previous_action = ""
-
-mod.promise_dodge = false
-
-local last_press_dodge = 0
 
 local is_action_allowed_during_sprint = true
 
