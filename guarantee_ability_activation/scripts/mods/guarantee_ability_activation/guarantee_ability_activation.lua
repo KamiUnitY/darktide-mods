@@ -79,7 +79,7 @@ local debug = {
     end,
 }
 
-local _is_available_ability_charges = function()
+local is_available_ability_charges = function()
     local unit = Managers.player:local_player(1).player_unit
     if unit then
         if ScriptUnit.extension(unit, "ability_system"):remaining_ability_charges("combat_ability") > 0 then
@@ -145,7 +145,7 @@ end
 -----------------------
 
 local function setPromise(from)
-    if not _is_available_ability_charges() then
+    if not is_available_ability_charges() then
         return
     end
     if not mod.promise_ability then
@@ -171,7 +171,7 @@ local function isPromised()
         if elapsed(mod.last_do_promise) < INTERVAL_DO_PROMISE then
             return false
         end
-        if not _is_available_ability_charges() then
+        if not is_available_ability_charges() then
             clearPromise("empty_ability_charges")
             return false
         end

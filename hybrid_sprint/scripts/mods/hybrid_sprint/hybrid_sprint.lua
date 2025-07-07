@@ -267,7 +267,7 @@ end
 -- FUNCTIONS --
 ---------------
 
-local function empty_reload_sprint_check()
+local empty_reload_sprint_check = function()
     if character_state == "sprinting" or mod.keep_sprint then
         local unit = Managers.player:local_player(1).player_unit
         if unit then
