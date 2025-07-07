@@ -116,12 +116,6 @@ local debug = {
     end,
 }
 
-local _is_in_hub = function()
-    local game_mode_manager = Managers.state.game_mode
-    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
-    return game_mode_name == "hub"
-end
-
 local has_key_containing = function(table, pattern)
     for key, _ in pairs(table) do
         if string.find(key, pattern) then
@@ -129,6 +123,12 @@ local has_key_containing = function(table, pattern)
         end
     end
     return false
+end
+
+local _is_in_hub = function()
+    local game_mode_manager = Managers.state.game_mode
+    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+    return game_mode_name == "hub"
 end
 
 local time_now = function()

@@ -101,15 +101,18 @@ local debug = {
     end,
 }
 
-local has_any_movement_pressed = function()
-    local any_movement_pressed = false
-    for _, value in pairs(movement_pressed) do
-        if value then
-            any_movement_pressed = true
-            break
-        end
-    end
-    return any_movement_pressed
+local _is_in_hub = function()
+    local game_mode_manager = Managers.state.game_mode
+    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+    return game_mode_name == "hub"
+end
+
+local time_now = function()
+    return Managers.time and Managers.time:time("main")
+end
+
+local elapsed = function(time)
+    return time_now() - time
 end
 
 -- Function provided by the author of the no_dodge_jump mod, Jaemn
@@ -151,24 +154,21 @@ local player_movement_valid_for_dodge = function()
     end
 end
 
+local has_any_movement_pressed = function()
+    local any_movement_pressed = false
+    for _, value in pairs(movement_pressed) do
+        if value then
+            any_movement_pressed = true
+            break
+        end
+    end
+    return any_movement_pressed
+end
+
 local same_dodge_jump_bind = function(self)
     local aliases = self._aliases
     local device_type = DEVICE_TYPE_MAP_ALIASES[InputDevice.last_pressed_device.device_type]
     return aliases.jump[device_type] == aliases.dodge[device_type]
-end
-
-local _is_in_hub = function()
-    local game_mode_manager = Managers.state.game_mode
-    local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
-    return game_mode_name == "hub"
-end
-
-local time_now = function()
-    return Managers.time and Managers.time:time("main")
-end
-
-local elapsed = function(time)
-    return time_now() - time
 end
 
 local should_sprint_timeout = function ()

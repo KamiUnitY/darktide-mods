@@ -79,16 +79,6 @@ local debug = {
     end,
 }
 
-local is_available_ability_charges = function()
-    local unit = Managers.player:local_player(1).player_unit
-    if unit then
-        if ScriptUnit.extension(unit, "ability_system"):remaining_ability_charges("combat_ability") > 0 then
-            return true
-        end
-    end
-    return false
-end
-
 local _is_in_hub = function()
     local game_mode_manager = Managers.state.game_mode
     local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
@@ -101,6 +91,16 @@ end
 
 local elapsed = function(time)
     return time_now() - time
+end
+
+local is_available_ability_charges = function()
+    local unit = Managers.player:local_player(1).player_unit
+    if unit then
+        if ScriptUnit.extension(unit, "ability_system"):remaining_ability_charges("combat_ability") > 0 then
+            return true
+        end
+    end
+    return false
 end
 
 --------------------------
