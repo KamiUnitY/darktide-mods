@@ -7,6 +7,11 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id      = "enable_benchmark_input",
+				type = "checkbox",
+				default_value = false,
+			},
+			{
 				setting_id  = "debug_group",
 				type        = "group",
 				sub_widgets = {

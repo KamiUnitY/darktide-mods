@@ -8,6 +8,9 @@ return {
 	debug_group = {
 		en = "Debug",
 	},
+	enable_benchmark_input = {
+		en = "Benchmark Input",
+	},
 	enable_debug_modding_tools = {
 		en = "Modding Tools",
 	},

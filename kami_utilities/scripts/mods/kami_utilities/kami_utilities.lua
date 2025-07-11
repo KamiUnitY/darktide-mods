@@ -6,6 +6,7 @@ local modding_tools = get_mod("modding_tools")
 --------------------------
 
 mod.settings = {
+    enable_benchmark_input = mod:get("enable_benchmark_input"),
     enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
 }
 
@@ -68,20 +69,22 @@ local max_count = 100 -- Adjust this to the desired number of recent samples
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
 
-    if action_name == "action_one_pressed" then
-        local elapsed_time = os:clock() - last_stamp
+    if mod.settings["enable_benchmark_input"] then
+        if action_name == "action_one_pressed" then
+            local elapsed_time = os:clock() - last_stamp
 
-        recent_sum = recent_sum + elapsed_time
-        recent_count = recent_count + 1
+            recent_sum = recent_sum + elapsed_time
+            recent_count = recent_count + 1
 
-        if recent_count > max_count then
-            recent_sum = recent_sum - (recent_sum / recent_count)
-            recent_count = recent_count - 1
+            if recent_count > max_count then
+                recent_sum = recent_sum - (recent_sum / recent_count)
+                recent_count = recent_count - 1
+            end
+
+            mod.benchmark_input = recent_sum / recent_count
+
+            last_stamp = os:clock()
         end
-
-        mod.benchmark_input = recent_sum / recent_count
-
-        last_stamp = os:clock()
     end
 
     return out
