@@ -19,6 +19,12 @@ local ALLOWED_CHARACTER_STATE = {
     falling        = true,
 }
 
+local PRE_SLIDE_CHARACTER_STATE = {
+    dodging   = true,
+    sprinting = true,
+    walking   = true,
+}
+
 local DAMPING_MOVE = 10
 local DAMPING_RECOVER = 7
 
@@ -39,6 +45,8 @@ mod.roll_offset = 0
 mod.roll_offset_target = 0
 
 mod.tilt_factor = 0
+
+local last_pre_slide_character_state = ""
 
 local look_direction_box = Vector3Box()
 local move_direction_box = Vector3Box()
@@ -177,7 +185,7 @@ mod:hook_safe("PlayerCharacterStateSliding", "on_enter", function(self, unit, dt
         local move_input = self._input_extension:get("move")
         local rotation = self._first_person_component.rotation
         local move_direction = Quaternion.rotate(rotation, move_input)
-        if previous_state == "dodging" then
+        if previous_state == "dodging" or last_pre_slide_character_state == "dodging" then
             mod.tilt_factor = mod.settings["tilt_factor_dodging_slide"]
             if not mod.settings["invert_dodging_slide_angle"] then
                 move_direction = move_direction * -1
@@ -222,6 +230,9 @@ end)
 
 local _on_character_state_change = function (self)
     local character_state = self._state_current.name
+    if PRE_SLIDE_CHARACTER_STATE[character_state] then
+        last_pre_slide_character_state = character_state
+    end
     if not ALLOWED_CHARACTER_STATE[character_state] then
         mod.roll_offset_damping = DAMPING_RECOVER
         mod.roll_offset_target = 0
