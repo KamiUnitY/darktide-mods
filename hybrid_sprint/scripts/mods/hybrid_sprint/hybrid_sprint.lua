@@ -1,4 +1,4 @@
--- Hybrid Sprint by KamiUnitY. Ver. 1.3.3
+-- Hybrid Sprint by KamiUnitY. Ver. 1.3.4
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
@@ -521,7 +521,7 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
-    if action_name == "weapon_reload" then
+    if action_name == "weapon_reload_pressed" then
         if pressed then
             if mod.settings["enable_keep_sprint_after_weapon_action"] then
                 empty_reload_sprint_check()
