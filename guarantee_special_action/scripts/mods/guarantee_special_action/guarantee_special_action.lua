@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.1.7
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.8
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -8,8 +8,8 @@ local modding_tools = get_mod("modding_tools")
 ---------------
 
 local PROMISE_ACTION_MAP = {
-    weapon_extra_pressed = "action_special",
-    weapon_reload        = "action_reload",
+    weapon_extra_pressed  = "action_special",
+    weapon_reload_pressed = "action_reload",
 }
 
 local ALLOWED_CHARACTER_STATE = {
@@ -334,7 +334,7 @@ local function _on_slot_wielded(self)
         mod.is_toggle_special = false
         if weapon_template then
             for _, action in pairs(weapon_template.actions or {}) do
-                if action.kind == "toggle_special" then
+                if string.find(action.kind, "toggle_special") then
                     mod.is_toggle_special = true
                     break
                 end
