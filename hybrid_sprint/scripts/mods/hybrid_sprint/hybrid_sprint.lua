@@ -58,7 +58,7 @@ mod.promise_dodge = false
 
 mod.keep_sprint = false
 mod.keep_sprint_press = false
-mod.keep_sprint_empty_reload = false
+mod.keep_sprint_empty_action = false
 
 local action_pressed = {}
 
@@ -265,7 +265,8 @@ end
 -- FUNCTIONS --
 ---------------
 
-local empty_reload_sprint_check = function()
+local empty_action_sprint_check = function(action_name)
+    do return end
     if character_state == "sprinting" or mod.keep_sprint then
         local unit = Managers.player:local_player(1).player_unit
         if unit then
@@ -276,22 +277,55 @@ local empty_reload_sprint_check = function()
                 local wielded_slot = inventory_component and visual_loadout_extension._inventory_component.wielded_slot
                 local weapon_extension = visual_loadout_extension._weapon_extension
                 local slot_weapon = weapon_extension and weapon_extension._weapons[wielded_slot]
+                local wieldable_component = visual_loadout_extension._wieldable_slot_components[wielded_slot]
                 local weapon_template = slot_weapon and slot_weapon.weapon_template
                 local action_inputs = weapon_template and weapon_template.action_inputs
-                local weapon_has_reload = action_inputs and (action_inputs.reload or action_inputs.reload_pressed) ~= nil or false
-                local weapon_has_vent = action_inputs and action_inputs.vent ~= nil or false
-                if weapon_has_reload then
-                    local wieldable_component = visual_loadout_extension._wieldable_slot_components[wielded_slot]
-                    if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
-                        setPromise("empty_reload_pressed")
-                        mod.keep_sprint_empty_reload = true
+                local weapon_actions = weapon_template and weapon_template.actions
+
+                if action_name == "weapon_reload_pressed" then
+                    local weapon_has_reload = action_inputs and (action_inputs.reload or action_inputs.reload_pressed) ~= nil or false
+                    local weapon_has_vent = action_inputs and action_inputs.vent ~= nil or false
+
+                    if weapon_has_reload then
+                        if wieldable_component.current_ammunition_reserve == 0 or wieldable_component.current_ammunition_clip == wieldable_component.max_ammunition_clip then
+                            setPromise("empty_reload_pressed")
+                            mod.keep_sprint_empty_action = true
+                        end
+                    elseif weapon_has_vent then
+                        local warp_charge_component = weapon_extension and weapon_extension._warp_charge_component
+                        local warp_charge_percentage = warp_charge_component and warp_charge_component.current_percentage
+                        if warp_charge_percentage == 0 then
+                            setPromise("empty_reload_pressed")
+                            mod.keep_sprint_empty_action = true
+                        end
                     end
-                elseif weapon_has_vent then
-                    local warp_charge_component = weapon_extension and weapon_extension._warp_charge_component
-				    local warp_charge_percentage = warp_charge_component and warp_charge_component.current_percentage
-                    if warp_charge_percentage == 0 then
-                        setPromise("empty_reload_pressed")
-                        mod.keep_sprint_empty_reload = true
+
+                elseif action_name == "weapon_extra_pressed"  then
+                    local weapon_special_tweak_data = weapon_template and weapon_template.weapon_special_tweak_data
+                    local special_needs_charges = weapon_special_tweak_data and weapon_special_tweak_data.num_charges_to_consume_on_activation
+                    local action_weapon_special = weapon_actions and weapon_actions.action_weapon_special
+                    local special_kind = action_weapon_special and action_weapon_special.kind
+
+                    local ignore_active_special, is_toggle_special = false, false
+                    if weapon_template then
+                        for _, action in pairs(weapon_template.actions or {}) do
+                            if ignore_active_special ~= true and string.find(action.kind, "activate_special") and action.activation_cooldown == nil then
+                                ignore_active_special = true
+                            end
+                            if is_toggle_special ~= true and string.find(action.kind, "toggle_special") then
+                                is_toggle_special = true
+                            end
+                            if ignore_active_special and is_toggle_special then break end
+                        end
+                    end
+
+                    if
+                        (wieldable_component.special_active and not ignore_active_special and not is_toggle_special) or
+                        ((special_needs_charges ~= nil or wieldable_component.max_num_special_charges ~= 0) and wieldable_component.num_special_charges < (special_needs_charges or 1)) or
+                        (special_kind == "ranged_load_special" and wieldable_component.current_ammunition_reserve == 0 and wieldable_component.num_special_charges == 0)
+                    then
+                        setPromise("empty_special_pressed")
+                        mod.keep_sprint_empty_action = true
                     end
                 end
             end
@@ -326,7 +360,7 @@ mod:hook_safe("GameplayStateRun", "on_enter", function(...)
     mod.promise_dodge = false
     mod.keep_sprint = false
     mod.keep_sprint_press = false
-    mod.keep_sprint_empty_reload = false
+    mod.keep_sprint_empty_action = false
 end)
 
 mod:hook_safe("GameplayStateRun", "on_exit", function(...)
@@ -335,7 +369,7 @@ mod:hook_safe("GameplayStateRun", "on_exit", function(...)
     mod.promise_dodge = false
     mod.keep_sprint = false
     mod.keep_sprint_press = false
-    mod.keep_sprint_empty_reload = false
+    mod.keep_sprint_empty_action = false
 end)
 
 -- CLEARING PROMISE ON WEAPON ACTION
@@ -356,8 +390,8 @@ mod:hook_safe("PlayerCharacterStateWalking", "on_enter", function(self, unit, dt
                 setPromise("was_" .. previous_state)
             elseif is_agile_weapon and (string.find(previous_action, "heavy") or string.find(current_action, "heavy")) then
                 setPromise("agile_weapon_heavy")
-            elseif mod.keep_sprint_empty_reload then
-                setPromise("empty_reload")
+            elseif mod.keep_sprint_empty_action then
+                setPromise("empty_action")
             end
         end
     end
@@ -430,7 +464,7 @@ local _on_character_state_change = function (self)
         mod.keep_sprint_press = false
     end
     if character_state == "sprinting" then
-        mod.keep_sprint_empty_reload = false
+        mod.keep_sprint_empty_action = false
     end
 end
 
@@ -521,10 +555,10 @@ local _input_hook = function(func, self, action_name)
         return out
     end
 
-    if action_name == "weapon_reload_pressed" then
+    if action_name == "weapon_reload_pressed" or action_name == "weapon_extra_pressed" then
         if pressed then
             if mod.settings["enable_keep_sprint_after_weapon_action"] then
-                empty_reload_sprint_check()
+                empty_action_sprint_check(action_name)
             end
         end
         return out
