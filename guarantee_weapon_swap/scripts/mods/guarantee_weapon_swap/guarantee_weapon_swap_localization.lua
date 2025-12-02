@@ -27,6 +27,12 @@ return {
 		["zh-cn"] = "狂信徒的信仰之刃",
 		["zh-tw"] = "狂信徒的信仰之刃",
 	},
+	enable_quick_grenades = {
+		en = "Queue Quick Blitzes",
+	},
+	enable_quick_grenades_description = {
+		en = "For Zealot's Blades of Faith and Hivescum's Blinder/Blackout",
+	},
 	debug_group = {
 		en = "Debug",
 		ru = "Отладка",

@@ -13,7 +13,7 @@ return {
 				range           = { 1, 5 }
 			},
 			{
-				setting_id = "enable_zealot_throwing_knives",
+				setting_id = "enable_quick_grenades",
 				type = "checkbox",
 				default_value = true,
 			},

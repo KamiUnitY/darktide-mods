@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.1
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.2
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -45,6 +45,12 @@ local ALLOWED_CHARACTER_STATE = {
     walking        = true,
     jumping        = true,
     falling        = true,
+}
+
+local IS_QUICK_GRENADE = {
+    zealot_throwing_knives        = true,
+    broker_flash_grenade          = true,
+    broker_flash_grenade_improved = true,
 }
 
 local INTERVAL_DO_PROMISE = 0.05
@@ -108,9 +114,9 @@ end
 --------------------------
 
 mod.settings = {
-    queue_limit                     = mod:get("queue_limit"),
-    enable_zealot_throwing_knives   = mod:get("enable_zealot_throwing_knives"),
-    enable_debug_modding_tools      = mod:get("enable_debug_modding_tools"),
+    queue_limit                = mod:get("queue_limit"),
+    enable_quick_grenades      = mod:get("enable_quick_grenades"),
+    enable_debug_modding_tools = mod:get("enable_debug_modding_tools"),
 }
 
 mod.on_setting_changed = function(setting_id)
@@ -257,7 +263,7 @@ mod:hook("PlayerUnitAbilityExtension", "can_wield", function(func, self, slot_na
         if slot_name == "slot_grenade_ability" then
             if not can_wield then
                 clearPromise("grenade")
-            elseif self._equipped_abilities.grenade_ability.name == "zealot_throwing_knives" then
+            elseif IS_QUICK_GRENADE[self._equipped_abilities.grenade_ability.name] then
                 clearPromise("grenade")
             end
         end
@@ -355,7 +361,7 @@ local _input_hook = function(func, self, action_name)
                 if (
                     action_name ~= "grenade_ability_pressed" or
                     (
-                        (grenade_ability ~= "zealot_throwing_knives" or mod.settings["enable_zealot_throwing_knives"]) and
+                        (not IS_QUICK_GRENADE[grenade_ability] or mod.settings["enable_quick_grenades"]) and
                         current_slot ~= "slot_luggable"
                     )
                 )
