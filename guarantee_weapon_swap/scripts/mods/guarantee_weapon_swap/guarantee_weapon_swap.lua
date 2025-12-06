@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.2
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.3
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -260,12 +260,10 @@ end)
 mod:hook("PlayerUnitAbilityExtension", "can_wield", function(func, self, slot_name, previous_check)
     local can_wield = func(self, slot_name, previous_check)
     if self._player.viewport_name == "player1" then
-        if slot_name == "slot_grenade_ability" then
-            if not can_wield then
-                clearPromise("grenade")
-            elseif IS_QUICK_GRENADE[self._equipped_abilities.grenade_ability.name] then
-                clearPromise("grenade")
-            end
+        if not can_wield or
+            (slot_name == "slot_grenade_ability" and IS_QUICK_GRENADE[self._equipped_abilities.grenade_ability.name])
+        then
+            clearPromise(PROMISE_SLOT_MAP[slot_name])
         end
     end
     return can_wield
