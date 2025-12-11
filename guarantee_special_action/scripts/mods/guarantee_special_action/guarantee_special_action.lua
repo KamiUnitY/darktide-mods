@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.1.9
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.10
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
