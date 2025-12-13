@@ -1,4 +1,4 @@
--- Hybrid Sprint by KamiUnitY. Ver. 1.3.4
+-- Hybrid Sprint by KamiUnitY. Ver. 1.3.5
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
@@ -38,6 +38,8 @@ local MOVEMENT_ACTIONS = {
 local IS_AGILE_WEAPON = {
     combatknife_p1_m1 = true,
     combatknife_p1_m2 = true,
+    dual_shivs_p1_m1  = true,
+    dual_shivs_p1_m2  = true,
 }
 
 local DEVICE_TYPE_MAP_ALIASES = {
