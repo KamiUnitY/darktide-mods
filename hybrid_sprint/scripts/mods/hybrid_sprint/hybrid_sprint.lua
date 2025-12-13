@@ -2,7 +2,6 @@
 
 local mod = get_mod("hybrid_sprint")
 local modding_tools = get_mod("modding_tools")
-local guarantee_special_action = get_mod("guarantee_special_action")
 local toggle_alt_fire = get_mod("ToggleAltFire")
 
 local InputDevice = require("scripts/managers/input/input_device")
@@ -501,12 +500,6 @@ local _input_hook = function(func, self, action_name)
             last_press_sprinting = time_now()
             if ALLOWED_CHARACTER_STATE[character_state] and not TRAVELING_CHARACTER_STATE[character_state] then
                 mod.keep_sprint_press = true
-            end
-        end
-        -- Compatibility with Guarantee Special Action
-        if guarantee_special_action then
-            if guarantee_special_action.promise_exist and guarantee_special_action.interrupt_sprinting_special then
-                return false
             end
         end
         -- Compatibility with ToggleAltFire
