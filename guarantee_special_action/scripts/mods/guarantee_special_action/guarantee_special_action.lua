@@ -49,7 +49,6 @@ mod.is_parry_special = false
 mod.special_requires_ammo = false
 mod.special_needs_charges = nil
 mod.ignore_active_special = false
-mod.interrupt_sprinting_special = false
 
 mod.special_releases_action_one = false
 mod.special_releases_action_two = false
@@ -327,7 +326,6 @@ local function _on_slot_wielded(self)
         clearAllPromises("on_slot_wielded")
 
         mod.ignore_active_special = _weapon_data.ignore_active_special or false
-        mod.interrupt_sprinting_special = _weapon_data.interrupt_sprinting_special or false
         mod.special_needs_charges = _weapon_data.special_needs_charges or nil
         mod.special_requires_ammo = _weapon_data.special_requires_ammo or false
         mod.is_parry_special = _weapon_data.special_parry or false
@@ -574,12 +572,6 @@ local _input_hook = function(func, self, action_name)
 
     -- Auto release weapon holding action on promise_exist
     if mod.promise_exist then
-        if mod.interrupt_sprinting_special then
-            if action_name == "sprinting" then
-                return false
-            end
-        end
-
         if doing_push or (doing_melee_start and allowed_chain_special) then
             return out
         end

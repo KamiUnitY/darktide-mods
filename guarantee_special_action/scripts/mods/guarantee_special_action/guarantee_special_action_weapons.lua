@@ -91,14 +91,12 @@ local weapons = {
     },
     combatknife_p1_m1 = {
         action_special              = true,
-        interrupt_sprinting_special = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
     combatknife_p1_m2 = {
         action_special              = true,
-        interrupt_sprinting_special = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.0,
