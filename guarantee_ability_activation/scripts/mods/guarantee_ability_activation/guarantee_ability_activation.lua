@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.10
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.11
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -34,11 +34,12 @@ local IS_DASH_ABILITY = {
 }
 
 local IS_WEAPON_ABILITY = {
-    zealot_relic               = true,
-    psyker_force_field         = true,
-    psyker_force_field_dome    = true,
-    adamant_area_buff_drone    = true,
-    broker_ability_stimm_field = true,
+    zealot_relic                = true,
+    psyker_force_field          = true,
+    psyker_force_field_improved = true,
+    psyker_force_field_dome     = true,
+    adamant_area_buff_drone     = true,
+    broker_ability_stimm_field  = true,
 }
 
 local INTERVAL_DO_PROMISE = 0.05
