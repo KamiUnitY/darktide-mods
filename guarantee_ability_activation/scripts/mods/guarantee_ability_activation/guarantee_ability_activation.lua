@@ -68,7 +68,7 @@ local grenade_ability = ""
 
 local weapon_template_name = ""
 
-local last_set_promise = 0
+local last_ability_pressed = 0
 
 ---------------
 -- UTILITIES --
@@ -164,7 +164,6 @@ local function setPromise(from)
     if not mod.promise_ability then
         if is_allowed_character_state() then
             mod.promise_ability = true
-            last_set_promise = time_now()
             if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
         end
     end
@@ -236,7 +235,7 @@ local IS_AIM_CANCEL = {
     [AIM_CANCEL_WITH_SPRINT] = true,
 }
 
-local PREVENT_CANCEL_DURATION = 0.3
+local PREVENT_CANCEL_DURATION = 0.5
 
 -- HANDLE PROMISE ON START HOLDING ABILITY
 
@@ -261,7 +260,7 @@ mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_ac
                         setPromise("AIM_CANCEL_WITH_SPRINT")
                         return
                     end
-                    if elapsed(last_set_promise) <= PREVENT_CANCEL_DURATION then
+                    if elapsed(last_ability_pressed) <= PREVENT_CANCEL_DURATION then
                         setPromise("AIM_CANCEL_NORMAL")
                         return
                     end
@@ -404,6 +403,7 @@ local _input_hook = function(func, self, action_name)
 
     if action_name == "combat_ability_pressed" then
         if pressed then
+            last_ability_pressed = time_now()
             if mod.settings["enable_prevent_relic_cancel"] and combat_ability == "zealot_relic" and current_slot == "slot_combat_ability" then
                 return false
             end
