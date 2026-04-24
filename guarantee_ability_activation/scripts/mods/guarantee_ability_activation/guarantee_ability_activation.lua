@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.12
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.13
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -40,6 +40,11 @@ local IS_WEAPON_ABILITY = {
     psyker_force_field_dome     = true,
     adamant_area_buff_drone     = true,
     broker_ability_stimm_field  = true,
+}
+
+local IS_PSYKER_DISCHARGE_ABILITY = {
+    psyker_discharge_shout          = true,
+    psyker_discharge_shout_improved = true,
 }
 
 local INTERVAL_DO_PROMISE = 0.05
@@ -107,6 +112,11 @@ local is_available_ability_charges = function()
     return false
 end
 
+local is_allowed_character_state = function()
+    return ALLOWED_CHARACTER_STATE[character_state] or
+        (IS_PSYKER_DISCHARGE_ABILITY[combat_ability] and character_state == "exploding")
+end
+
 --------------------------
 -- MOD SETTINGS CACHING --
 --------------------------
@@ -152,7 +162,7 @@ local function setPromise(from)
         return
     end
     if not mod.promise_ability then
-        if ALLOWED_CHARACTER_STATE[character_state] then
+        if is_allowed_character_state() then
             mod.promise_ability = true
             last_set_promise = time_now()
             if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
@@ -288,7 +298,7 @@ end)
 
 local function _on_character_state_change(self)
     character_state = self._state_current.name
-    if not ALLOWED_CHARACTER_STATE[character_state] then
+    if not is_allowed_character_state() then
         clearPromise("UNALLOWED_CHARACTER_STATE")
     end
 end
@@ -408,6 +418,9 @@ local _input_hook = function(func, self, action_name)
 
     if action_name == "combat_ability_release" then
         if pressed then
+            if IS_PSYKER_DISCHARGE_ABILITY[combat_ability] and character_state == "exploding" then
+                setPromise("exploding")
+            end
             if modding_tools then debug:print_mod("Player pressed " .. action_name) end
         end
         return out
