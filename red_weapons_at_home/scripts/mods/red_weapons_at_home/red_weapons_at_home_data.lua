@@ -11,9 +11,27 @@ return {
 				type        = "group",
 				sub_widgets = {
 					{
+						setting_id = "gadget_stamina_required_expertise",
+						type = "numeric",
+						default_value = 0,
+						range = { 0, 430 }
+					},
+					{
+						setting_id = "gadget_toughness_required_expertise",
+						type = "numeric",
+						default_value = 0,
+						range = { 0, 430 }
+					},
+					{
+						setting_id = "gadget_health_required_expertise",
+						type = "numeric",
+						default_value = 0,
+						range = { 0, 430 }
+					},
+					{
 						setting_id = "gadget_wound_required_expertise",
 						type = "numeric",
-						default_value = 400,
+						default_value = 0,
 						range = { 0, 430 }
 					},
 				}

@@ -1,4 +1,4 @@
--- Red Weapons at Home by KamiUnitY. Ver. 1.2.5
+-- Red Weapons at Home by KamiUnitY. Ver. 1.2.6
 
 local mod = get_mod("red_weapons_at_home")
 local modding_tools = get_mod("modding_tools")
@@ -30,9 +30,9 @@ local TRAIT_MAX_VALUE = {
 }
 
 local TRAIT_REQUIRED_EXPERTISE = {
-	gadget_stamina_increase           = 410,
-	gadget_innate_toughness_increase  = 0,
-	gadget_innate_health_increase     = 0,
+	gadget_stamina_increase           = nil, --mod.settings["gadget_stamina_required_expertise"]
+	gadget_innate_toughness_increase  = nil, --mod.settings["gadget_toughness_required_expertise"]
+	gadget_innate_health_increase     = nil, --mod.settings["gadget_health_required_expertise"]
 	gadget_innate_max_wounds_increase = nil, --mod.settings["gadget_wound_required_expertise"]
 }
 
@@ -74,6 +74,9 @@ local function fetch_rarity_color()
 end
 
 local function fetch_curios_settings()
+    TRAIT_REQUIRED_EXPERTISE["gadget_stamina_increase"]           = mod.settings["gadget_stamina_required_expertise"]
+    TRAIT_REQUIRED_EXPERTISE["gadget_innate_toughness_increase"]  = mod.settings["gadget_toughness_required_expertise"]
+    TRAIT_REQUIRED_EXPERTISE["gadget_innate_health_increase"]     = mod.settings["gadget_health_required_expertise"]
     TRAIT_REQUIRED_EXPERTISE["gadget_innate_max_wounds_increase"] = mod.settings["gadget_wound_required_expertise"]
 end
 
@@ -126,10 +129,13 @@ end
 --------------------------
 
 mod.settings = {
-    gadget_wound_required_expertise = mod:get("gadget_wound_required_expertise"),
-    rarity_color_6_red              = mod:get("rarity_color_6_red"),
-    rarity_color_6_green            = mod:get("rarity_color_6_green"),
-    rarity_color_6_blue             = mod:get("rarity_color_6_blue"),
+    gadget_stamina_required_expertise   = mod:get("gadget_stamina_required_expertise"),
+    gadget_toughness_required_expertise = mod:get("gadget_toughness_required_expertise"),
+    gadget_health_required_expertise    = mod:get("gadget_health_required_expertise"),
+    gadget_wound_required_expertise     = mod:get("gadget_wound_required_expertise"),
+    rarity_color_6_red                  = mod:get("rarity_color_6_red"),
+    rarity_color_6_green                = mod:get("rarity_color_6_green"),
+    rarity_color_6_blue                 = mod:get("rarity_color_6_blue"),
 }
 
 mod.on_setting_changed = function(setting_id)

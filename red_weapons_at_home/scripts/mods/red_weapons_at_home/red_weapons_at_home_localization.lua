@@ -21,6 +21,24 @@ return {
 		["zh-cn"] = "珍品",
 		["zh-tw"] = "珍品",
 	},
+	gadget_stamina_required_expertise = {
+		en = "Stamina Required Rating",
+		ru = "Требуемый рейтинг выносливости",
+		["zh-cn"] = "耐力评分",
+		["zh-tw"] = "耐力評分",
+	},
+	gadget_toughness_required_expertise = {
+		en = "Toughness Required Rating",
+		ru = "Требуемый рейтинг крепости",
+		["zh-cn"] = "坚韧评分",
+		["zh-tw"] = "堅韌評分",
+	},
+	gadget_health_required_expertise = {
+		en = "Health Required Rating",
+		ru = "Требуемый рейтинг здоровья",
+		["zh-cn"] = "生命评分",
+		["zh-tw"] = "生命評分",
+	},
 	gadget_wound_required_expertise = {
 		en = "Wound Required Rating",
 		ru = "Требуемый рейтинг ранения",
