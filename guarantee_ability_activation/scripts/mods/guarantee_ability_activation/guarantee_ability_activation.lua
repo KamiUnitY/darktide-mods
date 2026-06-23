@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.13
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.14
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -222,6 +222,19 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
             if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
         end
     end
+end)
+
+mod:hook("PlayerUnitAbilityExtension", "can_use_ability", function(func, self, ability_type)
+    local out = func(self, ability_type)
+
+    if self._player.viewport_name == "player1" then
+        if out and ability_type == "combat_ability" then
+            clearPromise("can_use_ability")
+            if modding_tools then debug:print_mod("Game has successfully initiated the execution of can_use_ability") end
+        end
+    end
+
+    return out
 end)
 
 -- CONSTATNS FOR HANDLE PROMISE ON HOLDING ABILITY
