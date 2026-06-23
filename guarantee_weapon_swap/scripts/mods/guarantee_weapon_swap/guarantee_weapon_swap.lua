@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.3
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.4
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -48,9 +48,11 @@ local ALLOWED_CHARACTER_STATE = {
 }
 
 local IS_QUICK_GRENADE = {
-    zealot_throwing_knives        = true,
-    broker_flash_grenade          = true,
-    broker_flash_grenade_improved = true,
+    zealot_throwing_knives         = true,
+    broker_flash_grenade           = true,
+    broker_flash_grenade_improved  = true,
+    cryptic_servo_skull_order_base = true,
+    cryptic_force_field            = true,
 }
 
 local INTERVAL_DO_PROMISE = 0.05
@@ -255,6 +257,14 @@ mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", functio
     end
 end)
 
+mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
+    if self._player.viewport_name == "player1" then
+        if ability_type == "grenade_ability" then
+            clearPromise("grenade")
+        end
+    end
+end)
+
 -- CLEAR PROMISE ON FAILING TO WIELD GRENADE
 
 mod:hook("PlayerUnitAbilityExtension", "can_wield", function(func, self, slot_name, previous_check)
@@ -371,13 +381,20 @@ local _input_hook = function(func, self, action_name)
         return out or isPromised(promise_action)
     end
 
-    if mod.promise_exist and is_attack_prevent_weapon then
-        if action_name == "action_one_pressed" or action_name == "action_one_hold" then
-            return false
-        end
+    if mod.promise_exist then
+        if is_attack_prevent_weapon then
+            if action_name == "action_one_pressed" or action_name == "action_one_hold" then
+                return false
+            end
 
-        if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-            return false
+            if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+                return false
+            end
+        end
+        if current_slot == "slot_combat_ability" and combat_ability == "cryptic_chordclaw" then
+            if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+                return true
+            end
         end
     end
 
