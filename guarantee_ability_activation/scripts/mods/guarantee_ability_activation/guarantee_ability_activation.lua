@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.15
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.3.16
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -61,8 +61,11 @@ local IS_IGNORED_CHARGE_ABILITY = {
     cryptic_precision_stance = true,
 }
 
-
 local INTERVAL_DO_PROMISE = 0.05
+
+local ABILITY_PROMISE_COOLDOWN = {
+    cryptic_chordclaw = 0.2,
+}
 
 ---------------
 -- VARIABLES --
@@ -71,6 +74,7 @@ local INTERVAL_DO_PROMISE = 0.05
 mod.promise_ability = false
 
 mod.last_do_promise = 0
+mod.last_clear_promise = 0
 
 local is_in_hub = false
 
@@ -173,20 +177,26 @@ end
 -----------------------
 
 local function setPromise(from)
+    if mod.promise_ability then
+        return
+    end
     if not is_available_ability_charges() then
         return
     end
-    if not mod.promise_ability then
-        if is_allowed_character_state() then
-            mod.promise_ability = true
-            if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
-        end
+    if not is_allowed_character_state() then
+        return
     end
+    if elapsed(mod.last_clear_promise) < (ABILITY_PROMISE_COOLDOWN[combat_ability] or 0) then
+        return
+    end
+    mod.promise_ability = true
+    if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
 end
 
 local function clearPromise(from)
     if mod.promise_ability then
         mod.promise_ability = false
+        mod.last_clear_promise = time_now()
         if modding_tools then debug:print_mod("clearPromiseFrom: " .. from) end
     end
 end
