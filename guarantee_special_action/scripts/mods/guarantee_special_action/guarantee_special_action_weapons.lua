@@ -330,8 +330,8 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
-    powersword_p3_m1 = {
-        action_special              = true,
+    powersword_p3_m1 = { --disabled
+        action_special              = false,
         special_needs_charges       = 1,
         special_releases_action_one = true,
         special_releases_action_two = false,
