@@ -72,6 +72,10 @@ local ABILITY_PROMISE_DURATION = {
     cryptic_chordclaw = 0.65,
 }
 
+local ABILITY_PROMISE_COOLDOWN = {
+    cryptic_chordclaw = 0.2,
+}
+
 ---------------
 -- VARIABLES --
 ---------------
@@ -79,6 +83,7 @@ local ABILITY_PROMISE_DURATION = {
 mod.promise_ability = false
 
 local last_do_promise = 0
+local last_clear_promise = 0
 
 local is_in_hub = false
 
@@ -96,6 +101,7 @@ local last_ability_pressed = 0
 local promise_elapsed = 0
 local ability_promise_expire = 0
 local ability_promise_duration = 1
+local ability_promise_cooldown = 0
 
 local is_dash_ability = nil
 local is_weapon_ability = nil
@@ -199,6 +205,9 @@ local function setPromise(from)
     if not is_allowed_character_state() then
         return
     end
+    if elapsed(last_clear_promise) < ability_promise_cooldown then
+        return
+    end
     mod.promise_ability = true
     promise_elapsed = time_now()
     ability_promise_expire = promise_elapsed + ability_promise_duration
@@ -208,6 +217,7 @@ end
 local function clearPromise(from)
     if mod.promise_ability then
         mod.promise_ability = false
+        last_clear_promise = time_now()
         if modding_tools then debug:print_mod("clearPromiseFrom: " .. from) end
     end
 end
@@ -418,6 +428,7 @@ local _on_ability_equip = function (self)
         grenade_ability = _equipped_abilities.grenade_ability and _equipped_abilities.grenade_ability.name
 
         ability_promise_duration = ABILITY_PROMISE_DURATION[combat_ability] or 1
+        ability_promise_cooldown = ABILITY_PROMISE_COOLDOWN[combat_ability] or 0
         is_dash_ability = IS_DASH_ABILITY[combat_ability]
         is_weapon_ability = IS_WEAPON_ABILITY[combat_ability]
         is_cancel_sprint_ability = IS_CANCEL_SPRINT_ABILITY[combat_ability]
