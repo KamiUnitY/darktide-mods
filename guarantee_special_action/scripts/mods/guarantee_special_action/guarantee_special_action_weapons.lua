@@ -286,6 +286,7 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     dual_shivs_p1_m1 = {
+        pressing_buffer             = 0.3,
         action_special              = true,
         special_needs_charges       = 1,
         special_releases_action_one = true,
@@ -293,6 +294,7 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     dual_shivs_p1_m2 = {
+        pressing_buffer             = 0.3,
         action_special              = true,
         special_needs_charges       = 1,
         special_releases_action_one = true,
