@@ -73,7 +73,7 @@ local ABILITY_PROMISE_DURATION = {
 }
 
 local ABILITY_PROMISE_COOLDOWN = {
-    cryptic_chordclaw = 0.2,
+    cryptic_chordclaw = 0.25,
 }
 
 ---------------
@@ -83,7 +83,7 @@ local ABILITY_PROMISE_COOLDOWN = {
 mod.promise_ability = false
 
 local last_do_promise = 0
-local last_clear_promise = 0
+local last_set_promise = 0
 
 local is_in_hub = false
 
@@ -98,7 +98,6 @@ local weapon_template_name = ""
 
 local last_ability_pressed = 0
 
-local promise_elapsed = 0
 local ability_promise_expire = 0
 local ability_promise_duration = 1
 local ability_promise_cooldown = 0
@@ -205,19 +204,19 @@ local function setPromise(from)
     if not is_allowed_character_state() then
         return
     end
-    if elapsed(last_clear_promise) < ability_promise_cooldown then
+    if elapsed(last_set_promise) < ability_promise_cooldown then
+        debug:print_mod("Promise on cooldown")
         return
     end
     mod.promise_ability = true
-    promise_elapsed = time_now()
-    ability_promise_expire = promise_elapsed + ability_promise_duration
+    last_set_promise = time_now()
+    ability_promise_expire = last_set_promise + ability_promise_duration
     if modding_tools then debug:print_mod("setPromiseFrom: " .. from) end
 end
 
 local function clearPromise(from)
     if mod.promise_ability then
         mod.promise_ability = false
-        last_clear_promise = time_now()
         if modding_tools then debug:print_mod("clearPromiseFrom: " .. from) end
     end
 end
@@ -226,6 +225,10 @@ local function isPromised(t)
     local promise = mod.promise_ability
 
     if promise then
+        if t > ability_promise_expire then
+            clearPromise("PROMISE_TIMEOUT")
+            return false
+        end
         if t - last_do_promise < INTERVAL_DO_PROMISE then
             return false
         end
@@ -457,15 +460,6 @@ end)
 --------------------
 -- ON EVERY FRAME --
 --------------------
-
-mod.update = function(dt)
-    if mod.promise_ability then
-        promise_elapsed = promise_elapsed + dt
-        if promise_elapsed > ability_promise_expire then
-            clearPromise("PROMISE_TIMEOUT")
-        end
-    end
-end
 
 ----------------
 -- INPUT HOOK --
