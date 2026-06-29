@@ -21,6 +21,12 @@ return {
 		["zh-cn"] = "防止按下技能键时取消圣咏",
 		["zh-tw"] = "防止按下技能鍵時取消禱告",
 	},
+	enable_prevent_relic_sprint = {
+		en = "Prevent chorus cancel from sprint key",
+		ru = "Предотвращение отмены Хора при нажатии клавиши бега",
+		["zh-cn"] = "防止按下冲刺键时取消圣咏",
+		["zh-tw"] = "防止按下衝刺鍵時取消禱告",
+	},
 	enable_prevent_ability_aiming = {
 		en = "Disable ability holding feature",
 		ru = "Отключение функции удержания способности",

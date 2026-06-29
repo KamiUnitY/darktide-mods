@@ -12,6 +12,11 @@ return {
 				default_value = false,
 			},
 			{
+				setting_id = "enable_prevent_relic_sprint",
+				type = "checkbox",
+				default_value = false,
+			},
+			{
 				setting_id = "enable_prevent_ability_aiming",
 				type = "checkbox",
 				default_value = false,

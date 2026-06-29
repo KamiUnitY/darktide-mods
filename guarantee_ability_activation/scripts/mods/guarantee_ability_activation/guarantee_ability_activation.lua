@@ -163,6 +163,7 @@ end
 
 mod.settings = {
     enable_prevent_relic_cancel   = mod:get("enable_prevent_relic_cancel"),
+    enable_prevent_relic_sprint   = mod:get("enable_prevent_relic_sprint"),
     enable_prevent_ability_aiming = mod:get("enable_prevent_ability_aiming"),
     enable_debug_modding_tools    = mod:get("enable_debug_modding_tools"),
 }
@@ -499,8 +500,19 @@ local _input_hook = function(func, self, action_name)
     end
 
     if action_name == "combat_ability_hold" then
-        if pressed and mod.settings["enable_prevent_ability_aiming"] and not is_must_hold_ability then
-            return false
+        if pressed then
+            if mod.settings["enable_prevent_ability_aiming"] and not is_must_hold_ability then
+                return false
+            end
+        end
+        return out
+    end
+
+    if action_name == "sprint" then
+        if pressed then
+            if mod.settings["enable_prevent_relic_sprint"] and combat_ability == "zealot_relic" and current_slot == "slot_combat_ability" then
+                return false
+            end
         end
         return out
     end
