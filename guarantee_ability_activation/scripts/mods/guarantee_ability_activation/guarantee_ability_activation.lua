@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.4.0
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.4.1
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -62,10 +62,6 @@ local IS_PSYKER_DISCHARGE_ABILITY = {
     psyker_discharge_shout_improved = true,
 }
 
-local IS_IGNORED_CHARGE_ABILITY = {
-    cryptic_precision_stance = true,
-}
-
 local INTERVAL_DO_PROMISE = 0.05
 
 local ABILITY_PROMISE_DURATION = {
@@ -108,7 +104,6 @@ local is_cancel_sprint_ability = nil
 local is_cancel_normal_ability = nil
 local is_must_hold_ability = nil
 local is_psyker_discharge_ability = nil
-local is_ignored_charge_ability = nil
 
 ---------------
 -- UTILITIES --
@@ -274,19 +269,6 @@ mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self,
     end
 end)
 
-mod:hook("PlayerUnitAbilityExtension", "can_use_ability", function(func, self, ability_type)
-    local out = func(self, ability_type)
-
-    if self._player.viewport_name == "player1" then
-        if ability_type == "combat_ability" and is_ignored_charge_ability and out then
-            clearPromise("can_use_ability")
-            if modding_tools then debug:print_mod("Game has successfully initiated the execution of can_use_ability") end
-        end
-    end
-
-    return out
-end)
-
 -- CONSTATNS FOR HANDLE PROMISE ON HOLDING ABILITY
 
 local AIM_CANCEL_NORMAL      = "hold_input_released"
@@ -308,6 +290,14 @@ mod:hook_safe("ActionBase", "start", function(self, action_settings, t, time_sca
             clearPromise("ability_base_start")
             if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
         end
+    end
+end)
+
+-- CLEAR PROMISE ON SKITARIIA PRECISION STANCE TOGGLE
+
+mod:hook_safe("ActionPrecisionStanceToggle", "start", function(self, action_settings, t, time_scale, action_start_params)
+    if self._player.viewport_name == "player1" then
+        clearPromise("ActionPrecisionStanceToggle")
     end
 end)
 
@@ -439,7 +429,6 @@ local _on_ability_equip = function (self)
         is_cancel_normal_ability = IS_CANCEL_NORMAL_ABILITY[combat_ability]
         is_must_hold_ability = IS_MUST_HOLD_ABILITY[combat_ability]
         is_psyker_discharge_ability = IS_PSYKER_DISCHARGE_ABILITY[combat_ability]
-        is_ignored_charge_ability = IS_IGNORED_CHARGE_ABILITY[combat_ability]
     end
 end
 
