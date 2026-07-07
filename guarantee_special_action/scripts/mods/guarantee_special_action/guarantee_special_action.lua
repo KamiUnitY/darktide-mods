@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.1.13
+-- Guarantee Special Action by KamiUnitY. Ver. 1.1.14
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -558,13 +558,6 @@ local _input_hook = function(func, self, action_name)
             elseif action_name == "action_one_hold" then
                 if doing_special or doing_push then
                     return false
-                end
-            end
-        end
-        if mod.promises.action_special then
-            if character_state ~= "sprinting" then
-                if action_name == "action_two_hold" then
-                    return true
                 end
             end
         end
