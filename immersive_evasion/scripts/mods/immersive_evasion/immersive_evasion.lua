@@ -1,4 +1,4 @@
--- Immersive Evasion by KamiUnitY. Ver. 1.1.3
+-- Immersive Evasion by KamiUnitY. Ver. 1.1.4
 
 local mod = get_mod("immersive_evasion")
 local modding_tools = get_mod("modding_tools")
@@ -255,30 +255,29 @@ end)
 -- CAMERA HOOK --
 -----------------
 
-mod:hook("CameraManager", "update", function(func, self, dt, t, viewport_name, yaw, pitch, roll)
+mod:hook("CameraManager", "set_node_trees_aim_orientation", function(func, self, viewport_name, yaw, pitch, roll)
     if viewport_name == "player1" and (mod.roll_offset ~= 0 or mod.roll_offset_target ~= 0) then
-        -- Create the initial rotation quaternion without roll offset
+        -- Keep the horizontal look direction current for dodge/slide tilt calculation.
         local initial_rotation = Quaternion.from_yaw_pitch_roll(yaw, pitch, roll)
+        local flat_look_direction = Vector3.flat(Quaternion.forward(initial_rotation))
+        look_direction_box:store(Vector3.normalize(flat_look_direction))
 
-        -- Calculate the look direction and full direction without roll offset
-        local look_direction = Vector3.normalize(Vector3.flat(Quaternion.forward(initial_rotation)))
-        look_direction_box:store(look_direction)
+        roll = roll + mod.roll_offset
+    end
 
+    return func(self, viewport_name, yaw, pitch, roll)
+end)
+
+----------------
+-- MOD UPDATE --
+----------------
+
+mod.update = function(dt)
+    if mod.roll_offset ~= 0 or mod.roll_offset_target ~= 0 then
         -- Smoothly update the roll offset
         mod.roll_offset = mod.roll_offset + (mod.roll_offset_target - mod.roll_offset) * dt * mod.roll_offset_damping
         if math.abs(mod.roll_offset_target - mod.roll_offset) < ROLL_OFFSET_THRESHOLD then
             mod.roll_offset = mod.roll_offset_target
         end
-
-        -- Apply the roll offset to the rotation
-        local roll_offset_rotation = Quaternion.from_yaw_pitch_roll(0, 0, mod.roll_offset)
-        local final_rotation = Quaternion.multiply(initial_rotation, roll_offset_rotation)
-
-        -- Extract the adjusted yaw, pitch, and roll from the final rotation quaternion
-        local adjusted_yaw, adjusted_pitch, adjusted_roll = Quaternion.to_yaw_pitch_roll(final_rotation)
-
-        -- Return the adjusted values
-        return func(self, dt, t, viewport_name, adjusted_yaw, adjusted_pitch, adjusted_roll)
     end
-    return func(self, dt, t, viewport_name, yaw, pitch, roll)
-end)
+end
