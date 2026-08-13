@@ -3,13 +3,13 @@ local mod = get_mod("curved_hud")
 return {
 	name = mod:localize("mod_name"),
 	description = mod:localize("mod_description"),
-	is_togglable = false,
+	is_togglable = true,
 	options = {
 		widgets = {
 			{
 				setting_id = "curve_strength",
 				type = "numeric",
-				default_value = 3,
+				default_value = -10,
 				range = { -20, 20 },
 			},
 			{

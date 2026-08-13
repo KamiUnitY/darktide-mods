@@ -1,7 +1,6 @@
 local mod = get_mod("curved_hud")
 
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
-local HudElementPlayerPanelBase = require("scripts/ui/hud/elements/player_panel_base/hud_element_player_panel_base")
 local HudElementPlayerBuffs = require("scripts/ui/hud/elements/player_buffs/hud_element_player_buffs_polling")
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIWidget = require("scripts/managers/ui/ui_widget")
@@ -22,11 +21,8 @@ local _excluded_element_names = {
 
 local hud_scenegraphs = setmetatable({}, { __mode = "k" })
 local hud_elements = setmetatable({}, { __mode = "k" })
-local player_name_widgets = setmetatable({}, { __mode = "k" })
-local player_name_values = setmetatable({}, { __mode = "k" })
-local panel_numeric_widgets = setmetatable({}, { __mode = "k" })
-local drawing_player_name = nil
-local drawing_panel_numeric = false
+local text_width_caches = setmetatable({}, { __mode = "k" })
+local retained_text_groups = setmetatable({}, { __mode = "k" })
 local widget_graphic_anchor = nil
 local drawing_center_anchored_widget = false
 local drawing_hud_element_group = false
@@ -154,8 +150,8 @@ local function update_camera_lag(dt)
 	local height = RESOLUTION_LOOKUP.height or 1080
 	local movement_limit_percent = math.clamp(tonumber(mod:get("camera_follow_limit")) or 1.0, 0.0, 2.0)
 	local movement_limit = math.min(width, height) * movement_limit_percent * 0.01
-	local world_pixels_per_meter = height * 0.08
-	local target_lag_x = lag_yaw * width * 0.55 + lag_right * world_pixels_per_meter
+	local world_pixels_per_meter = height * 0.16
+	local target_lag_x = -lag_yaw * width * 0.55 + lag_right * world_pixels_per_meter
 	local target_lag_y = -lag_pitch * height * 0.7 - lag_up * world_pixels_per_meter
 	local movement_distance = math.sqrt(target_lag_x * target_lag_x + target_lag_y * target_lag_y)
 	local limited_lag_x = 0.0
@@ -222,8 +218,8 @@ local function is_center_anchored_widget(widget, renderer)
 	return false
 end
 
-local function hud_curve(renderer, position, size, force_hud_element)
-	if drawing_center_anchored_widget or not mod:is_enabled() or not force_hud_element and not hud_scenegraphs[renderer.ui_scenegraph] then
+local function hud_curve(renderer, position, size)
+	if drawing_center_anchored_widget or not mod:is_enabled() or not hud_scenegraphs[renderer.ui_scenegraph] then
 		return nil
 	end
 
@@ -549,18 +545,113 @@ local function formatted_characters(text, base_font_size, base_color, scale)
 	return characters
 end
 
+local function cached_character_width(renderer, text, font_type, font_size, options)
+	local renderer_cache = text_width_caches[renderer]
+
+	if not renderer_cache then
+		renderer_cache = {}
+		text_width_caches[renderer] = renderer_cache
+	end
+
+	local character_spacing = options and options.character_spacing or 0
+	local cache_key = tostring(font_type) .. "\31" .. tostring(font_size) .. "\31" .. tostring(character_spacing) .. "\31" .. text
+	local width = renderer_cache[cache_key]
+
+	if width then
+		return width
+	end
+
+	local visible_width, _, _, caret = UIRenderer.text_size(renderer, text, font_type, font_size, nil, options)
+	local caret_advance = caret and caret[1] or 0
+
+	width = math.max(visible_width, caret_advance, font_size * 0.35)
+	renderer_cache[cache_key] = width
+
+	return width
+end
+
+local function renderer_text_groups(renderer)
+	local groups = retained_text_groups[renderer]
+
+	if not groups then
+		groups = {}
+		retained_text_groups[renderer] = groups
+	end
+
+	return groups
+end
+
+local function collapse_retained_text_group(renderer, retained_id)
+	if not retained_id or retained_id == true then
+		return
+	end
+
+	local groups = retained_text_groups[renderer]
+	local group = groups and groups[retained_id]
+
+	if not group then
+		return
+	end
+
+	groups[retained_id] = nil
+
+	for i = #group.ids, 2, -1 do
+		local secondary_id = group.ids[i]
+
+		if secondary_id then
+			UIRenderer.destroy_text(renderer, secondary_id)
+		end
+	end
+end
+
+mod:hook(UIRenderer, "destroy_text", function(func, self, retained_id)
+	local groups = retained_text_groups[self]
+	local group = groups and groups[retained_id]
+
+	if group then
+		groups[retained_id] = nil
+
+		for i = #group.ids, 2, -1 do
+			local secondary_id = group.ids[i]
+
+			if secondary_id then
+				func(self, secondary_id)
+			end
+		end
+	end
+
+	return func(self, retained_id)
+end)
+
+-- UIWidget.draw is used by every screen and menu in the game. Hooking it
+-- globally makes the curve mod enter the hook chain for unrelated UI. HUD
+-- elements already draw inside a UIRenderer begin/end pass, so install this
+-- wrapper only for the duration of a curved HUD pass instead.
+local scoped_ui_widget_draw = nil
+
+local function draw_curved_hud_widget(widget, ...)
+	local previous_widget_graphic_anchor = widget_graphic_anchor
+	local was_drawing_center_anchored_widget = drawing_center_anchored_widget
+	local renderer = select(1, ...)
+	local draw_widget = scoped_ui_widget_draw
+
+	drawing_center_anchored_widget = is_center_anchored_widget(widget, renderer)
+	widget_graphic_anchor = drawing_hud_element_group and not drawing_center_anchored_widget and widget_scenegraph_anchor(renderer, widget) or nil
+
+	local result = draw_widget(widget, ...)
+
+	widget_graphic_anchor = previous_widget_graphic_anchor
+	drawing_center_anchored_widget = was_drawing_center_anchored_widget
+
+	return result
+end
+
 mod:hook(HudElementBase, "init", function(func, self, ...)
 	func(self, ...)
 
 	if not _excluded_element_names[self.__class_name] then
 		hud_scenegraphs[self._ui_scenegraph] = true
 		hud_elements[self] = true
-	end
-
-	local widgets_by_name = self._widgets_by_name
-
-	if widgets_by_name and widgets_by_name.ability_bar and not widgets_by_name.ability_bar_widget then
-		widgets_by_name.ability_bar_widget = widgets_by_name.ability_bar
 	end
 end)
 
@@ -575,6 +666,8 @@ mod:hook(UIRenderer, "begin_pass", function(func, self, ui_scenegraph, ...)
 	stack[#stack + 1] = {
 		grouped = drawing_hud_element_group,
 		anchor = widget_graphic_anchor,
+		ui_widget_draw = UIWidget.draw,
+		scoped_ui_widget_draw = scoped_ui_widget_draw,
 	}
 
 	local result = func(self, ui_scenegraph, ...)
@@ -583,6 +676,14 @@ mod:hook(UIRenderer, "begin_pass", function(func, self, ui_scenegraph, ...)
 
 	if drawing_hud_element_group then
 		widget_graphic_anchor = nil
+
+		if UIWidget.draw ~= draw_curved_hud_widget then
+			scoped_ui_widget_draw = UIWidget.draw
+			UIWidget.draw = draw_curved_hud_widget
+		end
+	elseif UIWidget.draw == draw_curved_hud_widget then
+		UIWidget.draw = scoped_ui_widget_draw
+		scoped_ui_widget_draw = nil
 	end
 
 	return result
@@ -595,6 +696,8 @@ mod:hook(UIRenderer, "end_pass", function(func, self, ...)
 
 	if state then
 		stack[#stack] = nil
+		UIWidget.draw = state.ui_widget_draw
+		scoped_ui_widget_draw = state.scoped_ui_widget_draw
 		drawing_hud_element_group = state.grouped
 		widget_graphic_anchor = state.anchor
 	else
@@ -615,9 +718,8 @@ mod.update = function(dt)
 
 	update_camera_lag(dt)
 
-	-- Match the working player-name path: keep every gameplay HUD widget live
-	-- so its individually submitted glyphs are redrawn instead of relying on a
-	-- retained ID belonging to the original whole string.
+	-- Individually submitted glyphs and camera sway require the retained HUD
+	-- elements to be redrawn with their current transforms.
 	for element in pairs(hud_elements) do
 		if hud_scenegraphs[element._ui_scenegraph] then
 			element:set_dirty()
@@ -639,61 +741,6 @@ mod:hook(HudElementPlayerBuffs, "_draw_widgets", function(func, self, ...)
 	drawing_hud_element_group = was_drawing_hud_element_group
 	widget_graphic_anchor = previous_widget_graphic_anchor
 
-	return result
-end)
-
-mod:hook(HudElementPlayerPanelBase, "_draw_widgets", function(func, self, ...)
-	local widgets_by_name = self._widgets_by_name
-	local player_name = widgets_by_name and widgets_by_name.player_name
-
-	-- NumericUI  has a typo in its panel destroy hook: it checks
-	-- `ability_bar` but then accesses `ability_bar_widget`. Supply the expected
-	-- alias without replacing or modifying NumericUI's actual widget.
-	if widgets_by_name and widgets_by_name.ability_bar and not widgets_by_name.ability_bar_widget then
-		widgets_by_name.ability_bar_widget = widgets_by_name.ability_bar
-	end
-
-	if player_name then
-		player_name_widgets[player_name] = true
-		player_name_values[player_name] = player_name.content and player_name.content.text or self._current_player_name
-		player_name.dirty = true
-	end
-
-	for _, widget_name in ipairs({ "health_text", "toughness_text", "bonus_toughness_text" }) do
-		local widget = widgets_by_name and widgets_by_name[widget_name]
-
-		if widget then
-			panel_numeric_widgets[widget] = true
-		end
-	end
-
-	return func(self, ...)
-end)
-
-mod:hook(UIWidget, "draw", function(func, widget, ...)
-	local previous_player_name = drawing_player_name
-	local was_drawing_panel_numeric = drawing_panel_numeric
-	local previous_widget_graphic_anchor = widget_graphic_anchor
-	local was_drawing_center_anchored_widget = drawing_center_anchored_widget
-	local renderer = select(1, ...)
-
-	drawing_center_anchored_widget = is_center_anchored_widget(widget, renderer)
-	widget_graphic_anchor = drawing_hud_element_group and not drawing_center_anchored_widget and widget_scenegraph_anchor(renderer, widget) or nil
-
-	if player_name_widgets[widget] then
-		drawing_player_name = player_name_values[widget]
-	end
-
-	if panel_numeric_widgets[widget] then
-		drawing_panel_numeric = true
-	end
-
-	local result = func(widget, ...)
-	drawing_player_name = previous_player_name
-	drawing_panel_numeric = was_drawing_panel_numeric
-
-	widget_graphic_anchor = previous_widget_graphic_anchor
-	drawing_center_anchored_widget = was_drawing_center_anchored_widget
 	return result
 end)
 
@@ -719,15 +766,15 @@ mod:hook(UIRenderer, "script_draw_bitmap", function(func, self, material, positi
 		Matrix4x4.set_translation(transform, translation)
 
 		return UIRenderer.script_draw_bitmap_3d(self, material, transform, nil, position[3] or 0, size, color, nil, retained_id)
-	else
-		widget_graphic_anchor = {
-			position = Vector3(position[1], position[2], position[3] or 0),
-			size = Vector3(size[1], size[2], size[3] or 0),
-			angle = angle,
-			offset_x = offset_x,
-			offset_y = offset_y,
-		}
 	end
+
+	widget_graphic_anchor = {
+		position = Vector3(position[1], position[2], position[3] or 0),
+		size = Vector3(size[1], size[2], size[3] or 0),
+		angle = angle,
+		offset_x = offset_x,
+		offset_y = offset_y,
+	}
 
 	local render_position = Vector3(position[1] + offset_x, position[2] + offset_y, position[3] or 0)
 	local transform = local_rotation_transform(render_position, size, angle)
@@ -758,15 +805,15 @@ mod:hook(UIRenderer, "script_draw_bitmap_uv", function(func, self, material, pos
 		Matrix4x4.set_translation(transform, translation)
 
 		return UIRenderer.script_draw_bitmap_3d(self, material, transform, nil, position[3] or 0, size, color, uvs, retained_id)
-	else
-		widget_graphic_anchor = {
-			position = Vector3(position[1], position[2], position[3] or 0),
-			size = Vector3(size[1], size[2], size[3] or 0),
-			angle = angle,
-			offset_x = offset_x,
-			offset_y = offset_y,
-		}
 	end
+
+	widget_graphic_anchor = {
+		position = Vector3(position[1], position[2], position[3] or 0),
+		size = Vector3(size[1], size[2], size[3] or 0),
+		angle = angle,
+		offset_x = offset_x,
+		offset_y = offset_y,
+	}
 
 	local render_position = Vector3(position[1] + offset_x, position[2] + offset_y, position[3] or 0)
 	local transform = local_rotation_transform(render_position, size, angle)
@@ -780,28 +827,6 @@ mod:hook(UIRenderer, "script_draw_text", function(func, self, text, font_size, f
 	local render_text_size = size
 	local render_text_options = options
 
-	if drawing_panel_numeric and size then
-		local text_width = UIRenderer.text_size(self, text, font_type, font_size, nil, options)
-		local aligned_x = position[1]
-		local alignment = options and options.horizontal_alignment
-
-		if alignment == Gui.HorizontalAlignRight then
-			aligned_x = aligned_x + size[1] - text_width
-		elseif alignment == Gui.HorizontalAlignCenter then
-			aligned_x = aligned_x + (size[1] - text_width) * 0.5
-		end
-
-		render_text_position = Vector3(aligned_x, position[2], position[3] or 0)
-		render_text_size = Vector3(math.max(text_width + font_size, 1), size[2], size[3] or 0)
-		render_text_options = {}
-
-		for key, value in pairs(options or {}) do
-			render_text_options[key] = value
-		end
-
-		render_text_options.horizontal_alignment = Gui.HorizontalAlignLeft
-	end
-
 	local text_size = render_text_size or Vector3.zero()
 	local anchor = widget_graphic_anchor
 	local angle, text_offset_x, offset_y
@@ -813,23 +838,23 @@ mod:hook(UIRenderer, "script_draw_text", function(func, self, text, font_size, f
 	end
 
 	if not angle then
+		collapse_retained_text_group(self, retained_id)
 		return func(self, text, font_size, font_type, render_text_position, render_text_size, color, render_text_options, retained_id)
 	end
 
 	if type(text) == "string" and text ~= "" and not string.find(text, "\n", 1, true) then
-		local displayed_text = drawing_player_name or text
-		local characters = formatted_characters(displayed_text, font_size, color, self.scale or 1)
+		local characters = formatted_characters(text, font_size, color, self.scale or 1)
 
 		if #characters > 0 then
+			local groups = retained_id and renderer_text_groups(self)
+			local group = retained_id ~= true and groups and groups[retained_id] or nil
+			local glyph_ids = group and group.ids or (retained_id and {})
+			local previous_glyph_count = glyph_ids and #glyph_ids or 0
 			local total_width = 0
 
 			for i = 1, #characters do
 				local character = characters[i]
-				local visible_width, _, _, caret = UIRenderer.text_size(self, character.text, font_type, character.font_size, nil, options)
-				local caret_advance = caret and caret[1] or 0
-
-				character.width = math.max(visible_width, caret_advance, character.font_size * 0.35)
-				character.spacing = 0
+				character.width = cached_character_width(self, character.text, font_type, character.font_size, options)
 				total_width = total_width + character.width
 			end
 
@@ -900,13 +925,57 @@ mod:hook(UIRenderer, "script_draw_text", function(func, self, text, font_size, f
 					curved_position = Vector3(character_position[1] + line_offset_x, character_position[2] + character_offset_y, character_position[3])
 				end
 
-				func(self, character.text, character.font_size, font_type, curved_position, draw_size, character.color, character_options, nil)
+				local glyph_request
+
+				if retained_id then
+					glyph_request = glyph_ids[i] or (i == 1 and retained_id ~= true and retained_id) or true
+				end
+
+				local glyph_id = func(self, character.text, character.font_size, font_type, curved_position, draw_size, character.color, character_options, glyph_request)
+
+				if glyph_ids then
+					glyph_ids[i] = glyph_id or (glyph_request ~= true and glyph_request) or nil
+				end
+
 				cursor_x = cursor_x + character_width
+			end
+
+			if retained_id then
+				for i = previous_glyph_count, #characters + 1, -1 do
+					local stale_id = glyph_ids[i]
+
+					if stale_id then
+						UIRenderer.destroy_text(self, stale_id)
+					end
+
+					glyph_ids[i] = nil
+				end
+
+				local primary_id = retained_id == true and glyph_ids[1] or retained_id
+
+				if primary_id then
+					if group and retained_id ~= primary_id then
+						groups[retained_id] = nil
+					end
+
+					groups[primary_id] = group or { ids = glyph_ids }
+					return primary_id
+				end
+
+				for i = #glyph_ids, 2, -1 do
+					if glyph_ids[i] then
+						UIRenderer.destroy_text(self, glyph_ids[i])
+					end
+				end
+
+				return func(self, text, font_size, font_type, render_text_position, render_text_size, color, render_text_options, retained_id)
 			end
 
 			return nil
 		end
 	end
+
+	collapse_retained_text_group(self, retained_id)
 
 	local render_position = anchor and grouped_position(render_text_position, anchor) or Vector3(
 		render_text_position[1] + text_offset_x,
@@ -949,15 +1018,13 @@ mod:hook(UIRenderer, "draw_rect", function(func, self, position, size, color, re
 		return func(self, position, size, color, retained_id)
 	end
 
-	if not widget_graphic_anchor then
-		widget_graphic_anchor = {
-			position = scaled_position,
-			size = scaled_size,
-			angle = angle,
-			offset_x = offset_x,
-			offset_y = offset_y,
-		}
-	end
+	widget_graphic_anchor = {
+		position = scaled_position,
+		size = scaled_size,
+		angle = angle,
+		offset_x = offset_x,
+		offset_y = offset_y,
+	}
 
 	local render_position = Vector3(position[1] + offset_x / scale, position[2] + offset_y / scale, position[3] or 0)
 	local pivot = Vector2(size[1] * 0.5, size[2] * 0.5)
@@ -988,15 +1055,15 @@ mod:hook(UIRenderer, "draw_slug_icon", function(func, self, resource, index, pos
 		)
 
 		return UIRenderer.draw_slug_icon_rotated(self, resource, index, size, render_position, anchor.angle, pivot, color, optional_material, retained_id)
-	else
-		widget_graphic_anchor = {
-			position = scaled_position,
-			size = scaled_size,
-			angle = angle,
-			offset_x = offset_x,
-			offset_y = offset_y,
-		}
 	end
+
+	widget_graphic_anchor = {
+		position = scaled_position,
+		size = scaled_size,
+		angle = angle,
+		offset_x = offset_x,
+		offset_y = offset_y,
+	}
 
 	local render_position = Vector3(position[1] + offset_x / scale, position[2] + offset_y / scale, position[3] or 0)
 	local unscaled_pivot = Vector2(size[1] * 0.5, size[2] * 0.5)
