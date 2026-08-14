@@ -5,43 +5,59 @@ local HudElementPlayerBuffs = require("scripts/ui/hud/elements/player_buffs/hud_
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 
-local _excluded_element_names = {
-    HudElementPrologueTutorialSequenceTransitionEnd = true,
-    HudElementPrologueTutorialInfoBox = true,
-    HudElementCrosshair = true,
-    HudElementInteraction = true,
-    HudElementWorldMarkers = true,
-    HudElementEmoteWheel = true,
-    HudElementSmartTagging = true,
-    HudElementDamageIndicator = true,
-    ConstantElementWatermark = true,
-    ConstantElementPopupHandler = true,
-    ConstantElementSoftwareCursor = true
+local EXCLUDED_ELEMENT_NAMES = {
+	HudElementPrologueTutorialSequenceTransitionEnd = true,
+	HudElementPrologueTutorialInfoBox = true,
+	HudElementCrosshair = true,
+	HudElementInteraction = true,
+	HudElementWorldMarkers = true,
+	HudElementEmoteWheel = true,
+	HudElementSmartTagging = true,
+	HudElementDamageIndicator = true,
+	ConstantElementWatermark = true,
+	ConstantElementPopupHandler = true,
+	ConstantElementSoftwareCursor = true,
 }
 
+local CAMERA_FOLLOW_DELAY_SECONDS = 0.02
+local CAMERA_CUT_ANGLE = math.degrees_to_radians(45)
+local CAMERA_CUT_DISTANCE = 5
+local CAMERA_SWAY_SCALE = 0.1
+local WORLD_SWAY_SCALE = 1.0
+local WORLD_PIXELS_PER_SCREEN_HEIGHT = 0.16
+local HUD_EDGE_MARGIN = 2
+
+-- HUD ownership and draw-pass state.
 local hud_scenegraphs = setmetatable({}, { __mode = "k" })
+local corner_curve_scenegraphs = setmetatable({}, { __mode = "k" })
+local horizontally_centered_scenegraphs = setmetatable({}, { __mode = "k" })
 local hud_elements = setmetatable({}, { __mode = "k" })
-local text_width_caches = setmetatable({}, { __mode = "k" })
-local retained_text_groups = setmetatable({}, { __mode = "k" })
-local widget_graphic_anchor = nil
-local drawing_center_anchored_widget = false
-local drawing_hud_element_group = false
-local renderer_group_stacks = setmetatable({}, { __mode = "k" })
 local recent_container_nodes = setmetatable({}, { __mode = "k" })
+local renderer_group_stacks = setmetatable({}, { __mode = "k" })
+local widget_graphic_anchor
+local drawing_widget = false
+local drawing_corner_anchored_widget = false
+local drawing_screen_centered_widget = false
+local drawing_hud_element_group = false
+local buff_curve_suppressed = false
+local gameplay_hooks_enabled = true
 local hud_frame = 0
-local CAMERA_FOLLOW_DELAY_MS = 20
+
+-- Smoothed camera state used by HUD sway.
 ---@type number?
-local smoothed_camera_yaw = nil
+local smoothed_camera_yaw
 ---@type number?
-local smoothed_camera_pitch = nil
+local smoothed_camera_pitch
 ---@type number?
-local smoothed_camera_x = nil
+local smoothed_camera_x
 ---@type number?
-local smoothed_camera_y = nil
+local smoothed_camera_y
 ---@type number?
-local smoothed_camera_z = nil
+local smoothed_camera_z
 local camera_lag_x = 0.0
 local camera_lag_y = 0.0
+
+-- Camera sway ---------------------------------------------------------------
 
 local function shortest_angle_delta(target, current)
 	return (target - current + math.pi) % (math.pi * 2) - math.pi
@@ -67,12 +83,7 @@ local function set_camera_lag_origin(yaw, pitch, position_x, position_y, positio
 	camera_lag_y = 0.0
 end
 
-local function update_camera_lag(dt)
-	if not dt or dt <= 0 then
-		reset_camera_lag()
-		return
-	end
-
+local function current_camera_pose()
 	local player_manager = Managers.player
 	local camera_manager = Managers.state and Managers.state.camera
 
@@ -80,22 +91,47 @@ local function update_camera_lag(dt)
 	-- managers. PlayerManager:local_player calls Network.peer_id directly and
 	-- can therefore crash during these startup frames.
 	if not player_manager or not camera_manager then
-		reset_camera_lag()
-		return
+		return nil, nil
 	end
 
 	local player = player_manager:local_player_safe(1)
 	local viewport_name = player and player.viewport_name
 
 	if not viewport_name or not camera_manager:has_camera(viewport_name) then
-		reset_camera_lag()
-		return
+		return nil, nil
 	end
 
 	local rotation = camera_manager:camera_rotation(viewport_name)
 	local position = camera_manager:camera_position(viewport_name)
 
 	if not rotation or not Quaternion.is_valid(rotation) or not position or not Vector3.is_valid(position) then
+		return nil, nil
+	end
+
+	return rotation, position
+end
+
+local function clamp_screen_offset(offset_x, offset_y, limit)
+	local distance = math.sqrt(offset_x * offset_x + offset_y * offset_y)
+
+	if distance <= limit then
+		return offset_x, offset_y
+	end
+
+	local scale = limit / distance
+
+	return offset_x * scale, offset_y * scale
+end
+
+local function update_camera_lag(dt)
+	if not dt or dt <= 0 then
+		reset_camera_lag()
+		return
+	end
+
+	local rotation, position = current_camera_pose()
+
+	if not rotation then
 		reset_camera_lag()
 		return
 	end
@@ -123,13 +159,12 @@ local function update_camera_lag(dt)
 
 	-- Camera cuts and viewpoint changes should never fling the HUD across the
 	-- screen. Treat a large rotation or world-position jump as a new camera.
-	if math.abs(yaw_delta) > math.degrees_to_radians(45) or math.abs(pitch_delta) > math.degrees_to_radians(45) or position_delta_distance > 5 then
+	if math.abs(yaw_delta) > CAMERA_CUT_ANGLE or math.abs(pitch_delta) > CAMERA_CUT_ANGLE or position_delta_distance > CAMERA_CUT_DISTANCE then
 		set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z)
 		return
 	end
 
-	local delay_seconds = CAMERA_FOLLOW_DELAY_MS * 0.001
-	local follow_fraction = 1 - math.exp(-dt / delay_seconds)
+	local follow_fraction = 1 - math.exp(-dt / CAMERA_FOLLOW_DELAY_SECONDS)
 
 	smoothed_camera_yaw = smoothed_camera_yaw + yaw_delta * follow_fraction
 	smoothed_camera_pitch = smoothed_camera_pitch + pitch_delta * follow_fraction
@@ -150,47 +185,88 @@ local function update_camera_lag(dt)
 	local height = RESOLUTION_LOOKUP.height or 1080
 	local movement_limit_percent = math.clamp(tonumber(mod:get("camera_follow_limit")) or 1.0, 0.0, 2.0)
 	local movement_limit = math.min(width, height) * movement_limit_percent * 0.01
-	local world_pixels_per_meter = height * 0.16
-	local target_lag_x = -lag_yaw * width * 0.55 + lag_right * world_pixels_per_meter
-	local target_lag_y = -lag_pitch * height * 0.7 - lag_up * world_pixels_per_meter
-	local movement_distance = math.sqrt(target_lag_x * target_lag_x + target_lag_y * target_lag_y)
-	local limited_lag_x = 0.0
-	local limited_lag_y = 0.0
+	local world_pixels_per_meter = height * WORLD_PIXELS_PER_SCREEN_HEIGHT
+	local camera_lag_pixels_x = -lag_yaw * width * 0.5 * CAMERA_SWAY_SCALE
+	local camera_lag_pixels_y = -lag_pitch * height * 0.7 * CAMERA_SWAY_SCALE
+	local world_lag_pixels_x = lag_right * world_pixels_per_meter * WORLD_SWAY_SCALE
+	local world_lag_pixels_y = -lag_up * world_pixels_per_meter * WORLD_SWAY_SCALE
+	local target_lag_x = camera_lag_pixels_x + world_lag_pixels_x
+	local target_lag_y = camera_lag_pixels_y + world_lag_pixels_y
 
 	if movement_limit <= 0 then
 		camera_lag_x = 0.0
 		camera_lag_y = 0.0
 		return
-	elseif movement_distance > movement_limit then
-		local limit_scale = movement_limit / movement_distance
-
-		limited_lag_x = target_lag_x * limit_scale
-		limited_lag_y = target_lag_y * limit_scale
-	else
-		limited_lag_x = target_lag_x
-		limited_lag_y = target_lag_y
 	end
+
+	local limited_lag_x, limited_lag_y = clamp_screen_offset(target_lag_x, target_lag_y, movement_limit)
 
 	-- Smooth the final screen-space movement as well as the tracked camera
 	-- angles. This removes the rigid start/stop response without making the
 	-- configured delay substantially longer.
-	local movement_smoothing_time = math.max(delay_seconds * 0.5, 0.05)
+	local movement_smoothing_time = math.max(CAMERA_FOLLOW_DELAY_SECONDS * 0.5, 0.05)
 	local movement_fraction = 1 - math.exp(-dt / movement_smoothing_time)
 
 	camera_lag_x = camera_lag_x + (limited_lag_x - camera_lag_x) * movement_fraction
 	camera_lag_y = camera_lag_y + (limited_lag_y - camera_lag_y) * movement_fraction
 
-	local smoothed_distance = math.sqrt(camera_lag_x * camera_lag_x + camera_lag_y * camera_lag_y)
-
-	if smoothed_distance > movement_limit then
-		local limit_scale = movement_limit / smoothed_distance
-
-		camera_lag_x = camera_lag_x * limit_scale
-		camera_lag_y = camera_lag_y * limit_scale
-	end
+	camera_lag_x, camera_lag_y = clamp_screen_offset(camera_lag_x, camera_lag_y, movement_limit)
 end
 
-local function is_center_anchored_widget(widget, renderer)
+-- Curve and widget grouping -------------------------------------------------
+
+local function top_level_screen_alignment(node, scenegraph)
+	local parent_id = node and node.parent
+	local parent = parent_id and rawget(scenegraph, parent_id)
+
+	if parent and not parent.parent then
+		return node.horizontal_alignment, node.vertical_alignment
+	end
+
+	return nil, nil
+end
+
+local function is_corner_alignment(horizontal_alignment, vertical_alignment)
+	local horizontal_edge = horizontal_alignment == "left" or horizontal_alignment == "right"
+	local vertical_edge = vertical_alignment == "top" or vertical_alignment == "bottom"
+
+	return horizontal_edge and vertical_edge
+end
+
+local function classify_scenegraph_anchors(scenegraph)
+	if not scenegraph then
+		return false, false, false
+	end
+
+	local corner_anchored = false
+	local screen_centered = false
+	local horizontally_centered = false
+	local other_anchored = false
+
+	for _, node in pairs(scenegraph) do
+		if type(node) == "table" then
+			local horizontal_alignment, vertical_alignment = top_level_screen_alignment(node, scenegraph)
+
+			if horizontal_alignment == "center" then
+				horizontally_centered = true
+			end
+
+			if is_corner_alignment(horizontal_alignment, vertical_alignment) then
+				corner_anchored = true
+			elseif horizontal_alignment == "center" and vertical_alignment == "center" then
+				screen_centered = true
+			elseif horizontal_alignment then
+				other_anchored = true
+			end
+		end
+	end
+
+	return corner_anchored,
+		screen_centered and not corner_anchored and not other_anchored,
+		horizontally_centered
+end
+
+local function classify_widget_anchor(widget, renderer)
 	local scenegraph = renderer and renderer.ui_scenegraph
 	local scenegraph_id = widget and widget.scenegraph_id
 
@@ -201,25 +277,63 @@ local function is_center_anchored_widget(widget, renderer)
 			break
 		end
 
-		local parent_id = node.parent
-		local parent = parent_id and rawget(scenegraph, parent_id)
-
-		-- Only treat alignment as screen-centering when this node is anchored
-		-- directly below the scenegraph root. Child nodes commonly use center /
-		-- center to align inside an edge HUD slot and must inherit that slot's
-		-- curve.
-		if parent and not parent.parent and node.horizontal_alignment == "center" and node.vertical_alignment == "center" then
-			return true
+		-- A widget attached directly to the scenegraph root is a screen-wide
+		-- overlay rather than a positioned HUD container. Leave overlays such as
+		-- cinematic bars and fades completely untouched by curve and sway.
+		if not node.parent then
+			return false, true
 		end
 
-		scenegraph_id = parent_id
+		-- Only the first container below the screen root describes the widget's
+		-- screen anchor. Inner nodes often use center alignment within that
+		-- container and must not be mistaken for screen-centered widgets.
+		local horizontal_alignment, vertical_alignment = top_level_screen_alignment(node, scenegraph)
+
+		if horizontal_alignment then
+			local corner_anchored = is_corner_alignment(horizontal_alignment, vertical_alignment)
+			local screen_centered = horizontal_alignment == "center" and vertical_alignment == "center"
+
+			return corner_anchored, screen_centered
+		end
+
+		scenegraph_id = node.parent
 	end
 
-	return false
+	return false, false
+end
+
+local function refresh_hud_element_anchor_profile(element)
+	if EXCLUDED_ELEMENT_NAMES[element.__class_name] then
+		return
+	end
+
+	local scenegraph = element._ui_scenegraph
+
+	if not scenegraph then
+		return
+	end
+
+	local corner_anchored, screen_centered, horizontally_centered = classify_scenegraph_anchors(scenegraph)
+
+	-- A horizontally centered owner is authoritative for the complete element.
+	-- Auxiliary compass nodes, for example, use left/top alignment internally
+	-- but must not promote their shared scenegraph into the corner curve set.
+	horizontally_centered_scenegraphs[scenegraph] = horizontally_centered and true or nil
+	corner_curve_scenegraphs[scenegraph] = corner_anchored and not horizontally_centered and true or nil
+
+	if screen_centered then
+		hud_scenegraphs[scenegraph] = nil
+		hud_elements[element] = nil
+	else
+		hud_scenegraphs[scenegraph] = true
+		hud_elements[element] = true
+	end
 end
 
 local function hud_curve(renderer, position, size)
-	if drawing_center_anchored_widget or not mod:is_enabled() or not hud_scenegraphs[renderer.ui_scenegraph] then
+	local scenegraph = renderer.ui_scenegraph
+
+	if drawing_screen_centered_widget or not mod:is_enabled() or not hud_scenegraphs[scenegraph] then
 		return nil
 	end
 
@@ -232,8 +346,6 @@ local function hud_curve(renderer, position, size)
 	local height = RESOLUTION_LOOKUP.height or 1080 * scale
 	local primitive_width = size and size[1] or 0
 	local primitive_height = size and size[2] or 0
-
-
 	local half_width = width * 0.5
 	local half_height = height * 0.5
 	local primitive_center_x = position[1] + primitive_width * 0.5
@@ -242,7 +354,11 @@ local function hud_curve(renderer, position, size)
 	local dy = primitive_center_y - half_height
 	local u = math.clamp(dx / half_width, -1, 1)
 	local v = math.clamp(dy / half_height, -1, 1)
-	local strength = math.degrees_to_radians(mod:get("curve_strength") or 0)
+	local suppress_curve = buff_curve_suppressed
+		or horizontally_centered_scenegraphs[scenegraph]
+		or not corner_curve_scenegraphs[scenegraph]
+		or (drawing_widget and not drawing_corner_anchored_widget)
+	local strength = suppress_curve and 0 or math.degrees_to_radians(mod:get("curve_strength") or 0)
 	local tangent = math.tan(strength)
 
 	-- A separable concave-screen projection matching the reference grid:
@@ -278,11 +394,10 @@ local function hud_curve(renderer, position, size)
 	local sine = math.abs(math.sin(angle))
 	local extent_x = cosine * primitive_width * 0.5 + sine * primitive_height * 0.5
 	local extent_y = sine * primitive_width * 0.5 + cosine * primitive_height * 0.5
-	local margin = 2
-	local min_center_x = extent_x + margin
-	local max_center_x = width - extent_x - margin
-	local min_center_y = extent_y + margin
-	local max_center_y = height - extent_y - margin
+	local min_center_x = extent_x + HUD_EDGE_MARGIN
+	local max_center_x = width - extent_x - HUD_EDGE_MARGIN
+	local min_center_y = extent_y + HUD_EDGE_MARGIN
+	local max_center_y = height - extent_y - HUD_EDGE_MARGIN
 
 	if min_center_x <= max_center_x then
 		mapped_center_x = math.clamp(mapped_center_x, min_center_x, max_center_x)
@@ -455,7 +570,7 @@ local function widget_scenegraph_anchor(renderer, widget)
 	local scale = renderer.scale or 1
 	local position = Vector3(min_x * scale, min_y * scale, world_position[3] or 0)
 	local size = Vector3((max_x - min_x) * scale, (max_y - min_y) * scale, 0)
-	local angle, offset_x, offset_y = hud_curve(renderer, position, size, true)
+	local angle, offset_x, offset_y = hud_curve(renderer, position, size)
 
 	if not angle then
 		return nil
@@ -470,8 +585,47 @@ local function widget_scenegraph_anchor(renderer, widget)
 	}
 end
 
-local function local_rotation_transform(position, size, angle)
-	local transform = Rotation2D(Vector3.zero(), angle, Vector2(size[1] * 0.5, size[2] * 0.5))
+-- Drawing transforms --------------------------------------------------------
+
+local function create_graphic_anchor(position, size, angle, offset_x, offset_y)
+	return {
+		position = Vector3(position[1], position[2], position[3] or 0),
+		size = Vector3(size[1], size[2], size[3] or 0),
+		angle = angle,
+		offset_x = offset_x,
+		offset_y = offset_y,
+	}
+end
+
+local function ensure_graphic_anchor(position, size, angle, offset_x, offset_y)
+	if not widget_graphic_anchor then
+		widget_graphic_anchor = create_graphic_anchor(position, size, angle, offset_x, offset_y)
+	end
+
+	return widget_graphic_anchor
+end
+
+local function anchor_pivot(anchor, position, scale)
+	scale = scale or 1
+
+	return Vector2(
+		(anchor.position[1] + anchor.size[1] * 0.5 - position[1]) / scale,
+		(anchor.position[2] + anchor.size[2] * 0.5 - position[2]) / scale
+	)
+end
+
+local function offset_position(position, offset_x, offset_y, scale)
+	scale = scale or 1
+
+	return Vector3(
+		position[1] + offset_x / scale,
+		position[2] + offset_y / scale,
+		position[3] or 0
+	)
+end
+
+local function rotation_transform(position, angle, pivot)
+	local transform = Rotation2D(Vector3.zero(), angle, pivot)
 	local translation = Matrix4x4.translation(transform)
 
 	translation.x = translation.x + position[1]
@@ -481,178 +635,163 @@ local function local_rotation_transform(position, size, angle)
 	return transform
 end
 
-local function grouped_position(position, anchor)
-	local pivot = Vector2(
-		anchor.position[1] + anchor.size[1] * 0.5 - position[1],
-		anchor.position[2] + anchor.size[2] * 0.5 - position[2]
+local function bitmap_transform(position, anchor)
+	local pivot = anchor_pivot(anchor, position)
+	local render_position = offset_position(position, anchor.offset_x, anchor.offset_y)
+
+	return rotation_transform(render_position, anchor.angle, pivot)
+end
+
+local text_3d_options = {}
+
+local function native_text_3d_options(options)
+	table.clear(text_3d_options)
+
+	if not options then
+		return nil
+	end
+
+	local horizontal_alignment = options.horizontal_alignment
+
+	if horizontal_alignment == Gui.HorizontalAlignCenter then
+		text_3d_options[#text_3d_options + 1] = "horizontal_align_center"
+	elseif horizontal_alignment == Gui.HorizontalAlignRight then
+		text_3d_options[#text_3d_options + 1] = "horizontal_align_right"
+	else
+		text_3d_options[#text_3d_options + 1] = "horizontal_align_left"
+	end
+
+	local vertical_alignment = options.vertical_alignment
+
+	if vertical_alignment == Gui.VerticalAlignCenter then
+		text_3d_options[#text_3d_options + 1] = "vertical_align_center"
+	elseif vertical_alignment == Gui.VerticalAlignBottom then
+		text_3d_options[#text_3d_options + 1] = "vertical_align_bottom"
+	else
+		text_3d_options[#text_3d_options + 1] = "vertical_align_top"
+	end
+
+	if type(options.line_spacing) == "number" then
+		text_3d_options[#text_3d_options + 1] = "line_spacing"
+		text_3d_options[#text_3d_options + 1] = options.line_spacing
+	end
+
+	if type(options.character_spacing) == "number" then
+		text_3d_options[#text_3d_options + 1] = "character_spacing"
+		text_3d_options[#text_3d_options + 1] = options.character_spacing
+	end
+
+	if options.shadow then
+		text_3d_options[#text_3d_options + 1] = "shadow"
+	end
+
+	if options.outline then
+		text_3d_options[#text_3d_options + 1] = "outline"
+	end
+
+	return text_3d_options
+end
+
+local function text_curve_parameters(renderer, text, font_size, font_type, position, size, options)
+	local anchor = widget_graphic_anchor
+
+	if anchor then
+		return anchor.angle,
+			anchor.offset_x,
+			anchor.offset_y,
+			anchor.position[1] + anchor.size[1] * 0.5 - position[1],
+			anchor.position[2] + anchor.size[2] * 0.5 - position[2]
+	end
+
+	-- Measuring once preserves the renderer's native kerning, rich text,
+	-- Unicode shaping, and multiline layout.
+	local width, height, minimum = UIRenderer.text_size(renderer, text, font_type, font_size, size, options, false)
+	local minimum_x = minimum and minimum[1] or 0
+	local minimum_y = minimum and minimum[2] or 0
+
+	width = tonumber(width) or (size and size[1]) or font_size
+	height = tonumber(height) or (size and size[2]) or font_size
+
+	local bounds_position = Vector3(position[1] + minimum_x, position[2] + minimum_y, position[3] or 0)
+	local bounds_size = Vector3(width, height, 0)
+	local angle, offset_x, offset_y = hud_curve(renderer, bounds_position, bounds_size)
+
+	return angle, offset_x, offset_y, minimum_x + width * 0.5, minimum_y + height * 0.5
+end
+
+local function text_rotation_transform(position, angle, offset_x, offset_y, pivot_x, pivot_y)
+	-- Rotation2D renders HUD Y through matrix Z. Text uses the matrix XY plane,
+	-- so it needs the opposite angle to match the other HUD primitives.
+	local text_angle = -angle
+	local cosine = math.cos(text_angle)
+	local sine = math.sin(text_angle)
+
+	return Matrix4x4.from_elements(
+		cosine, sine, 0,
+		-sine, cosine, 0,
+		0, 0, 1,
+		position[1] + offset_x + pivot_x * (1 - cosine) + pivot_y * sine,
+		position[2] + offset_y + pivot_y * (1 - cosine) - pivot_x * sine,
+		0
 	)
-	local render_position = Vector3(position[1] + anchor.offset_x, position[2] + anchor.offset_y, position[3] or 0)
-	local transform = Rotation2D(Vector3.zero(), anchor.angle, pivot)
-	local translation = Matrix4x4.translation(transform)
-
-	translation.x = translation.x + render_position[1]
-	translation.z = translation.z + render_position[2]
-	Matrix4x4.set_translation(transform, translation)
-
-	local transformed = Matrix4x4.transform(transform, Vector3.zero())
-
-	return Vector3(transformed[1], transformed[3], position[3] or 0)
 end
 
-local function formatted_characters(text, base_font_size, base_color, scale)
-	local characters = {}
-	local current_font_size = base_font_size
-	local current_color = base_color
-	local cursor = 1
-
-	local function append_visible(value)
-		for character in string.gmatch(value, "[%z\1-\127\194-\244][\128-\191]*") do
-			characters[#characters + 1] = {
-				text = character,
-				font_size = current_font_size,
-				color = current_color,
-			}
-		end
-	end
-
-	while cursor <= #text do
-		local tag_start, tag_end, directive = string.find(text, "{#(.-)}", cursor)
-
-		if not tag_start then
-			append_visible(string.sub(text, cursor))
-			break
-		end
-
-		if tag_start > cursor then
-			append_visible(string.sub(text, cursor, tag_start - 1))
-		end
-
-		local red, green, blue = string.match(directive, "^color%((%d+),(%d+),(%d+)%)$")
-		local inline_size = string.match(directive, "^size%(([%d%.]+)%)$")
-
-		if red then
-			current_color = Color(base_color and base_color[1] or 255, tonumber(red), tonumber(green), tonumber(blue))
-		elseif inline_size then
-			current_font_size = math.max(tonumber(inline_size) * scale, 1)
-		elseif string.match(directive, "^reset%(%)$") then
-			current_font_size = base_font_size
-			current_color = base_color
-		end
-
-		cursor = tag_end + 1
-	end
-
-	return characters
-end
-
-local function cached_character_width(renderer, text, font_type, font_size, options)
-	local renderer_cache = text_width_caches[renderer]
-
-	if not renderer_cache then
-		renderer_cache = {}
-		text_width_caches[renderer] = renderer_cache
-	end
-
-	local character_spacing = options and options.character_spacing or 0
-	local cache_key = tostring(font_type) .. "\31" .. tostring(font_size) .. "\31" .. tostring(character_spacing) .. "\31" .. text
-	local width = renderer_cache[cache_key]
-
-	if width then
-		return width
-	end
-
-	local visible_width, _, _, caret = UIRenderer.text_size(renderer, text, font_type, font_size, nil, options)
-	local caret_advance = caret and caret[1] or 0
-
-	width = math.max(visible_width, caret_advance, font_size * 0.35)
-	renderer_cache[cache_key] = width
-
-	return width
-end
-
-local function renderer_text_groups(renderer)
-	local groups = retained_text_groups[renderer]
-
-	if not groups then
-		groups = {}
-		retained_text_groups[renderer] = groups
-	end
-
-	return groups
-end
-
-local function collapse_retained_text_group(renderer, retained_id)
-	if not retained_id or retained_id == true then
-		return
-	end
-
-	local groups = retained_text_groups[renderer]
-	local group = groups and groups[retained_id]
-
-	if not group then
-		return
-	end
-
-	groups[retained_id] = nil
-
-	for i = #group.ids, 2, -1 do
-		local secondary_id = group.ids[i]
-
-		if secondary_id then
-			UIRenderer.destroy_text(renderer, secondary_id)
-		end
-	end
-end
-
-mod:hook(UIRenderer, "destroy_text", function(func, self, retained_id)
-	local groups = retained_text_groups[self]
-	local group = groups and groups[retained_id]
-
-	if group then
-		groups[retained_id] = nil
-
-		for i = #group.ids, 2, -1 do
-			local secondary_id = group.ids[i]
-
-			if secondary_id then
-				func(self, secondary_id)
-			end
-		end
-	end
-
-	return func(self, retained_id)
-end)
+-- HUD pass scoping ----------------------------------------------------------
 
 -- UIWidget.draw is used by every screen and menu in the game. Hooking it
 -- globally makes the curve mod enter the hook chain for unrelated UI. HUD
 -- elements already draw inside a UIRenderer begin/end pass, so install this
 -- wrapper only for the duration of a curved HUD pass instead.
-local scoped_ui_widget_draw = nil
+local scoped_ui_widget_draw
 
 local function draw_curved_hud_widget(widget, ...)
 	local previous_widget_graphic_anchor = widget_graphic_anchor
-	local was_drawing_center_anchored_widget = drawing_center_anchored_widget
+	local was_drawing_widget = drawing_widget
+	local was_drawing_corner_anchored_widget = drawing_corner_anchored_widget
+	local was_drawing_screen_centered_widget = drawing_screen_centered_widget
 	local renderer = select(1, ...)
 	local draw_widget = scoped_ui_widget_draw
 
-	drawing_center_anchored_widget = is_center_anchored_widget(widget, renderer)
-	widget_graphic_anchor = drawing_hud_element_group and not drawing_center_anchored_widget and widget_scenegraph_anchor(renderer, widget) or nil
+	drawing_widget = true
+	drawing_corner_anchored_widget, drawing_screen_centered_widget = classify_widget_anchor(widget, renderer)
+
+	-- Dynamic child HUD elements can inherit their final corner alignment after
+	-- construction without invoking the base layout hook. The widget ancestry
+	-- is authoritative at draw time, so promote its scenegraph immediately.
+	if drawing_corner_anchored_widget
+		and renderer
+		and renderer.ui_scenegraph
+		and not horizontally_centered_scenegraphs[renderer.ui_scenegraph]
+	then
+		corner_curve_scenegraphs[renderer.ui_scenegraph] = true
+	end
+
+	widget_graphic_anchor = drawing_hud_element_group and drawing_corner_anchored_widget and widget_scenegraph_anchor(renderer, widget) or nil
 
 	local result = draw_widget(widget, ...)
 
 	widget_graphic_anchor = previous_widget_graphic_anchor
-	drawing_center_anchored_widget = was_drawing_center_anchored_widget
+	drawing_widget = was_drawing_widget
+	drawing_corner_anchored_widget = was_drawing_corner_anchored_widget
+	drawing_screen_centered_widget = was_drawing_screen_centered_widget
 
 	return result
 end
 
 mod:hook(HudElementBase, "init", function(func, self, ...)
 	func(self, ...)
+	refresh_hud_element_anchor_profile(self)
+end)
 
-	if not _excluded_element_names[self.__class_name] then
-		hud_scenegraphs[self._ui_scenegraph] = true
-		hud_elements[self] = true
-	end
+mod:hook(HudElementBase, "set_scenegraph_position", function(func, self, ...)
+	local result = func(self, ...)
+
+	-- Some HUD elements are created with a neutral alignment and moved into a
+	-- corner later. Reclassify after that layout change rather than relying on
+	-- the element's construction-time anchor.
+	refresh_hud_element_anchor_profile(self)
+
+	return result
 end)
 
 mod:hook(UIRenderer, "begin_pass", function(func, self, ui_scenegraph, ...)
@@ -709,17 +848,15 @@ mod:hook(UIRenderer, "end_pass", function(func, self, ...)
 end)
 
 mod.update = function(dt)
-	hud_frame = hud_frame + 1
-
-	if not mod:is_enabled() then
-		reset_camera_lag()
+	if not mod:is_enabled() or not gameplay_hooks_enabled then
 		return
 	end
 
+	hud_frame = hud_frame + 1
 	update_camera_lag(dt)
 
-	-- Individually submitted glyphs and camera sway require the retained HUD
-	-- elements to be redrawn with their current transforms.
+	-- Camera sway requires retained HUD elements to be redrawn with their
+	-- current transforms.
 	for element in pairs(hud_elements) do
 		if hud_scenegraphs[element._ui_scenegraph] then
 			element:set_dirty()
@@ -732,17 +869,22 @@ mod:hook(HudElementPlayerBuffs, "_draw_widgets", function(func, self, ...)
 	-- from its own horizontal position instead of making the whole row rigid.
 	local was_drawing_hud_element_group = drawing_hud_element_group
 	local previous_widget_graphic_anchor = widget_graphic_anchor
+	local was_suppressing_buff_curve = buff_curve_suppressed
 
 	drawing_hud_element_group = false
 	widget_graphic_anchor = nil
+	buff_curve_suppressed = mod:get("curve_buff_hud") == false
 
 	local result = func(self, ...)
 
 	drawing_hud_element_group = was_drawing_hud_element_group
 	widget_graphic_anchor = previous_widget_graphic_anchor
+	buff_curve_suppressed = was_suppressing_buff_curve
 
 	return result
 end)
+
+-- Curved renderer primitives ------------------------------------------------
 
 mod:hook(UIRenderer, "script_draw_bitmap", function(func, self, material, position, size, color, retained_id)
 	local angle, offset_x, offset_y = hud_curve(self, position, size)
@@ -751,33 +893,8 @@ mod:hook(UIRenderer, "script_draw_bitmap", function(func, self, material, positi
 		return func(self, material, position, size, color, retained_id)
 	end
 
-	if widget_graphic_anchor then
-		local anchor = widget_graphic_anchor
-		local pivot = Vector2(
-			anchor.position[1] + anchor.size[1] * 0.5 - position[1],
-			anchor.position[2] + anchor.size[2] * 0.5 - position[2]
-		)
-		local render_position = Vector3(position[1] + anchor.offset_x, position[2] + anchor.offset_y, position[3] or 0)
-		local transform = Rotation2D(Vector3.zero(), anchor.angle, pivot)
-		local translation = Matrix4x4.translation(transform)
-
-		translation.x = translation.x + render_position[1]
-		translation.z = translation.z + render_position[2]
-		Matrix4x4.set_translation(transform, translation)
-
-		return UIRenderer.script_draw_bitmap_3d(self, material, transform, nil, position[3] or 0, size, color, nil, retained_id)
-	end
-
-	widget_graphic_anchor = {
-		position = Vector3(position[1], position[2], position[3] or 0),
-		size = Vector3(size[1], size[2], size[3] or 0),
-		angle = angle,
-		offset_x = offset_x,
-		offset_y = offset_y,
-	}
-
-	local render_position = Vector3(position[1] + offset_x, position[2] + offset_y, position[3] or 0)
-	local transform = local_rotation_transform(render_position, size, angle)
+	local anchor = ensure_graphic_anchor(position, size, angle, offset_x, offset_y)
+	local transform = bitmap_transform(position, anchor)
 	local layer = position[3] or 0
 
 	return UIRenderer.script_draw_bitmap_3d(self, material, transform, nil, layer, size, color, nil, retained_id)
@@ -790,207 +907,54 @@ mod:hook(UIRenderer, "script_draw_bitmap_uv", function(func, self, material, pos
 		return func(self, material, position, size, uvs, color, retained_id)
 	end
 
-	if widget_graphic_anchor then
-		local anchor = widget_graphic_anchor
-		local pivot = Vector2(
-			anchor.position[1] + anchor.size[1] * 0.5 - position[1],
-			anchor.position[2] + anchor.size[2] * 0.5 - position[2]
-		)
-		local render_position = Vector3(position[1] + anchor.offset_x, position[2] + anchor.offset_y, position[3] or 0)
-		local transform = Rotation2D(Vector3.zero(), anchor.angle, pivot)
-		local translation = Matrix4x4.translation(transform)
-
-		translation.x = translation.x + render_position[1]
-		translation.z = translation.z + render_position[2]
-		Matrix4x4.set_translation(transform, translation)
-
-		return UIRenderer.script_draw_bitmap_3d(self, material, transform, nil, position[3] or 0, size, color, uvs, retained_id)
-	end
-
-	widget_graphic_anchor = {
-		position = Vector3(position[1], position[2], position[3] or 0),
-		size = Vector3(size[1], size[2], size[3] or 0),
-		angle = angle,
-		offset_x = offset_x,
-		offset_y = offset_y,
-	}
-
-	local render_position = Vector3(position[1] + offset_x, position[2] + offset_y, position[3] or 0)
-	local transform = local_rotation_transform(render_position, size, angle)
+	local anchor = ensure_graphic_anchor(position, size, angle, offset_x, offset_y)
+	local transform = bitmap_transform(position, anchor)
 	local layer = position[3] or 0
 
 	return UIRenderer.script_draw_bitmap_3d(self, material, transform, nil, layer, size, color, uvs, retained_id)
 end)
 
 mod:hook(UIRenderer, "script_draw_text", function(func, self, text, font_size, font_type, position, size, color, options, retained_id)
-	local render_text_position = position
-	local render_text_size = size
-	local render_text_options = options
-
-	local text_size = render_text_size or Vector3.zero()
-	local anchor = widget_graphic_anchor
-	local angle, text_offset_x, offset_y
-
-	if anchor then
-		angle = anchor.angle
-	else
-		angle, text_offset_x, offset_y = hud_curve(self, render_text_position, text_size)
+	if type(text) == "number" then
+		text = tostring(text)
+	elseif type(text) ~= "string" or text == "" then
+		return func(self, text, font_size, font_type, position, size, color, options, retained_id)
 	end
 
-	if not angle then
-		collapse_retained_text_group(self, retained_id)
-		return func(self, text, font_size, font_type, render_text_position, render_text_size, color, render_text_options, retained_id)
-	end
-
-	if type(text) == "string" and text ~= "" and not string.find(text, "\n", 1, true) then
-		local characters = formatted_characters(text, font_size, color, self.scale or 1)
-
-		if #characters > 0 then
-			local groups = retained_id and renderer_text_groups(self)
-			local group = retained_id ~= true and groups and groups[retained_id] or nil
-			local glyph_ids = group and group.ids or (retained_id and {})
-			local previous_glyph_count = glyph_ids and #glyph_ids or 0
-			local total_width = 0
-
-			for i = 1, #characters do
-				local character = characters[i]
-				character.width = cached_character_width(self, character.text, font_type, character.font_size, options)
-				total_width = total_width + character.width
-			end
-
-			local start_x = render_text_position[1]
-			local available_width = render_text_size and render_text_size[1] or total_width
-			local alignment = render_text_options and render_text_options.horizontal_alignment
-
-			if alignment == Gui.HorizontalAlignCenter then
-				start_x = start_x + (available_width - total_width) * 0.5
-			elseif alignment == Gui.HorizontalAlignRight then
-				start_x = start_x + available_width - total_width
-			end
-
-			local character_options = {}
-
-			for key, value in pairs(render_text_options or {}) do
-				character_options[key] = value
-			end
-
-			character_options.horizontal_alignment = Gui.HorizontalAlignLeft
-
-			local cursor_x = start_x
-			local vertical_alignment = render_text_options and render_text_options.vertical_alignment
-			local line_height = render_text_size and render_text_size[2] or font_size
-			local visible_line_height = math.min(font_size, line_height)
-			local line_curve_y = render_text_position[2]
-
-			if vertical_alignment == Gui.VerticalAlignCenter then
-				line_curve_y = line_curve_y + (line_height - visible_line_height) * 0.5
-			elseif vertical_alignment == Gui.VerticalAlignBottom then
-				line_curve_y = line_curve_y + line_height - visible_line_height
-			end
-
-			local line_curve_position = Vector3(start_x, line_curve_y, render_text_position[3] or 0)
-			local line_curve_size = Vector3(total_width, visible_line_height, 0)
-			local line_offset_x = 0.0
-
-			if not anchor then
-				local _, computed_line_offset_x = hud_curve(self, line_curve_position, line_curve_size)
-
-				line_offset_x = tonumber(computed_line_offset_x) or 0.0
-			end
-
-			for i = 1, #characters do
-				local character = characters[i]
-				local character_width = character.width
-				local character_position = Vector3(cursor_x, render_text_position[2], render_text_position[3] or 0)
-				local character_height = render_text_size and render_text_size[2] or character.font_size
-				local visible_height = math.min(character.font_size, character_height)
-				local curve_y = character_position[2]
-
-				if vertical_alignment == Gui.VerticalAlignCenter then
-					curve_y = curve_y + (character_height - visible_height) * 0.5
-				elseif vertical_alignment == Gui.VerticalAlignBottom then
-					curve_y = curve_y + character_height - visible_height
-				end
-
-				local draw_size = Vector3(math.max(available_width, character_width + character.font_size * 2), character_height, 0)
-				local curved_position
-
-				if anchor then
-					curved_position = grouped_position(character_position, anchor)
-				else
-					local curve_position = Vector3(character_position[1], curve_y, character_position[3])
-					local curve_size = Vector3(character_width, visible_height, 0)
-					local _, _, character_offset_y = hud_curve(self, curve_position, curve_size)
-
-					curved_position = Vector3(character_position[1] + line_offset_x, character_position[2] + character_offset_y, character_position[3])
-				end
-
-				local glyph_request
-
-				if retained_id then
-					glyph_request = glyph_ids[i] or (i == 1 and retained_id ~= true and retained_id) or true
-				end
-
-				local glyph_id = func(self, character.text, character.font_size, font_type, curved_position, draw_size, character.color, character_options, glyph_request)
-
-				if glyph_ids then
-					glyph_ids[i] = glyph_id or (glyph_request ~= true and glyph_request) or nil
-				end
-
-				cursor_x = cursor_x + character_width
-			end
-
-			if retained_id then
-				for i = previous_glyph_count, #characters + 1, -1 do
-					local stale_id = glyph_ids[i]
-
-					if stale_id then
-						UIRenderer.destroy_text(self, stale_id)
-					end
-
-					glyph_ids[i] = nil
-				end
-
-				local primary_id = retained_id == true and glyph_ids[1] or retained_id
-
-				if primary_id then
-					if group and retained_id ~= primary_id then
-						groups[retained_id] = nil
-					end
-
-					groups[primary_id] = group or { ids = glyph_ids }
-					return primary_id
-				end
-
-				for i = #glyph_ids, 2, -1 do
-					if glyph_ids[i] then
-						UIRenderer.destroy_text(self, glyph_ids[i])
-					end
-				end
-
-				return func(self, text, font_size, font_type, render_text_position, render_text_size, color, render_text_options, retained_id)
-			end
-
-			return nil
-		end
-	end
-
-	collapse_retained_text_group(self, retained_id)
-
-	local render_position = anchor and grouped_position(render_text_position, anchor) or Vector3(
-		render_text_position[1] + text_offset_x,
-		render_text_position[2] + offset_y,
-		render_text_position[3] or 0
+	local angle, offset_x, offset_y, pivot_x, pivot_y = text_curve_parameters(
+		self,
+		text,
+		font_size,
+		font_type,
+		position,
+		size,
+		options
 	)
 
-	return func(self, text, font_size, font_type, render_position, render_text_size, color, render_text_options, retained_id)
+	if not angle then
+		return func(self, text, font_size, font_type, position, size, color, options, retained_id)
+	end
+
+	local transform = text_rotation_transform(position, angle, offset_x, offset_y, pivot_x, pivot_y)
+
+	return UIRenderer.script_draw_text_3d(
+		self,
+		text,
+		font_size,
+		font_type,
+		transform,
+		nil,
+		position[3] or 0,
+		size,
+		color,
+		native_text_3d_options(options),
+		-- Immediate text is intentional: it follows the changing sway transform
+		-- without relying on an incompatible retained 2D text ID.
+		nil
+	)
 end)
 
 mod:hook(UIRenderer, "draw_rect", function(func, self, position, size, color, retained_id)
-	if drawing_center_anchored_widget then
-		return func(self, position, size, color, retained_id)
-	end
-
 	local scale = self.scale or 1
 	local scaled_position = Vector3(position[1] * scale, position[2] * scale, position[3] or 0)
 	local scaled_size = Vector3(size[1] * scale, size[2] * scale, size[3] or 0)
@@ -999,15 +963,8 @@ mod:hook(UIRenderer, "draw_rect", function(func, self, position, size, color, re
 	-- its first graphical pass. This preserves the widget's internal layout.
 	if widget_graphic_anchor then
 		local anchor = widget_graphic_anchor
-		local pivot = Vector2(
-			(anchor.position[1] + anchor.size[1] * 0.5 - scaled_position[1]) / scale,
-			(anchor.position[2] + anchor.size[2] * 0.5 - scaled_position[2]) / scale
-		)
-		local render_position = Vector3(
-			position[1] + anchor.offset_x / scale,
-			position[2] + anchor.offset_y / scale,
-			position[3] or 0
-		)
+		local pivot = anchor_pivot(anchor, scaled_position, scale)
+		local render_position = offset_position(position, anchor.offset_x, anchor.offset_y, scale)
 
 		return UIRenderer.draw_rect_rotated(self, size, render_position, anchor.angle, pivot, color)
 	end
@@ -1018,15 +975,9 @@ mod:hook(UIRenderer, "draw_rect", function(func, self, position, size, color, re
 		return func(self, position, size, color, retained_id)
 	end
 
-	widget_graphic_anchor = {
-		position = scaled_position,
-		size = scaled_size,
-		angle = angle,
-		offset_x = offset_x,
-		offset_y = offset_y,
-	}
+	ensure_graphic_anchor(scaled_position, scaled_size, angle, offset_x, offset_y)
 
-	local render_position = Vector3(position[1] + offset_x / scale, position[2] + offset_y / scale, position[3] or 0)
+	local render_position = offset_position(position, offset_x, offset_y, scale)
 	local pivot = Vector2(size[1] * 0.5, size[2] * 0.5)
 
 	return UIRenderer.draw_rect_rotated(self, size, render_position, angle, pivot, color)
@@ -1044,28 +995,15 @@ mod:hook(UIRenderer, "draw_slug_icon", function(func, self, resource, index, pos
 
 	if widget_graphic_anchor then
 		local anchor = widget_graphic_anchor
-		local pivot = Vector2(
-			(anchor.position[1] + anchor.size[1] * 0.5 - scaled_position[1]) / scale,
-			(anchor.position[2] + anchor.size[2] * 0.5 - scaled_position[2]) / scale
-		)
-		local render_position = Vector3(
-			position[1] + anchor.offset_x / scale,
-			position[2] + anchor.offset_y / scale,
-			position[3] or 0
-		)
+		local pivot = anchor_pivot(anchor, scaled_position, scale)
+		local render_position = offset_position(position, anchor.offset_x, anchor.offset_y, scale)
 
 		return UIRenderer.draw_slug_icon_rotated(self, resource, index, size, render_position, anchor.angle, pivot, color, optional_material, retained_id)
 	end
 
-	widget_graphic_anchor = {
-		position = scaled_position,
-		size = scaled_size,
-		angle = angle,
-		offset_x = offset_x,
-		offset_y = offset_y,
-	}
+	ensure_graphic_anchor(scaled_position, scaled_size, angle, offset_x, offset_y)
 
-	local render_position = Vector3(position[1] + offset_x / scale, position[2] + offset_y / scale, position[3] or 0)
+	local render_position = offset_position(position, offset_x, offset_y, scale)
 	local unscaled_pivot = Vector2(size[1] * 0.5, size[2] * 0.5)
 
 	return UIRenderer.draw_slug_icon_rotated(self, resource, index, size, render_position, angle, unscaled_pivot, color, optional_material, retained_id)
@@ -1079,7 +1017,7 @@ mod:hook(UIRenderer, "draw_slug_multi_icon", function(func, self, resource, inde
 	local retained_mode = not not retained_ids
 	local existing_ids = retained_ids == true and nil or retained_ids
 	local resources_are_array = type(resource) == "table"
-	local output_ids = {}
+	local output_ids = retained_mode and {} or nil
 
 	for i = 1, draw_count do
 		local item_position = Vector3(position[1], position[2], position[3] or 0)
@@ -1088,7 +1026,7 @@ mod:hook(UIRenderer, "draw_slug_multi_icon", function(func, self, resource, inde
 		local item_resource = resources_are_array and resource[i] or resource
 		local retained_id = existing_ids and existing_ids[i] or retained_mode
 
-		output_ids[i] = UIRenderer.draw_slug_icon(
+		local output_id = UIRenderer.draw_slug_icon(
 			self,
 			item_resource,
 			index,
@@ -1099,7 +1037,78 @@ mod:hook(UIRenderer, "draw_slug_multi_icon", function(func, self, resource, inde
 			nil,
 			retained_id
 		)
+
+		if output_ids then
+			output_ids[i] = output_id
+		end
 	end
 
-	return retained_mode and output_ids or nil
+	return output_ids
 end)
+
+-- Gameplay lifecycle --------------------------------------------------------
+
+local function gameplay_scene_is_active()
+	return not not (Managers.state and Managers.state.game_mode)
+end
+
+local function reset_draw_scope()
+	if UIWidget.draw == draw_curved_hud_widget and scoped_ui_widget_draw then
+		UIWidget.draw = scoped_ui_widget_draw
+	end
+
+	scoped_ui_widget_draw = nil
+	widget_graphic_anchor = nil
+	drawing_widget = false
+	drawing_corner_anchored_widget = false
+	drawing_screen_centered_widget = false
+	drawing_hud_element_group = false
+	buff_curve_suppressed = false
+	reset_camera_lag()
+end
+
+local function set_gameplay_hooks_enabled(enabled, force)
+	enabled = not not enabled
+
+	if not force and gameplay_hooks_enabled == enabled then
+		return
+	end
+
+	gameplay_hooks_enabled = enabled
+
+	if not enabled then
+		reset_draw_scope()
+	end
+
+	if enabled then
+		mod:enable_all_hooks()
+	else
+		mod:disable_all_hooks()
+	end
+end
+
+-- DMF events remain available when this mod's hooks are disabled, so they can
+-- restore every hook before StateGameplay initializes the HUD.
+mod.on_game_state_changed = function(status, state_name)
+	if state_name == "StateGameplay" then
+		set_gameplay_hooks_enabled(status == "enter", true)
+	end
+end
+
+mod.on_all_mods_loaded = function()
+	set_gameplay_hooks_enabled(gameplay_scene_is_active(), true)
+end
+
+mod.on_enabled = function()
+	-- DMF re-enables every hook when the mod is toggled on, so force the
+	-- gameplay-only hooks back off when enabling from a menu.
+	set_gameplay_hooks_enabled(gameplay_scene_is_active(), true)
+end
+
+mod.on_disabled = function()
+	set_gameplay_hooks_enabled(false, true)
+end
+
+-- Avoid paying for renderer hooks during the menu frames before the first
+-- lifecycle callback is received.
+set_gameplay_hooks_enabled(gameplay_scene_is_active(), true)

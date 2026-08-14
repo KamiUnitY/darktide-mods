@@ -7,6 +7,11 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id = "curve_buff_hud",
+				type = "checkbox",
+				default_value = false,
+			},
+			{
 				setting_id = "curve_strength",
 				type = "numeric",
 				default_value = -10,

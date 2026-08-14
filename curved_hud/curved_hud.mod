@@ -8,9 +8,5 @@ return {
 			mod_localization = "curved_hud/scripts/mods/curved_hud/curved_hud_localization",
 		})
 	end,
-	load_after = {
-		"NumericUI",
-		"who_are_you",
-	},
 	packages = {},
 }

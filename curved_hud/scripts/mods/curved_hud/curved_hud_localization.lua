@@ -3,6 +3,10 @@ return {
 	mod_description = {
 		en = "Angles the left and right sides of the gameplay HUD toward the screen center.",
 	},
+	curve_buff_hud = { en = "Curve buff HUD" },
+	curve_buff_hud_description = {
+		en = "Applies the HUD curve to buff icons and text. Camera sway still applies when disabled.",
+	},
 	curve_strength = { en = "Curve strength" },
 	curve_strength_description = {
 		en = "Controls both side rotation and how strongly small HUD icons bow vertically toward the screen center.",
