@@ -20,7 +20,6 @@ local EXCLUDED_ELEMENT_NAMES = {
 }
 
 local CAMERA_FOLLOW_DELAY_SECONDS = 0.02
-local CAMERA_CUT_ANGLE = math.degrees_to_radians(45)
 local CAMERA_CUT_DISTANCE = 5
 local CAMERA_SWAY_SCALE = 0.1
 local WORLD_SWAY_SCALE = 1.0
@@ -54,6 +53,14 @@ local smoothed_camera_x
 local smoothed_camera_y
 ---@type number?
 local smoothed_camera_z
+---@type string?
+local previous_viewport_name
+---@type number?
+local previous_camera_x
+---@type number?
+local previous_camera_y
+---@type number?
+local previous_camera_z
 local camera_lag_x = 0.0
 local camera_lag_y = 0.0
 
@@ -69,16 +76,24 @@ local function reset_camera_lag()
 	smoothed_camera_x = nil
 	smoothed_camera_y = nil
 	smoothed_camera_z = nil
+	previous_viewport_name = nil
+	previous_camera_x = nil
+	previous_camera_y = nil
+	previous_camera_z = nil
 	camera_lag_x = 0.0
 	camera_lag_y = 0.0
 end
 
-local function set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z)
+local function set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z, viewport_name)
 	smoothed_camera_yaw = yaw
 	smoothed_camera_pitch = pitch
 	smoothed_camera_x = position_x
 	smoothed_camera_y = position_y
 	smoothed_camera_z = position_z
+	previous_viewport_name = viewport_name
+	previous_camera_x = position_x
+	previous_camera_y = position_y
+	previous_camera_z = position_z
 	camera_lag_x = 0.0
 	camera_lag_y = 0.0
 end
@@ -108,7 +123,7 @@ local function current_camera_pose()
 		return nil, nil
 	end
 
-	return rotation, position
+	return rotation, position, viewport_name
 end
 
 local function clamp_screen_offset(offset_x, offset_y, limit)
@@ -129,7 +144,7 @@ local function update_camera_lag(dt)
 		return
 	end
 
-	local rotation, position = current_camera_pose()
+	local rotation, position, viewport_name = current_camera_pose()
 
 	if not rotation then
 		reset_camera_lag()
@@ -142,7 +157,7 @@ local function update_camera_lag(dt)
 	local position_z = position[3]
 
 	if not smoothed_camera_yaw or not smoothed_camera_pitch or not smoothed_camera_x or not smoothed_camera_y or not smoothed_camera_z then
-		set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z)
+		set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z, viewport_name)
 		return
 	end
 
@@ -151,18 +166,27 @@ local function update_camera_lag(dt)
 	local position_delta_x = position_x - smoothed_camera_x
 	local position_delta_y = position_y - smoothed_camera_y
 	local position_delta_z = position_z - smoothed_camera_z
-	local position_delta_distance = math.sqrt(
-		position_delta_x * position_delta_x +
-		position_delta_y * position_delta_y +
-		position_delta_z * position_delta_z
+	local frame_position_delta_x = position_x - previous_camera_x
+	local frame_position_delta_y = position_y - previous_camera_y
+	local frame_position_delta_z = position_z - previous_camera_z
+	local frame_position_delta_distance = math.sqrt(
+		frame_position_delta_x * frame_position_delta_x +
+		frame_position_delta_y * frame_position_delta_y +
+		frame_position_delta_z * frame_position_delta_z
 	)
 
-	-- Camera cuts and viewpoint changes should never fling the HUD across the
-	-- screen. Treat a large rotation or world-position jump as a new camera.
-	if math.abs(yaw_delta) > CAMERA_CUT_ANGLE or math.abs(pitch_delta) > CAMERA_CUT_ANGLE or position_delta_distance > CAMERA_CUT_DISTANCE then
-		set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z)
+	-- Compare camera identity and consecutive raw positions when detecting a
+	-- cut. Comparing the live rotation to the delayed rotation made a fast,
+	-- legitimate mouse turn look like a cut and snapped the HUD back to zero.
+	if viewport_name ~= previous_viewport_name or frame_position_delta_distance > CAMERA_CUT_DISTANCE then
+		set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z, viewport_name)
 		return
 	end
+
+	previous_camera_x = position_x
+	previous_camera_y = position_y
+	previous_camera_z = position_z
+	previous_viewport_name = viewport_name
 
 	local follow_fraction = 1 - math.exp(-dt / CAMERA_FOLLOW_DELAY_SECONDS)
 
