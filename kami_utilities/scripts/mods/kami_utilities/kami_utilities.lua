@@ -45,7 +45,7 @@ local debug = {
 -- CHEATS --
 ------------
 
-mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
+mod:hook_safe("PlayerUnitAbilityExtension", "consume_ability_usage_cost", function(self, ability_type, ...)
     if self._player.viewport_name == "player1" then
         if ability_type == "combat_ability" then
             local unit = Managers.player:local_player(1).player_unit

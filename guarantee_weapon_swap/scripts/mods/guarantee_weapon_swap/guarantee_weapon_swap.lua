@@ -257,9 +257,10 @@ mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", functio
     end
 end)
 
-mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
+mod:hook_safe("PlayerUnitAbilityExtension", "consume_ability_usage_cost", function(self, ability_type, ...)
     if self._player.viewport_name == "player1" then
         if ability_type == "grenade_ability" then
+            debug:print_mod("Clearing promise for grenade ability usage cost")
             clearPromise("grenade")
         end
     end

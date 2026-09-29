@@ -260,11 +260,11 @@ end)
 
 -- CLEAR PROMISE ON ABILITY USED
 
-mod:hook_safe("PlayerUnitAbilityExtension", "use_ability_charge", function(self, ability_type, optional_num_charges)
+mod:hook_safe("PlayerUnitAbilityExtension", "consume_ability_usage_cost", function(self, ability_type, ...)
     if self._player.viewport_name == "player1" then
         if ability_type == "combat_ability" then
-            clearPromise("use_ability_charge")
-            if modding_tools then debug:print_mod("Game has successfully initiated the execution of use_ability_charge") end
+            clearPromise("consume_ability_usage_cost")
+            if modding_tools then debug:print_mod("Game has successfully initiated the execution of consume_ability_usage_cost") end
         end
     end
 end)
