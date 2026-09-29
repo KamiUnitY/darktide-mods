@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.4
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.5
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -370,7 +370,8 @@ local _input_hook = function(func, self, action_name)
                 if (
                     action_name ~= "grenade_ability_pressed" or
                     (
-                        (not IS_QUICK_GRENADE[grenade_ability] or mod.settings["enable_quick_grenades"]) and
+                        -- (not IS_QUICK_GRENADE[grenade_ability] or mod.settings["enable_quick_grenades"]) and -- temporary disabled
+                        (not IS_QUICK_GRENADE[grenade_ability] or false) and
                         current_slot ~= "slot_luggable"
                     )
                 )
