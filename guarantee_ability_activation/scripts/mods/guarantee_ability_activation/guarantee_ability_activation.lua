@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.4.1
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.4.2
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -286,7 +286,7 @@ local PREVENT_CANCEL_DURATION = 0.25
 
 mod:hook_safe("ActionBase", "start", function(self, action_settings, t, time_scale, action_start_params)
     if self._player.viewport_name == "player1" then
-        if action_settings.ability_type == "combat_ability" and not is_weapon_ability then
+        if self._ability_type == "combat_ability" and not is_weapon_ability then
             clearPromise("ability_base_start")
             if modding_tools then debug:print_mod("Game has successfully initiated the execution of ActionAbilityBase:Start") end
         end
@@ -306,19 +306,19 @@ end)
 mod:hook_safe("ActionBase", "finish", function(self, reason, data, t, time_in_action)
     if self._player.viewport_name == "player1" then
         local action_settings = self._action_settings
-        if action_settings and action_settings.ability_type == "combat_ability" then
-            if IS_AIM_CANCEL[reason] then
-                if action_settings.start_input then
-                    if reason == AIM_CANCEL_WITH_SPRINT and not is_cancel_sprint_ability then
-                        setPromise("AIM_CANCEL_WITH_SPRINT")
-                        return
-                    end
-                    if elapsed(last_ability_pressed) <= PREVENT_CANCEL_DURATION and not is_cancel_normal_ability then
-                        setPromise("AIM_CANCEL_NORMAL")
-                        return
-                    end
+        if self._ability_type == "combat_ability" then
+        if IS_AIM_CANCEL[reason] then
+            if action_settings.start_input then
+                if reason == AIM_CANCEL_WITH_SPRINT and not is_cancel_sprint_ability then
+                    setPromise("AIM_CANCEL_WITH_SPRINT")
+                    return
                 end
-                if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
+                if elapsed(last_ability_pressed) <= PREVENT_CANCEL_DURATION and not is_cancel_normal_ability then
+                    setPromise("AIM_CANCEL_NORMAL")
+                    return
+                end
+            end
+            if modding_tools then debug:print_mod("Player pressed AIM_CANCEL by " .. reason) end
             end
         end
     end
@@ -329,16 +329,16 @@ end)
 mod:hook("ActionCharacterStateChange", "finish", function(func, self, reason, data, t, time_in_action)
     if self._player.viewport_name == "player1" then
         local action_settings = self._action_settings
-        if action_settings and action_settings.ability_type == "combat_ability" then
+        if self._ability_type == "combat_ability" then
             local current_state = self._character_sate_component.state_name
             local wanted_state = self._wanted_state_name
             local is_in_wanted_state = current_state == wanted_state
 
-            local use_ability_charge = action_settings.use_ability_charge
             local ability_interrupted_reasons = action_settings.ability_interrupted_reasons
             local should_use_charge = (not ability_interrupted_reasons or not ability_interrupted_reasons[reason]) and is_in_wanted_state
+			local consume_ability_usage_cost = action_settings.consume_ability_usage_cost
 
-            if not (use_ability_charge and should_use_charge) then
+            if not (consume_ability_usage_cost and should_use_charge) then
                 setPromise("state_change_failed")
             end
         end
