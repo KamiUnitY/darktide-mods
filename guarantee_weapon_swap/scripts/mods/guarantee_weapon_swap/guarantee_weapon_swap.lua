@@ -1,4 +1,4 @@
--- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.5
+-- Guarantee Weapon Swap by KamiUnitY. Ver. 1.4.6
 
 local mod = get_mod("guarantee_weapon_swap")
 local modding_tools = get_mod("modding_tools")
@@ -153,12 +153,11 @@ end
 
 local function setPromise(action)
     table.insert(mod.promises, action)
-
     if #mod.promises > mod.settings["queue_limit"] then
         table.remove(mod.promises, 1)
     end
-
     mod.promise_exist = true
+    if modding_tools then debug:print_mod("Setting promise for action: " .. tostring(action)) end
 end
 
 local function clearPromise(action)
@@ -169,6 +168,7 @@ local function clearPromise(action)
             return
         end
     end
+    if modding_tools then debug:print_mod("Clearing promise for action: " .. tostring(action)) end
 end
 
 local function clearAllPromises()
@@ -176,6 +176,7 @@ local function clearAllPromises()
         table.clear(mod.promises)
         mod.promise_exist = false
     end
+    if modding_tools then debug:print_mod("Clearing all promises") end
 end
 
 local function isPromised(action)
@@ -257,13 +258,14 @@ mod:hook_safe("PlayerUnitWeaponExtension", "server_correction_occurred", functio
     end
 end)
 
-mod:hook_safe("PlayerUnitAbilityExtension", "consume_ability_usage_cost", function(self, ability_type, ...)
+mod:hook("PlayerUnitAbilityExtension", "can_use_ability", function(func, self, ability_type)
+    local can_use_ability = func(self, ability_type)
     if self._player.viewport_name == "player1" then
-        if ability_type == "grenade_ability" then
-            debug:print_mod("Clearing promise for grenade ability usage cost")
+        if can_use_ability and ability_type == "grenade_ability" then
             clearPromise("grenade")
         end
     end
+    return can_use_ability
 end)
 
 -- CLEAR PROMISE ON FAILING TO WIELD GRENADE
@@ -370,8 +372,7 @@ local _input_hook = function(func, self, action_name)
                 if (
                     action_name ~= "grenade_ability_pressed" or
                     (
-                        -- (not IS_QUICK_GRENADE[grenade_ability] or mod.settings["enable_quick_grenades"]) and -- temporary disabled
-                        (not IS_QUICK_GRENADE[grenade_ability] or false) and
+                        (not IS_QUICK_GRENADE[grenade_ability] or mod.settings["enable_quick_grenades"]) and
                         current_slot ~= "slot_luggable"
                     )
                 )
