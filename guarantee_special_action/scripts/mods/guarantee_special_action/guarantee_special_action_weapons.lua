@@ -219,6 +219,13 @@ local weapons = {
         special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
+    powermaul_2h_p1_m2 = {
+        action_special              = true,
+        special_needs_charges       = 1,
+        special_releases_action_one = true,
+        special_releases_action_two = true,
+        promise_buffer              = 1.0,
+    },
     powermaul_shield_p1_m1 = {
         action_special              = true,
         special_needs_charges       = 25,
@@ -347,11 +354,6 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
-    transonic_claw_p1_m1 = {
-        action_special              = false,
-        special_releases_action_one = false,
-        special_releases_action_two = false,
-    },
     ogryn_combatblade_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
@@ -413,7 +415,13 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
-    ogryn_powermaul_slabshield_p1_m1 = {
+    ogryn_powermaul_slabshield_p1_m1 = { --disabled
+        action_special              = false,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
+    ogryn_powermaul_slabshield_p1_m2 = { --disabled
         action_special              = false,
         special_releases_action_one = true,
         special_releases_action_two = false,
@@ -436,6 +444,12 @@ local weapons = {
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.5,
+    },
+    ogryn_hammer_2h_p1_m1 = { --disabled
+        action_special              = false,
+        special_releases_action_one = true,
+        special_releases_action_two = true,
+        promise_buffer              = 1.0,
     },
     autogun_p1_m1 = {
         action_special              = true,
@@ -759,6 +773,24 @@ local weapons = {
         reload_releases_action_two  = false,
         promise_buffer              = 1.0,
     },
+    shotgun_p2_m3 = {
+        action_special              = true,
+        action_reload               = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        reload_releases_action_one  = true,
+        reload_releases_action_two  = false,
+        promise_buffer              = 1.0,
+    },
+    shotgun_p3_m1 = {
+        action_special              = true,
+        action_reload               = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        reload_releases_action_one  = true,
+        reload_releases_action_two  = false,
+        promise_buffer              = 1.0,
+    },
     shotgun_p4_m1 = {
         pressing_buffer             = 0.2,
         action_special              = true,
@@ -971,6 +1003,15 @@ local weapons = {
         promise_buffer              = 1.0,
     },
     ogryn_thumper_p1_m2 = {
+        action_special              = true,
+        action_reload               = true,
+        special_releases_action_one = false,
+        special_releases_action_two = false,
+        reload_releases_action_one  = false,
+        reload_releases_action_two  = false,
+        promise_buffer              = 1.0,
+    },
+    ogryn_thumper_p1_m3 = {
         action_special              = true,
         action_reload               = true,
         special_releases_action_one = false,
