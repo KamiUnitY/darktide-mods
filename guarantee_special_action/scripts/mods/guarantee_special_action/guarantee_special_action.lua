@@ -34,6 +34,7 @@ local ALLOWED_SLOT = {
 local DEFAULT_INTERVAL_DO_PROMISE = 0.05
 
 local DEFAULT_PROMISE_BUFFER = 1.0
+local PARRY_ACTIVATION_DELAY = 0.3
 
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
@@ -68,6 +69,7 @@ mod.promises = {
 local is_in_hub = false
 
 local character_state = ""
+local last_sprint = 0
 
 local current_action = ""
 local previous_action = ""
@@ -450,7 +452,14 @@ end)
 -- UPDATE CHARACTER STATE VARIABLE AND CLEAR PROMISE ON UNALLOWED CHARACTER STATE
 
 local _on_character_state_change = function(self)
-    character_state = self._state_current.name
+    local new_character_state = self._state_current.name
+
+    if character_state == "sprinting" then
+        last_sprint = time_now()
+    end
+
+    character_state = new_character_state
+
     if not ALLOWED_CHARACTER_STATE[character_state] then
         clearAllPromises("UNALLOWED CHARACTER STATE")
     end
@@ -522,8 +531,15 @@ local _input_hook = function(func, self, action_name)
                 end
             end
         end
-        if promise_action == "action_special" and not allowed_chain_special then
-            return false
+        if promise_action == "action_special" then
+            if not allowed_chain_special then
+                return false
+            end
+            if mod.is_parry_special then
+                if mod.promises.action_special and elapsed(last_sprint) < PARRY_ACTIVATION_DELAY then
+                    return false
+                end
+            end
         end
         return out or isPromised(promise_action)
     end
