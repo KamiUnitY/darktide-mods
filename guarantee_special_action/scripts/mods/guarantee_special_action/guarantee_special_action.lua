@@ -34,7 +34,7 @@ local ALLOWED_SLOT = {
 local DEFAULT_INTERVAL_DO_PROMISE = 0.05
 
 local DEFAULT_PROMISE_BUFFER = 1.0
-local PARRY_ACTIVATION_DELAY = 0.3
+local PARRY_WORKAROUND_DELAY = 0.3
 
 local WEAPONS = mod:io_dofile("guarantee_special_action/scripts/mods/guarantee_special_action/guarantee_special_action_weapons")
 
@@ -47,6 +47,7 @@ mod.promise_exist = false
 mod.is_toggle_special = false
 mod.is_parry_special = false
 
+mod.parry_sprint_workaround = false
 mod.special_requires_ammo = false
 mod.special_needs_charges = nil
 mod.ignore_active_special = false
@@ -331,6 +332,7 @@ local function _on_slot_wielded(self)
         mod.special_needs_charges = _weapon_data.special_needs_charges or nil
         mod.special_requires_ammo = _weapon_data.special_requires_ammo or false
         mod.is_parry_special = _weapon_data.special_parry or false
+        mod.parry_sprint_workaround = _weapon_data.parry_sprint_workaround or false
         mod.pressing_buffer = _weapon_data.pressing_buffer or nil
         mod.promise_buffer = _weapon_data.promise_buffer or DEFAULT_PROMISE_BUFFER
         mod.interval_do_promise = _weapon_data.interval_do_promise or DEFAULT_INTERVAL_DO_PROMISE
@@ -535,8 +537,8 @@ local _input_hook = function(func, self, action_name)
             if not allowed_chain_special then
                 return false
             end
-            if mod.is_parry_special then
-                if mod.promises.action_special and elapsed(last_sprint) < PARRY_ACTIVATION_DELAY then
+            if mod.parry_sprint_workaround then
+                if mod.promises.action_special and elapsed(last_sprint) < PARRY_WORKAROUND_DELAY then
                     return false
                 end
             end
