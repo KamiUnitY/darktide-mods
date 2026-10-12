@@ -1,4 +1,4 @@
--- Guarantee Special Action by KamiUnitY. Ver. 1.1.14
+-- Guarantee Special Action by KamiUnitY. Ver. 1.2.0
 
 local mod = get_mod("guarantee_special_action")
 local modding_tools = get_mod("modding_tools")
@@ -12,6 +12,20 @@ local Ammo = require("scripts/utilities/ammo")
 local PROMISE_ACTION_MAP = {
     weapon_extra_pressed  = "action_special",
     weapon_reload_pressed = "action_reload",
+}
+
+local PRESSED_BUTTON_MAP = {
+    weapon_extra_pressed  = "action_special",
+    weapon_reload_pressed = "action_reload",
+    action_one_pressed    = "action_one",
+    action_two_pressed    = "action_two",
+}
+
+local HOLD_BUTTON_MAP = {
+    weapon_extra_hold  = "action_special",
+    weapon_reload_hold = "action_reload",
+    action_one_hold    = "action_one",
+    action_two_hold    = "action_two",
 }
 
 local ALLOWED_CHARACTER_STATE = {
@@ -71,6 +85,8 @@ local is_in_hub = false
 
 local character_state = ""
 local last_sprint = 0
+local last_pressed_button = nil
+local held_buttons = {}
 
 local current_action = ""
 local previous_action = ""
@@ -141,6 +157,18 @@ end
 
 local elapsed = function(time)
     return time_now() - time
+end
+
+local weapon_releases_action = function(priority, action)
+    if priority == "action_special" then
+        return action == "action_one" and mod.special_releases_action_one
+            or action == "action_two" and mod.special_releases_action_two
+    elseif priority == "action_reload" then
+        return action == "action_one" and mod.reload_releases_action_one
+            or action == "action_two" and mod.reload_releases_action_two
+    end
+
+    return false
 end
 
 --------------------------
@@ -322,6 +350,8 @@ local function _on_slot_wielded(self)
 
     if wielded_slot ~= current_slot then
         current_slot = wielded_slot
+        last_pressed_button = nil
+        held_buttons = {}
         local slot_weapon = self._weapons[current_slot]
         weapon_template = slot_weapon and slot_weapon.weapon_template
         local _weapon_data = weapon_template and WEAPONS[weapon_template.name] or {}
@@ -513,6 +543,17 @@ end)
 local _input_hook = function(func, self, action_name)
     local out = func(self, action_name)
     local pressed = (out == true) or (type(out) == "number" and out > 0)
+    local action_pressed_button = PRESSED_BUTTON_MAP[action_name]
+    local action_hold_button = HOLD_BUTTON_MAP[action_name]
+
+    if action_pressed_button and pressed then
+        held_buttons[action_pressed_button] = true
+        last_pressed_button = action_pressed_button
+    end
+
+    if action_hold_button and not pressed then
+        held_buttons[action_hold_button] = false
+    end
 
     if is_in_hub then
         return out
@@ -560,7 +601,24 @@ local _input_hook = function(func, self, action_name)
 
     -- Some weapons wont get activated with weapon_extra_pressed
     if action_name == "weapon_extra_hold" then
+        if held_buttons[last_pressed_button]
+            and weapon_releases_action("action_special", last_pressed_button)
+        then
+            return false
+        end
         if mod.promises.action_special then
+            return true
+        end
+        return out
+    end
+
+    if action_name == "weapon_reload_hold" then
+        if held_buttons[last_pressed_button]
+            and weapon_releases_action("action_reload", last_pressed_button)
+        then
+            return false
+        end
+        if mod.promises.action_reload then
             return true
         end
         return out
@@ -588,21 +646,26 @@ local _input_hook = function(func, self, action_name)
         end
 
         if action_name == "action_one_pressed" or action_name == "action_one_hold" then
-            if mod.special_releases_action_one and mod.promises.action_special then
+            if mod.promises.action_special and weapon_releases_action("action_special", "action_one")
+                or mod.promises.action_reload and weapon_releases_action("action_reload", "action_one")
+            then
                 return false
             end
-            if mod.reload_releases_action_one and mod.promises.action_reload then
+        end
+        if action_name == "action_two_pressed" or action_name == "action_two_hold" then
+            if mod.promises.action_special and weapon_releases_action("action_special", "action_two")
+                or mod.promises.action_reload and weapon_releases_action("action_reload", "action_two")
+            then
                 return false
             end
         end
 
-        if action_name == "action_two_pressed" or action_name == "action_two_hold" then
-            if mod.special_releases_action_two and mod.promises.action_special then
-                return false
-            end
-            if mod.reload_releases_action_two and mod.promises.action_reload then
-                return false
-            end
+    elseif held_buttons[last_pressed_button] then
+        if action_name == "action_one_hold" and weapon_releases_action(last_pressed_button, "action_one") then
+            return false
+        end
+        if action_name == "action_two_hold" and weapon_releases_action(last_pressed_button, "action_two") then
+            return false
         end
     end
 

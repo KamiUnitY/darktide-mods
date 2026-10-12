@@ -342,11 +342,11 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
-    powersword_p3_m1 = { --disabled
+    powersword_p3_m1 = {
         action_special              = false,
         special_needs_charges       = 1,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     powermaul_p3_m1 = {
@@ -418,16 +418,16 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
-    ogryn_powermaul_slabshield_p1_m1 = { --disabled
+    ogryn_powermaul_slabshield_p1_m1 = {
         action_special              = false,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
-    ogryn_powermaul_slabshield_p1_m2 = { --disabled
+    ogryn_powermaul_slabshield_p1_m2 = {
         action_special              = false,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     ogryn_pickaxe_2h_p1_m1 = {
@@ -448,8 +448,8 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.5,
     },
-    ogryn_hammer_2h_p1_m1 = { --disabled
-        action_special              = false,
+    ogryn_hammer_2h_p1_m1 = {
+        action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = true,
         promise_buffer              = 1.0,
