@@ -216,24 +216,22 @@ local function _on_slot_wielded(self)
     local inventory_component = self._inventory_component
     local wielded_slot = inventory_component.wielded_slot
 
-    if wielded_slot ~= current_slot then
-        previous_slot = current_slot
-        current_slot = wielded_slot
+    previous_slot = current_slot
+    current_slot = wielded_slot
 
-        local slot_weapon = self._weapons[current_slot]
-        local weapon_template = slot_weapon and slot_weapon.weapon_template
-        local weapon_keywords = weapon_template and weapon_template.keywords
-        is_attack_prevent_weapon = weapon_keywords and (
-            table.contains(weapon_keywords, "psyker") or
-            table.contains(weapon_keywords, "force_staff")
-        )
+    local slot_weapon = self._weapons[current_slot]
+    local weapon_template = slot_weapon and slot_weapon.weapon_template
+    local weapon_keywords = weapon_template and weapon_template.keywords
+    is_attack_prevent_weapon = weapon_keywords and (
+        table.contains(weapon_keywords, "psyker") or
+        table.contains(weapon_keywords, "force_staff")
+    )
 
-        clearPromise("quick")
-        clearPromise(PROMISE_SLOT_MAP[current_slot])
+    clearPromise("quick")
+    clearPromise(PROMISE_SLOT_MAP[current_slot])
 
-        if current_slot ~= "" and previous_slot ~= "" then
-            if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
-        end
+    if current_slot ~= "" and previous_slot ~= "" then
+        if modding_tools then debug:print_mod(previous_slot .. " -> " .. current_slot) end
     end
 end
 

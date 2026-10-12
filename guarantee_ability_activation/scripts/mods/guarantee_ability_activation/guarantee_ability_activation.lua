@@ -1,4 +1,4 @@
--- Guarantee Ability Activation by KamiUnitY. Ver. 1.4.2
+-- Guarantee Ability Activation by KamiUnitY. Ver. 1.4.3
 
 local mod = get_mod("guarantee_ability_activation")
 local modding_tools = get_mod("modding_tools")
@@ -382,13 +382,11 @@ local function _on_slot_wielded(self)
     local inventory_component = self._inventory_component
     local wielded_slot = inventory_component.wielded_slot
 
-    if wielded_slot ~= current_slot then
-        current_slot = wielded_slot
-        local slot_weapon = self._weapons[current_slot]
-        weapon_template_name = (slot_weapon and slot_weapon.weapon_template and slot_weapon.weapon_template.name) or ""
-        if current_slot == "slot_combat_ability" then
-            clearPromise("on " .. current_slot)
-        end
+    current_slot = wielded_slot
+    local slot_weapon = self._weapons[current_slot]
+    weapon_template_name = (slot_weapon and slot_weapon.weapon_template and slot_weapon.weapon_template.name) or ""
+    if current_slot == "slot_combat_ability" then
+        clearPromise("on " .. current_slot)
     end
 end
 
