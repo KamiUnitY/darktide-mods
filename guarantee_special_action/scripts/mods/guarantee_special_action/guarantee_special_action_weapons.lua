@@ -215,6 +215,15 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
+    powermaul_p3_m1 = {
+        action_special              = true,
+        special_needs_charges       = 5,
+        ignore_active_special       = true,
+        ignore_chain_special        = true,
+        special_releases_action_one = true,
+        special_releases_action_two = false,
+        promise_buffer              = 1.0,
+    },
     powermaul_2h_p1_m1 = {
         action_special              = true,
         ignore_active_special       = true,
@@ -347,14 +356,6 @@ local weapons = {
         special_needs_charges       = 1,
         special_releases_action_one = true,
         special_releases_action_two = true,
-        promise_buffer              = 1.0,
-    },
-    powermaul_p3_m1 = {
-        action_special              = true,
-        special_needs_charges       = 5,
-        ignore_active_special       = true,
-        special_releases_action_one = true,
-        special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
     ogryn_combatblade_p1_m1 = {
