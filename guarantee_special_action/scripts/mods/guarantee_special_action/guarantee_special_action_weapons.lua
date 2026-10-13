@@ -278,6 +278,13 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.0,
     },
+    powersword_p3_m1 = {
+        action_special              = false,
+        special_needs_charges       = 1,
+        special_releases_action_one = true,
+        special_releases_action_two = true,
+        promise_buffer              = 1.0,
+    },
     powersword_2h_p1_m1 = {
         action_special              = true,
         special_releases_action_one = false,
@@ -332,13 +339,6 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.3,
     },
-    transonic_sword_p1_m1 = {
-        action_special              = true,
-        special_parry               = true,
-        special_releases_action_one = true,
-        special_releases_action_two = false,
-        promise_buffer              = 1.0,
-    },
     transonic_knife_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
@@ -349,13 +349,6 @@ local weapons = {
         action_special              = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
-        promise_buffer              = 1.0,
-    },
-    powersword_p3_m1 = {
-        action_special              = false,
-        special_needs_charges       = 1,
-        special_releases_action_one = true,
-        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     ogryn_combatblade_p1_m1 = {
