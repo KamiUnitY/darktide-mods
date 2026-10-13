@@ -212,7 +212,7 @@ local weapons = {
     powermaul_p2_m1 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     powermaul_p3_m1 = {
@@ -339,16 +339,10 @@ local weapons = {
         special_releases_action_two = false,
         promise_buffer              = 1.3,
     },
-    transonic_knife_p1_m1 = {
-        action_special              = true,
-        special_releases_action_one = true,
-        special_releases_action_two = false,
-        promise_buffer              = 1.0,
-    },
     transonic_sword_transonic_knife_p1_m1 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     ogryn_combatblade_p1_m1 = {
@@ -408,6 +402,7 @@ local weapons = {
     ogryn_powermaul_p1_m1 = {
         action_special              = true,
         special_needs_charges       = 1,
+        ignore_chain_special        = true,
         special_releases_action_one = true,
         special_releases_action_two = false,
         promise_buffer              = 1.0,
