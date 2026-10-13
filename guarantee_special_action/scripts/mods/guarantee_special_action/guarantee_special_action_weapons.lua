@@ -909,6 +909,7 @@ local weapons = {
     ogryn_gauntlet_p1_m1 = {
         action_special              = true,
         action_reload               = true,
+        ignore_chain_special        = true,
         special_releases_action_one = true,
         special_releases_action_two = true,
         reload_releases_action_one  = true,
