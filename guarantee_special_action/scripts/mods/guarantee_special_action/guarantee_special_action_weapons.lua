@@ -128,19 +128,19 @@ local weapons = {
     combatsword_p2_m1 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     combatsword_p2_m2 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     combatsword_p2_m3 = {
         action_special              = true,
         special_releases_action_one = true,
-        special_releases_action_two = false,
+        special_releases_action_two = true,
         promise_buffer              = 1.0,
     },
     combatsword_p3_m1 = {
