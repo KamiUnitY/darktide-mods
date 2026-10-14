@@ -201,7 +201,7 @@ local function setPromise(from)
         return
     end
     if elapsed(last_set_promise) < ability_promise_cooldown then
-        debug:print_mod("Promise on cooldown")
+        if modding_tools then debug:print_mod("Promise on cooldown") end
         return
     end
     mod.promise_ability = true
