@@ -75,6 +75,7 @@ local DMF_OPTIONS_VIEW_NAME = "dmf_options_view"
 local known_huds = setmetatable({}, { __mode = "k" })
 local hud_compositors = setmetatable({}, { __mode = "k" })
 local hud_element_draw_targets = setmetatable({}, { __mode = "k" })
+local original_hud_draw_methods = setmetatable({}, { __mode = "k" })
 local world_enabled_by_name = {}
 local gameplay_hooks_enabled = true
 local hud_material_ready = false
@@ -588,6 +589,39 @@ local function is_world_enabled(world_name)
 	return world_enabled_by_name[world_name]
 end
 
+local function install_hud_draw(hud)
+	if original_hud_draw_methods[hud] then
+		return
+	end
+
+	local original_draw = hud.draw
+
+	original_hud_draw_methods[hud] = original_draw
+	hud.draw = function(self, dt, t, input_service)
+		local compositor = gameplay_hooks_enabled
+			and is_world_enabled(self._world_name)
+			and get_or_create_hud_compositor(self)
+
+		if not compositor then
+			return original_draw(self, dt, t, input_service)
+		end
+
+		composite_hud(compositor)
+		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.UNCURVED, UNCURVED_RENDER_PASS)
+		draw_hud_elements(self, dt, t, input_service, compositor.curved_renderer, HUD_DRAW_TARGET.CURVED)
+		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.SCREEN)
+	end
+end
+
+local function restore_hud_draw(hud)
+	local original_draw = original_hud_draw_methods[hud]
+
+	if original_draw then
+		hud.draw = original_draw
+		original_hud_draw_methods[hud] = nil
+	end
+end
+
 ------------------
 -- UI HUD HOOKS --
 ------------------
@@ -598,27 +632,16 @@ mod:hook(UIHud, "init", function(func, self, ...)
 	known_huds[self] = true
 	world_enabled_by_name[self._world_name] = Managers.world:is_world_enabled(self._world_name) == true
 	get_or_create_hud_compositor(self)
+	install_hud_draw(self)
 
 	return result
-end)
-
-mod:hook(UIHud, "draw", function(func, self, dt, t, input_service)
-	local compositor = is_world_enabled(self._world_name) and get_or_create_hud_compositor(self)
-
-	if not compositor then
-		return func(self, dt, t, input_service)
-	end
-
-	composite_hud(compositor)
-	draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.UNCURVED, UNCURVED_RENDER_PASS)
-	draw_hud_elements(self, dt, t, input_service, compositor.curved_renderer, HUD_DRAW_TARGET.CURVED)
-	draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.SCREEN)
 end)
 
 mod:hook(UIHud, "destroy", function(func, self, ...)
 	local result = func(self, ...)
 
 	destroy_hud_compositor(self, false)
+	restore_hud_draw(self)
 	known_huds[self] = nil
 
 	return result
@@ -765,6 +788,10 @@ mod.on_disabled = function()
 end
 
 mod.on_unload = function()
+	for hud in pairs(known_huds) do
+		restore_hud_draw(hud)
+	end
+
 	if custom_assets then
 		custom_assets.release_owner(mod)
 	end
