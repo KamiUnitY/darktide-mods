@@ -1,5 +1,6 @@
 local mod = get_mod("curve_your_hud")
 local custom_assets = get_mod("CustomAssets")
+local hud_studio = get_mod("hud_studio")
 
 local Managers = Managers
 local Quaternion = Quaternion
@@ -498,7 +499,7 @@ local function composite_hud(compositor)
 	local height = RESOLUTION_LOOKUP.height
 	local horizontal_margin = tonumber(mod.settings.horizontal_margin) or 0
 	local vertical_margin = tonumber(mod.settings.vertical_margin) or 0
-local content_width = width - horizontal_margin * 2
+	local content_width = width - horizontal_margin * 2
 	local content_height = height - vertical_margin * 2
 	local previous_base_render_pass = screen_renderer.base_render_pass
 	local color = Color(255, 255, 255, 255)
@@ -635,18 +636,6 @@ mod:hook(WorldManager, "enable_world", function(func, self, world_name, enabled,
 	return result
 end)
 
---------------------
--- ON EVERY FRAME --
---------------------
-
-mod.update = function(dt)
-	if not mod:is_enabled() or not gameplay_hooks_enabled then
-		return
-	end
-
-	update_camera_lag(dt)
-end
-
 -------------------------------------
 -- REFRESH HUD ON MOD OPTIONS EXIT --
 -------------------------------------
@@ -674,8 +663,16 @@ local function gameplay_scene_is_active()
 	return not not (Managers.state and Managers.state.game_mode)
 end
 
+local function hud_studio_editor_is_active()
+	return hud_studio and hud_studio.hud_studio_editor_active == true or false
+end
+
 local function set_gameplay_hooks_enabled(enabled)
 	enabled = not not enabled
+
+	if gameplay_hooks_enabled == enabled then
+		return
+	end
 
 	gameplay_hooks_enabled = enabled
 
@@ -693,13 +690,38 @@ local function set_gameplay_hooks_enabled(enabled)
 	end
 end
 
+local function refresh_gameplay_hooks()
+	set_gameplay_hooks_enabled(
+		mod:is_enabled()
+		and hud_material_ready
+		and gameplay_scene_is_active()
+		and not hud_studio_editor_is_active()
+	)
+end
+
+--------------------
+-- ON EVERY FRAME --
+--------------------
+
+mod.update = function(dt)
+	refresh_gameplay_hooks()
+
+	if gameplay_hooks_enabled then
+		update_camera_lag(dt)
+	end
+end
+
 ---------------------------
 -- ON GAME STATE CHANGED --
 ---------------------------
 
 mod.on_game_state_changed = function(status, state_name)
 	if state_name == "StateGameplay" then
-		set_gameplay_hooks_enabled(hud_material_ready and mod:is_enabled() and status == "enter")
+		if status == "enter" then
+			refresh_gameplay_hooks()
+		else
+			set_gameplay_hooks_enabled(false)
+		end
 	end
 end
 
@@ -708,6 +730,8 @@ end
 ------------------------
 
 mod.on_all_mods_loaded = function()
+	set_gameplay_hooks_enabled(false)
+
 	if not custom_assets or not custom_assets.is_api_compatible(CUSTOM_ASSETS_API_VERSION) then
         mod:error("Needs Custom Assets")
         return
@@ -720,7 +744,7 @@ mod.on_all_mods_loaded = function()
 		end
 
 		hud_material_ready = true
-		set_gameplay_hooks_enabled(mod:is_enabled() and gameplay_scene_is_active())
+		refresh_gameplay_hooks()
 	end)
 
 	if not ticket then
@@ -733,7 +757,7 @@ end
 ---------------------------
 
 mod.on_enabled = function()
-	set_gameplay_hooks_enabled(hud_material_ready and gameplay_scene_is_active())
+	refresh_gameplay_hooks()
 end
 
 mod.on_disabled = function()
