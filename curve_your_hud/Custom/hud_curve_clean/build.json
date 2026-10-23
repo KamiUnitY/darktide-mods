@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "requested_output": "all",
+  "selected_scene": 0,
+  "requested_clip": null,
+  "emitted_clips": [],
+  "applied_approximations": [],
+  "texture_dimension_normalizations": [],
+  "memory": {
+    "loaded_bytes": 16660,
+    "game_copy_bytes": 0,
+    "streamed_bytes": 0
+  },
+  "compiler": {
+    "name": "curve_your_hud shader patcher",
+    "version": "1"
+  },
+  "target": {
+    "id": "darktide",
+    "name": "Warhammer 40,000: Darktide",
+    "unit_version": 115,
+    "material_version": 61
+  },
+  "roots": [
+    {
+      "type": "material",
+      "name": "content/mods/curve_your_hud/hud_curve_clean"
+    }
+  ],
+  "artifacts": [
+    {
+      "resource": {
+        "type": "material",
+        "name": "content/mods/curve_your_hud/hud_curve_clean"
+      },
+      "role": "primary",
+      "path": "hud_curve_clean.material",
+      "size": 68
+    },
+    {
+      "resource": {
+        "type": "material",
+        "name": "content/mods/curve_your_hud/hud_curve_clean"
+      },
+      "role": "stream",
+      "path": "data/am/de029efbb14d6635",
+      "size": 16592
+    }
+  ],
+  "resources": [
+    {
+      "key": {
+        "type": "material",
+        "name": "content/mods/curve_your_hud/hud_curve_clean"
+      },
+      "name_hash": "c49e87ff1dd89f34",
+      "file": {
+        "path": "hud_curve_clean.material",
+        "size": 68,
+        "crc32": "4c9d6278"
+      },
+      "stream": {
+        "name": "data/am/de029efbb14d6635",
+        "file": {
+          "path": "data/am/de029efbb14d6635",
+          "size": 16592,
+          "crc32": "ef0ed878"
+        }
+      },
+      "dependencies": []
+    }
+  ],
+  "external_resources": []
+}

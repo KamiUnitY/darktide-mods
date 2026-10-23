@@ -1,4 +1,5 @@
 local mod = get_mod("curve_your_hud")
+local custom_assets = get_mod("CustomAssets")
 
 local Managers = Managers
 local Quaternion = Quaternion
@@ -6,10 +7,13 @@ local Vector3 = Vector3
 local math = math
 local Color = Color
 local Gui = Gui
+local Material = Material
+local RESOLUTION_LOOKUP = RESOLUTION_LOOKUP
 
 local UIHud = require("scripts/managers/ui/ui_hud")
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIWidget = require("scripts/managers/ui/ui_widget")
+local UIViewHandler = require("scripts/managers/ui/ui_view_handler")
 local WorldManager = require("scripts/foundation/managers/world/world_manager")
 
 ---------------
@@ -45,15 +49,14 @@ local HUD_DRAW_TARGET = {
 
 local CAMERA_FOLLOW_DELAY_SECONDS = 0.01
 local WORLD_PIXELS_PER_SCREEN_HEIGHT = 0.16
-local HUD_RENDER_TARGET_MATERIAL = "content/ui/meshes/hud_plane/hud_material_effect_no_curve"
+local CUSTOM_ASSETS_API_VERSION = 1
+local HUD_CUSTOM_ASSET_ID = "curve_your_hud:hud_curve_clean"
+local HUD_RENDER_TARGET_MATERIAL = "content/mods/curve_your_hud/hud_curve_clean"
 
 local SCREEN_RENDERER_NAME = "curve_your_hud_screen_renderer"
 local CURVED_RENDERER_NAME = "curve_your_hud_curved_renderer"
 local UNCURVED_RENDER_PASS = "curve_your_hud_screen_uncurved"
 local CURVED_RENDER_PASS   = "curve_your_hud_screen_curved"
-
-local CURVE_GRID_MAX_HEIGHT_STEP = 2
-local CURVE_GRID_MIN_WIDTH = 1
 
 local BITMAP_CURVED_LAYER = 0
 local UNCURVED_SCREEN_PASS_LAYER = 1
@@ -61,6 +64,8 @@ local CURVED_SCREEN_PASS_LAYER = 2
 local SCREEN_PASS_LAYER = 3
 
 local FULLSCREEN_UVS = { { 0, 0 }, { 1, 1 } }
+
+local DMF_OPTIONS_VIEW_NAME = "dmf_options_view"
 
 ---------------
 -- VARIABLES --
@@ -71,6 +76,8 @@ local hud_compositors = setmetatable({}, { __mode = "k" })
 local hud_element_draw_targets = setmetatable({}, { __mode = "k" })
 local world_enabled_by_name = {}
 local gameplay_hooks_enabled = true
+local hud_material_ready = false
+local recreate_hud_compositors_requested = false
 
 
 ---@type string?
@@ -96,6 +103,8 @@ local camera_lag_y = 0.0
 
 mod.settings = {
 	curve_strength     = mod:get("curve_strength"),
+	noise_effect       = mod:get("noise_effect"),
+	stripe_effect      = mod:get("stripe_effect"),
 	camera_sway        = mod:get("camera_sway"),
 	opacity_multiplier = mod:get("opacity_multiplier"),
 	horizontal_margin  = mod:get("horizontal_margin"),
@@ -104,6 +113,7 @@ mod.settings = {
 
 mod.on_setting_changed = function(setting_id)
 	mod.settings[setting_id] = mod:get(setting_id)
+	recreate_hud_compositors_requested = true
 end
 
 -----------------
@@ -343,107 +353,6 @@ local function migrate_hud_renderer(hud, source_renderer, destination_renderer)
 	hud._refresh_retained = true
 end
 
-----------------------
--- CURVE GENERATION --
-----------------------
-
-local function curve_projection(width, height, strength)
-	local half_width = width * 0.5
-	local vertical_curve = math.tan(math.degrees_to_radians(strength)) * half_width / height
-
-	return {
-		width = width,
-		height = height,
-		half_width = half_width,
-		vertical_curve = vertical_curve,
-		vertical_fit = 1 / math.max(1, 1 - vertical_curve),
-	}
-end
-
-local function curve_grid_cell_height(projection, source_x)
-	local normalized_x = source_x / projection.width * 2 - 1
-
-	return math.abs(projection.height * (1 - projection.vertical_curve * normalized_x * normalized_x) * projection.vertical_fit)
-end
-
-local function calculate_curve_grid_boundaries(projection)
-	local column_count = math.ceil(
-		math.abs(curve_grid_cell_height(projection, 0) - curve_grid_cell_height(projection, projection.half_width))
-		* (1 + math.sqrt(2)) / CURVE_GRID_MAX_HEIGHT_STEP
-	)
-	column_count = math.max(4, column_count)
-	column_count = column_count + column_count % 2
-
-	local columns_per_side = column_count * 0.5
-	local boundaries = { 0 }
-
-	for i = 1, columns_per_side do
-		local boundary_x = projection.half_width * (1 - math.sqrt(1 - i / columns_per_side))
-
-		if boundary_x - boundaries[#boundaries] >= CURVE_GRID_MIN_WIDTH then
-			boundaries[#boundaries + 1] = boundary_x
-		elseif i == columns_per_side then
-			boundaries[math.max(2, #boundaries)] = boundary_x
-		end
-	end
-
-	for i = #boundaries - 1, 1, -1 do
-		boundaries[#boundaries + 1] = projection.width - boundaries[i]
-	end
-
-	return boundaries
-end
-
-local function rebuild_curve_cells(compositor, width, height, strength, horizontal_margin, vertical_margin)
-	local content_width = math.max(width - horizontal_margin * 2, 1)
-	local content_height = math.max(height - vertical_margin * 2, 1)
-	local projection = curve_projection(content_width, content_height, strength)
-	local cells = {}
-	local source_boundaries = calculate_curve_grid_boundaries(projection)
-
-	for column = 1, #source_boundaries - 1 do
-		local source_left = source_boundaries[column]
-		local source_right = source_boundaries[column + 1]
-		local source_center_x = (source_left + source_right) * 0.5
-		local curved_height = curve_grid_cell_height(projection, source_center_x)
-		local source_uv_half_height = content_height / curved_height * 0.5
-
-		cells[#cells + 1] = {
-			position_x = horizontal_margin + source_left,
-			right_x = horizontal_margin + source_right,
-			position_y = vertical_margin,
-			height = content_height,
-			uvs = {
-				{ source_left / content_width, 0.5 - source_uv_half_height },
-				{ source_right / content_width, 0.5 + source_uv_half_height },
-			},
-		}
-	end
-
-	compositor.curve_cells = cells
-	compositor.curve_width = width
-	compositor.curve_height = height
-	compositor.curve_strength = strength
-	compositor.curve_horizontal_margin = horizontal_margin
-	compositor.curve_vertical_margin = vertical_margin
-
-	return cells
-end
-
-local function ensure_curve_cells(compositor, width, height, strength, horizontal_margin, vertical_margin)
-	if compositor.curve_cells
-		and compositor.curve_width == width
-		and compositor.curve_height == height
-		and compositor.curve_strength == strength
-		and compositor.curve_horizontal_margin == horizontal_margin
-		and compositor.curve_vertical_margin == vertical_margin
-	then
-		return compositor.curve_cells
-	end
-
-	return rebuild_curve_cells(compositor, width, height, strength, horizontal_margin, vertical_margin)
-end
-
 --------------------
 -- HUD COMPOSITOR --
 --------------------
@@ -451,6 +360,9 @@ end
 local function get_or_create_hud_compositor(hud)
 	if hud_compositors[hud] then
 		return hud_compositors[hud]
+	end
+	if not hud_material_ready then
+		return nil
 	end
 
 	local original_renderer = hud._ui_renderer
@@ -473,6 +385,12 @@ local function get_or_create_hud_compositor(hud)
 		screen_renderer.gui_retained,
 		HUD_RENDER_TARGET_MATERIAL
 	)
+	local curved_material = curved_renderer.render_target_material
+
+	Material.set_scalar(curved_material, "material_variable_a0cca63e", tonumber(mod.settings.noise_effect))
+	Material.set_scalar(curved_material, "raster_intensity", tonumber(mod.settings.stripe_effect))
+	Material.set_scalar(curved_material, "strength", tonumber(mod.settings.curve_strength))
+	Material.set_scalar(curved_material, "angular_strength", 2.0)
 
 	Gui.render_pass(
 		screen_renderer.gui_retained,
@@ -578,10 +496,9 @@ local function composite_hud(compositor)
 
 	local width = RESOLUTION_LOOKUP.width
 	local height = RESOLUTION_LOOKUP.height
-	local strength = tonumber(mod.settings.curve_strength) or 0
 	local horizontal_margin = tonumber(mod.settings.horizontal_margin) or 0
 	local vertical_margin = tonumber(mod.settings.vertical_margin) or 0
-	local content_width = width - horizontal_margin * 2
+local content_width = width - horizontal_margin * 2
 	local content_height = height - vertical_margin * 2
 	local previous_base_render_pass = screen_renderer.base_render_pass
 	local color = Color(255, 255, 255, 255)
@@ -593,32 +510,25 @@ local function composite_hud(compositor)
 	UIRenderer.begin_pass(screen_renderer, scenegraph, nil, 0, render_settings)
 	screen_renderer.base_render_pass = CURVED_RENDER_PASS
 
-	local cells = math.abs(strength) > 0
-		and ensure_curve_cells(compositor, width, height, strength, horizontal_margin, vertical_margin)
-	local draw_count = cells and #cells or 1
 	local scale = screen_renderer.scale or 1
 	local snapped_lag_x = math.floor(camera_lag_x + 0.5)
 	local snapped_lag_y = math.floor(camera_lag_y + 0.5)
+	local left = math.floor(horizontal_margin + 0.5) + snapped_lag_x
+	local right = math.floor(horizontal_margin + content_width + 0.5) + snapped_lag_x
+	local top = math.floor(vertical_margin + 0.5) + snapped_lag_y
+	local bottom = math.floor(vertical_margin + content_height + 0.5) + snapped_lag_y
+	local position = Vector3(left / scale, top / scale, BITMAP_CURVED_LAYER)
+	local size = Vector3((right - left) / scale, (bottom - top) / scale, 0)
 
-	for i = 1, draw_count do
-		local cell = cells and cells[i]
-		local left = math.floor((cell and cell.position_x or horizontal_margin) + 0.5) + snapped_lag_x
-		local right = math.floor((cell and cell.right_x or horizontal_margin + content_width) + 0.5) + snapped_lag_x
-		local top = math.floor((cell and cell.position_y or vertical_margin) + 0.5) + snapped_lag_y
-		local bottom = math.floor((cell and cell.position_y + cell.height or vertical_margin + content_height) + 0.5) + snapped_lag_y
-		local position = Vector3(left / scale, top / scale, BITMAP_CURVED_LAYER)
-		local size = Vector3((right - left) / scale, (bottom - top) / scale, 0)
-
-		UIRenderer.script_draw_bitmap_uv(
-			screen_renderer,
-			curved_renderer.render_target_material,
-			position,
-			size,
-			cell and cell.uvs or FULLSCREEN_UVS,
-			color,
-			nil
-		)
-	end
+	UIRenderer.script_draw_bitmap_uv(
+		screen_renderer,
+		curved_renderer.render_target_material,
+		position,
+		size,
+		FULLSCREEN_UVS,
+		color,
+		nil
+	)
 
 	screen_renderer.base_render_pass = previous_base_render_pass
 	UIRenderer.end_pass(screen_renderer)
@@ -737,6 +647,25 @@ mod.update = function(dt)
 	update_camera_lag(dt)
 end
 
+-------------------------------------
+-- REFRESH HUD ON MOD OPTIONS EXIT --
+-------------------------------------
+
+mod:hook(UIViewHandler, "_force_close", function(func, self, view_name, ...)
+	local result = func(self, view_name, ...)
+
+	if view_name == DMF_OPTIONS_VIEW_NAME and recreate_hud_compositors_requested then
+		recreate_hud_compositors_requested = false
+
+		if mod:is_enabled() and gameplay_hooks_enabled then
+			destroy_all_hud_compositors()
+			ensure_known_hud_compositors()
+		end
+	end
+
+	return result
+end)
+
 ------------------------
 -- GAMEPLAY LIFECYCLE --
 ------------------------
@@ -770,7 +699,7 @@ end
 
 mod.on_game_state_changed = function(status, state_name)
 	if state_name == "StateGameplay" then
-		set_gameplay_hooks_enabled(mod:is_enabled() and status == "enter")
+		set_gameplay_hooks_enabled(hud_material_ready and mod:is_enabled() and status == "enter")
 	end
 end
 
@@ -779,7 +708,24 @@ end
 ------------------------
 
 mod.on_all_mods_loaded = function()
-	set_gameplay_hooks_enabled(mod:is_enabled() and gameplay_scene_is_active())
+	if not custom_assets or not custom_assets.is_api_compatible(CUSTOM_ASSETS_API_VERSION) then
+        mod:error("Needs Custom Assets")
+        return
+    end
+
+	local ticket, acquire_error = custom_assets.acquire(mod, HUD_CUSTOM_ASSET_ID, function(_, asset, load_error)
+		if load_error or not asset or not asset.primary then
+			mod:error("Could not load %s: %s", HUD_CUSTOM_ASSET_ID, tostring(load_error))
+			return
+		end
+
+		hud_material_ready = true
+		set_gameplay_hooks_enabled(mod:is_enabled() and gameplay_scene_is_active())
+	end)
+
+	if not ticket then
+		mod:error("Could not acquire %s: %s", HUD_CUSTOM_ASSET_ID, tostring(acquire_error))
+	end
 end
 
 ---------------------------
@@ -787,15 +733,21 @@ end
 ---------------------------
 
 mod.on_enabled = function()
-	set_gameplay_hooks_enabled(gameplay_scene_is_active())
+	set_gameplay_hooks_enabled(hud_material_ready and gameplay_scene_is_active())
 end
 
 mod.on_disabled = function()
 	set_gameplay_hooks_enabled(false)
 end
 
+mod.on_unload = function()
+	if custom_assets then
+		custom_assets.release_owner(mod)
+	end
+end
+
 --------------------
 -- INITIALIZATION --
 --------------------
 
-set_gameplay_hooks_enabled(mod:is_enabled() and gameplay_scene_is_active())
+set_gameplay_hooks_enabled(false)

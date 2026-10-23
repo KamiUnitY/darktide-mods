@@ -5,7 +5,15 @@ return {
 	},
 	curve_strength = { en = "Curve Strength" },
 	curve_strength_description = {
-		en = "Controls both side rotation and how strongly small HUD icons bow vertically toward the screen center.",
+		en = "Controls the shader curve amount. Positive and negative values bend the HUD in opposite directions.",
+	},
+	noise_effect = { en = "Noise Effect" },
+	noise_effect_description = {
+		en = "Controls the strength of the HUD noise effect.",
+	},
+	stripe_effect = { en = "Stripe Effect" },
+	stripe_effect_description = {
+		en = "Controls the strength of the HUD stripe effect.",
 	},
 	camera_sway = { en = "Camera Sway" },
 	camera_sway_description = {
