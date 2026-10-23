@@ -50,15 +50,26 @@ struct PixelInput
 
 float4 main(PixelInput input) : SV_Target0
 {
-    float2 uv = input.custom0.xy;
-    float centered_x = uv.x * 2.0 - 1.0;
-    float centered_y = uv.y * 2.0 - 1.0;
+    float2 base_uv = input.custom0.xy;
+    float centered_x = base_uv.x * 2.0 - 1.0;
+    float centered_y = base_uv.y * 2.0 - 1.0;
     float curve_weight = 1.0 - pow(abs(centered_x), angular_strength);
-    uv.y += curve_weight * centered_y * strength;
+    float curve_offset_y = curve_weight * centered_y * strength;
+    float2 curved_uv = base_uv + float2(0.0, curve_offset_y);
 
-    float4 color = __tex_source.Sample(__samp_source, uv);
+    // Evaluate every auxiliary UV at the same pre-curve location as the HUD
+    // source. This is the single-pass equivalent of applying the material
+    // effects first and curving the completed result last.
+    float base_uv_y_step = ddy(base_uv.y);
+    float curved_row_offset = abs(base_uv_y_step) > 1e-8
+        ? curve_offset_y / base_uv_y_step
+        : 0.0;
+    float3 curved_tint = input.custom1.rgb + ddy(input.custom1.rgb) * curved_row_offset;
+    float2 curved_custom2 = input.custom2 + ddy(input.custom2) * curved_row_offset;
+    float2 variation_a_uv = input.custom6 + ddy(input.custom6) * curved_row_offset;
+    float2 variation_b_uv = input.custom7 + ddy(input.custom7) * curved_row_offset;
 
-    float2 raster_uv = input.custom0 * input.custom2;
+    float2 raster_uv = curved_uv * curved_custom2;
     float raster_min_lod = global_texture2D[NonUniformResourceIndex(__bindless_minlod_raster.x)]
         .Sample(static_minlod_sampler, raster_uv).r * 32.0;
     float raster = global_texture2D[NonUniformResourceIndex(__bindless_texture_raster.x)]
@@ -66,16 +77,17 @@ float4 main(PixelInput input) : SV_Target0
     float raster_factor = saturate(raster + raster_intensity);
 
     float variation_a_min_lod = global_texture2D[NonUniformResourceIndex(__bindless_minlod_variation_a.x)]
-        .Sample(static_minlod_sampler, input.custom6).r * 32.0;
+        .Sample(static_minlod_sampler, variation_a_uv).r * 32.0;
     float variation_a = global_texture2D[NonUniformResourceIndex(__bindless_texture_variation_a.x)]
-        .Sample(global_samplers[__bindless_sampler_variation], input.custom6, int2(0, 0), variation_a_min_lod).r;
+        .Sample(global_samplers[__bindless_sampler_variation], variation_a_uv, int2(0, 0), variation_a_min_lod).r;
     float variation_b_min_lod = global_texture2D[NonUniformResourceIndex(__bindless_minlod_variation_b.x)]
-        .Sample(static_minlod_sampler, input.custom7).r * 32.0;
+        .Sample(static_minlod_sampler, variation_b_uv).r * 32.0;
     float variation_b = global_texture2D[NonUniformResourceIndex(__bindless_texture_variation_b.x)]
-        .Sample(global_samplers[__bindless_sampler_variation], input.custom7, int2(0, 0), variation_b_min_lod).r;
+        .Sample(global_samplers[__bindless_sampler_variation], variation_b_uv, int2(0, 0), variation_b_min_lod).r;
     float variation_factor = 1.0 - abs(variation_b - variation_a) * material_variable_a0cca63e;
 
-    color.rgb *= input.custom1.rgb * raster_factor * variation_factor;
+    float4 color = __tex_source.Sample(__samp_source, curved_uv);
+    color.rgb *= curved_tint * raster_factor * variation_factor;
 
     return color;
 }
