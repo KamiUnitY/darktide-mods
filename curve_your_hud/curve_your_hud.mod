@@ -8,6 +8,10 @@ return {
 			mod_localization = "curve_your_hud/scripts/mods/curve_your_hud/curve_your_hud_localization",
 		})
 	end,
-	load_after = { "CustomAssets" },
+	load_after = {
+		"modding_tools",
+		"CustomAssets",
+		"hud_studio",
+	},
 	packages = {},
 }

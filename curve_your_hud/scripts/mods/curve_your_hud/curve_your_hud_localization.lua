@@ -1,11 +1,11 @@
 return {
 	mod_name = { en = "Curve Your HUD" },
 	mod_description = {
-		en = "Modifies the HUD to give it a visor appearance.",
+		en = "Modifies the HUD to give it a visor-like appearance.",
 	},
 	curve_strength = { en = "Curve Strength" },
 	curve_strength_description = {
-		en = "Controls the shader curve amount. Positive and negative values bend the HUD in opposite directions.",
+		en = "Controls the curve amount of the HUD. A value of 0 means no curve.",
 	},
 	noise_effect = { en = "Noise Effect" },
 	noise_effect_description = {
