@@ -449,12 +449,6 @@ local function destroy_hud_compositor(hud, restore_original_renderer)
 	Managers.ui:destroy_renderer(SCREEN_RENDERER_NAME)
 end
 
-local function ensure_known_hud_compositors()
-	for hud in pairs(known_huds) do
-		get_or_create_hud_compositor(hud)
-	end
-end
-
 local function destroy_all_hud_compositors()
 	for hud in pairs(hud_compositors) do
 		destroy_hud_compositor(hud, true)
@@ -622,6 +616,16 @@ local function restore_hud_draw(hud)
 	end
 end
 
+local function register_hud(hud)
+	if not hud then
+		return
+	end
+
+	known_huds[hud] = true
+	world_enabled_by_name[hud._world_name] = Managers.world:is_world_enabled(hud._world_name) == true
+	install_hud_draw(hud)
+end
+
 ------------------
 -- UI HUD HOOKS --
 ------------------
@@ -629,10 +633,7 @@ end
 mod:hook(UIHud, "init", function(func, self, ...)
 	local result = func(self, ...)
 
-	known_huds[self] = true
-	world_enabled_by_name[self._world_name] = Managers.world:is_world_enabled(self._world_name) == true
-	get_or_create_hud_compositor(self)
-	install_hud_draw(self)
+	register_hud(self)
 
 	return result
 end)
@@ -671,7 +672,6 @@ mod:hook(UIViewHandler, "_force_close", function(func, self, view_name, ...)
 
 		if mod:is_enabled() and gameplay_hooks_enabled then
 			destroy_all_hud_compositors()
-			ensure_known_hud_compositors()
 		end
 	end
 
@@ -707,7 +707,6 @@ local function set_gameplay_hooks_enabled(enabled)
 	if enabled then
 		world_enabled_by_name = {}
 		mod:enable_all_hooks()
-		ensure_known_hud_compositors()
 	else
 		mod:disable_all_hooks()
 	end
@@ -780,6 +779,13 @@ end
 ---------------------------
 
 mod.on_enabled = function()
+	local ui_manager = Managers.ui
+
+	if ui_manager then
+		register_hud(ui_manager._hud)
+		register_hud(ui_manager._spectator_hud)
+	end
+
 	refresh_gameplay_hooks()
 end
 
