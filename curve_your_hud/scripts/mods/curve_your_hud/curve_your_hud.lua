@@ -237,7 +237,7 @@ local function update_camera_lag(dt)
 	local height = RESOLUTION_LOOKUP.height
 	local movement_limit = movement_limit_pixels(width, height)
 	local world_pixels_per_meter = height * WORLD_PIXELS_PER_SCREEN_HEIGHT
-	local camera_sway_scale = tonumber(mod.settings.camera_sway) or 0.0
+	local camera_sway_scale = mod.settings.camera_sway
 	local world_sway_scale = camera_sway_scale * 5
 	local target_lag_x = -lag_yaw * width * 0.5 * camera_sway_scale + lag_right * world_pixels_per_meter * world_sway_scale
 	local target_lag_y = -lag_pitch * height * camera_sway_scale - lag_up * world_pixels_per_meter * world_sway_scale
@@ -391,9 +391,9 @@ local function get_or_create_hud_compositor(hud)
 	)
 	local curved_material = curved_renderer.render_target_material
 
-	Material.set_scalar(curved_material, "material_variable_a0cca63e", tonumber(mod.settings.noise_effect))
-	Material.set_scalar(curved_material, "raster_intensity", tonumber(mod.settings.stripe_effect))
-	Material.set_scalar(curved_material, "strength", tonumber(mod.settings.curve_strength))
+	Material.set_scalar(curved_material, "material_variable_a0cca63e", mod.settings.noise_effect)
+	Material.set_scalar(curved_material, "raster_intensity", mod.settings.stripe_effect)
+	Material.set_scalar(curved_material, "strength", mod.settings.curve_strength)
 	Material.set_scalar(curved_material, "angular_strength", 2.0)
 
 	Gui.render_pass(
@@ -494,8 +494,8 @@ local function composite_hud(compositor)
 
 	local width = RESOLUTION_LOOKUP.width
 	local height = RESOLUTION_LOOKUP.height
-	local horizontal_margin = tonumber(mod.settings.horizontal_margin) or 0
-	local vertical_margin = tonumber(mod.settings.vertical_margin) or 0
+	local horizontal_margin = mod.settings.horizontal_margin
+	local vertical_margin = mod.settings.vertical_margin
 	local content_width = width - horizontal_margin * 2
 	local content_height = height - vertical_margin * 2
 	local previous_base_render_pass = screen_renderer.base_render_pass
@@ -537,7 +537,7 @@ local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_ta
 	local saved_start_layer = render_settings.start_layer
 	local saved_base_render_pass = ui_renderer.base_render_pass
 	local alpha_multiplier = render_settings.alpha_multiplier or 1
-	local opacity_multiplier = tonumber(mod.settings.opacity_multiplier)
+	local opacity_multiplier = mod.settings.opacity_multiplier
 	local currently_visible_elements = hud._currently_visible_elements
 	local elements_hud_scale_lookup = hud._elements_hud_scale_lookup
 	local elements_array = hud._elements_array
