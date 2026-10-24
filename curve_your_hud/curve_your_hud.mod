@@ -11,7 +11,6 @@ return {
 	load_after = {
 		"modding_tools",
 		"CustomAssets",
-		"hud_studio",
 	},
 	packages = {},
 }

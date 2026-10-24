@@ -1,6 +1,5 @@
 local mod = get_mod("curve_your_hud")
 local custom_assets = get_mod("CustomAssets")
-local hud_studio = mod:io_dofile("curve_your_hud/scripts/mods/curve_your_hud/compatibility/hud_studio")
 
 local Managers = Managers
 local Quaternion = Quaternion
@@ -72,12 +71,14 @@ local DMF_OPTIONS_VIEW_NAME = "dmf_options_view"
 -- VARIABLES --
 ---------------
 
+mod.effect_enabled = true
+mod.want_enabled = true
+
 local known_huds = setmetatable({}, { __mode = "k" })
 local hud_compositors = setmetatable({}, { __mode = "k" })
 local hud_element_draw_targets = setmetatable({}, { __mode = "k" })
 local original_hud_draw_methods = setmetatable({}, { __mode = "k" })
 local world_enabled_by_name = {}
-local gameplay_hooks_enabled = true
 local gameplay_state_active
 local hud_material_ready = false
 local recreate_hud_compositors_requested = false
@@ -593,7 +594,7 @@ local function install_hud_draw(hud)
 
 	original_hud_draw_methods[hud] = original_draw
 	hud.draw = function(self, dt, t, input_service)
-		local compositor = gameplay_hooks_enabled
+		local compositor = mod.effect_enabled
 			and is_world_enabled(self._world_name)
 			and get_or_create_hud_compositor(self)
 
@@ -625,7 +626,6 @@ local function register_hud(hud)
 	known_huds[hud] = true
 	world_enabled_by_name[hud._world_name] = Managers.world:is_world_enabled(hud._world_name) == true
 	install_hud_draw(hud)
-	hud_studio.install(hud)
 end
 
 ------------------
@@ -672,7 +672,7 @@ mod:hook(UIViewHandler, "_force_close", function(func, self, view_name, ...)
 	if view_name == DMF_OPTIONS_VIEW_NAME and recreate_hud_compositors_requested then
 		recreate_hud_compositors_requested = false
 
-		if mod:is_enabled() and gameplay_hooks_enabled then
+		if mod:is_enabled() and mod.effect_enabled then
 			destroy_all_hud_compositors()
 		end
 	end
@@ -692,14 +692,14 @@ local function gameplay_scene_is_active()
 	return not not (Managers.state and Managers.state.game_mode)
 end
 
-local function set_gameplay_hooks_enabled(enabled)
+local function set_effect_enabled(enabled)
 	enabled = not not enabled
 
-	if gameplay_hooks_enabled == enabled then
+	if mod.effect_enabled == enabled then
 		return
 	end
 
-	gameplay_hooks_enabled = enabled
+	mod.effect_enabled = enabled
 
 	if not enabled then
 		reset_camera_lag()
@@ -711,12 +711,12 @@ local function set_gameplay_hooks_enabled(enabled)
 	end
 end
 
-local function refresh_gameplay_hooks()
-	set_gameplay_hooks_enabled(
+local function refresh_effect_state()
+	set_effect_enabled(
 		mod:is_enabled()
+		and mod.want_enabled
 		and hud_material_ready
 		and gameplay_scene_is_active()
-		and not hud_studio.is_editor_active()
 	)
 end
 
@@ -725,7 +725,7 @@ end
 --------------------
 
 mod.update = function(dt)
-	if gameplay_hooks_enabled then
+	if mod.effect_enabled then
 		update_camera_lag(dt)
 	end
 end
@@ -739,9 +739,9 @@ mod.on_game_state_changed = function(status, state_name)
 		gameplay_state_active = status == "enter"
 
 		if gameplay_state_active then
-			refresh_gameplay_hooks()
+			refresh_effect_state()
 		else
-			set_gameplay_hooks_enabled(false)
+			set_effect_enabled(false)
 		end
 	end
 end
@@ -751,7 +751,7 @@ end
 ------------------------
 
 mod.on_all_mods_loaded = function()
-	set_gameplay_hooks_enabled(false)
+	set_effect_enabled(false)
 
 	if not custom_assets or not custom_assets.is_api_compatible(CUSTOM_ASSETS_API_VERSION) then
         mod:error("Needs Custom Assets")
@@ -765,7 +765,7 @@ mod.on_all_mods_loaded = function()
 		end
 
 		hud_material_ready = true
-		refresh_gameplay_hooks()
+		refresh_effect_state()
 	end)
 
 	if not ticket then
@@ -785,11 +785,11 @@ mod.on_enabled = function()
 		register_hud(ui_manager._spectator_hud)
 	end
 
-	refresh_gameplay_hooks()
+	refresh_effect_state()
 end
 
 mod.on_disabled = function()
-	set_gameplay_hooks_enabled(false)
+	set_effect_enabled(false)
 end
 
 mod.on_unload = function()
@@ -802,10 +802,28 @@ mod.on_unload = function()
 	end
 end
 
+----------------------
+-- PUBLIC FUNCTIONS --
+----------------------
+
+mod.toggle = function()
+	mod.want_enabled = not mod.want_enabled
+	refresh_effect_state()
+end
+
+mod.enable = function()
+	mod.want_enabled = true
+	refresh_effect_state()
+end
+
+mod.disable = function()
+	mod.want_enabled = false
+	refresh_effect_state()
+end
+
+
 --------------------
 -- INITIALIZATION --
 --------------------
 
-hud_studio.setup(mod, refresh_gameplay_hooks)
-
-set_gameplay_hooks_enabled(false)
+set_effect_enabled(false)
