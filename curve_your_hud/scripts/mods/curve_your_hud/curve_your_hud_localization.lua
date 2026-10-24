@@ -3,6 +3,10 @@ return {
 	mod_description = {
 		en = "Applies a curve effect to the HUD.",
 	},
+	toggle_keybind = { en = "Toggle Mod" },
+	toggle_keybind_description = {
+		en = "Assigns a key to toggle the HUD effect.",
+	},
 	curve_strength = { en = "Curve Strength" },
 	curve_strength_description = {
 		en = "Controls the curve amount of the HUD. A value of 0 means no curve.",

@@ -7,6 +7,14 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id = "toggle_keybind",
+				type = "keybind",
+				default_value = {},
+				keybind_trigger = "pressed",
+				keybind_type = "function_call",
+				function_name = "toggle",
+			},
+			{
 				setting_id = "curve_strength",
 				type = "numeric",
 				default_value = 0.08,
