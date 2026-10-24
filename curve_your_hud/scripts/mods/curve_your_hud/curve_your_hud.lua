@@ -78,6 +78,7 @@ local hud_element_draw_targets = setmetatable({}, { __mode = "k" })
 local original_hud_draw_methods = setmetatable({}, { __mode = "k" })
 local world_enabled_by_name = {}
 local gameplay_hooks_enabled = true
+local gameplay_state_active
 local hud_material_ready = false
 local recreate_hud_compositors_requested = false
 
@@ -684,6 +685,10 @@ end)
 ------------------------
 
 local function gameplay_scene_is_active()
+	if gameplay_state_active ~= nil then
+		return gameplay_state_active
+	end
+
 	return not not (Managers.state and Managers.state.game_mode)
 end
 
@@ -731,7 +736,9 @@ end
 
 mod.on_game_state_changed = function(status, state_name)
 	if state_name == "StateGameplay" then
-		if status == "enter" then
+		gameplay_state_active = status == "enter"
+
+		if gameplay_state_active then
 			refresh_gameplay_hooks()
 		else
 			set_gameplay_hooks_enabled(false)
