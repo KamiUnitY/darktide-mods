@@ -1,7 +1,7 @@
 return {
 	mod_name = { en = "Curve Your HUD" },
 	mod_description = {
-		en = "Modifies the HUD to give it a visor-like appearance.",
+		en = "Applies a curve effect to the HUD.",
 	},
 	curve_strength = { en = "Curve Strength" },
 	curve_strength_description = {
