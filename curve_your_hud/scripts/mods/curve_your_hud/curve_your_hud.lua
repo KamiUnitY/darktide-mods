@@ -726,7 +726,11 @@ end
 
 mod.update = function(dt)
 	if mod.effect_enabled then
-		update_camera_lag(dt)
+		if mod.settings.camera_sway ~= 0 then
+			update_camera_lag(dt)
+		else
+			reset_camera_lag()
+		end
 	end
 end
 
