@@ -1,6 +1,6 @@
 local mod = get_mod("curve_your_hud")
 local custom_assets = get_mod("CustomAssets")
-local hud_studio = get_mod("hud_studio")
+local hud_studio = mod:io_dofile("curve_your_hud/scripts/mods/curve_your_hud/compatibility/hud_studio")
 
 local Managers = Managers
 local Quaternion = Quaternion
@@ -624,6 +624,7 @@ local function register_hud(hud)
 	known_huds[hud] = true
 	world_enabled_by_name[hud._world_name] = Managers.world:is_world_enabled(hud._world_name) == true
 	install_hud_draw(hud)
+	hud_studio.install(hud)
 end
 
 ------------------
@@ -686,10 +687,6 @@ local function gameplay_scene_is_active()
 	return not not (Managers.state and Managers.state.game_mode)
 end
 
-local function hud_studio_editor_is_active()
-	return hud_studio and hud_studio.hud_studio_editor_active == true or false
-end
-
 local function set_gameplay_hooks_enabled(enabled)
 	enabled = not not enabled
 
@@ -706,9 +703,6 @@ local function set_gameplay_hooks_enabled(enabled)
 
 	if enabled then
 		world_enabled_by_name = {}
-		mod:enable_all_hooks()
-	else
-		mod:disable_all_hooks()
 	end
 end
 
@@ -717,7 +711,7 @@ local function refresh_gameplay_hooks()
 		mod:is_enabled()
 		and hud_material_ready
 		and gameplay_scene_is_active()
-		and not hud_studio_editor_is_active()
+		and not hud_studio.is_editor_active()
 	)
 end
 
@@ -726,8 +720,6 @@ end
 --------------------
 
 mod.update = function(dt)
-	refresh_gameplay_hooks()
-
 	if gameplay_hooks_enabled then
 		update_camera_lag(dt)
 	end
@@ -806,5 +798,7 @@ end
 --------------------
 -- INITIALIZATION --
 --------------------
+
+hud_studio.setup(mod, refresh_gameplay_hooks)
 
 set_gameplay_hooks_enabled(false)
