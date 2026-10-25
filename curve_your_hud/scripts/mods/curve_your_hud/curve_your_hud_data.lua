@@ -12,7 +12,7 @@ return {
 				default_value = {},
 				keybind_trigger = "pressed",
 				keybind_type = "function_call",
-				function_name = "toggle",
+				function_name = "toggle_keybind",
 			},
 			{
 				setting_id = "curve_strength",

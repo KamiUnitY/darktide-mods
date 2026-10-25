@@ -810,7 +810,7 @@ end
 -- PUBLIC FUNCTIONS --
 ----------------------
 
-local function can_toggle_effect()
+local function can_press_keybind()
 	local ui_manager = Managers.ui
 	local chat_is_open = ui_manager and ui_manager.chat_using_input and ui_manager:chat_using_input()
 	local view_is_open = ui_manager and ui_manager.has_active_view and ui_manager:has_active_view()
@@ -821,24 +821,23 @@ local function can_toggle_effect()
 end
 
 mod.toggle = function()
-	if not can_toggle_effect() then return end
-
 	mod.want_enabled = not mod.want_enabled
 	refresh_effect_state()
 end
 
 mod.enable = function()
-	if not can_toggle_effect() then return end
-
 	mod.want_enabled = true
 	refresh_effect_state()
 end
 
 mod.disable = function()
-	if not can_toggle_effect() then return end
-
 	mod.want_enabled = false
 	refresh_effect_state()
+end
+
+mod.toggle_keybind = function()
+	if not can_press_keybind() then return end
+	mod.toggle()
 end
 
 
