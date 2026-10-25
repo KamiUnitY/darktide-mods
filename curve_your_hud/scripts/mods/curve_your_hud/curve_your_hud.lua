@@ -9,8 +9,11 @@ local Color = Color
 local Gui = Gui
 local Material = Material
 local RESOLUTION_LOOKUP = RESOLUTION_LOOKUP
+local Gui_slug_text_3d = Gui.slug_text_3d
+local Gui_update_slug_text_3d = Gui.update_slug_text_3d
 
 local UIHud = require("scripts/managers/ui/ui_hud")
+local UIFonts = require("scripts/managers/ui/ui_fonts")
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIViewHandler = require("scripts/managers/ui/ui_view_handler")
@@ -661,6 +664,51 @@ mod:hook(WorldManager, "enable_world", function(func, self, world_name, enabled,
 
 	return result
 end)
+
+---------------------------------
+-- 3D TEXT RENDER-PASS ROUTING --
+---------------------------------
+
+-- local function draw_text_3d_to_render_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
+-- 	local render_settings = ui_renderer.render_settings
+-- 	local retained_mode = not not retained_id
+
+-- 	if retained_id == true then
+-- 		retained_id = nil
+-- 	end
+
+-- 	local alpha_multiplier = render_settings and render_settings.alpha_multiplier or 1
+-- 	local intensity_multiplier = render_settings and render_settings.color_intensity_multiplier or 1
+
+-- 	if color then
+-- 		color = Color(color[1] * alpha_multiplier, color[2] * intensity_multiplier, color[3] * intensity_multiplier, color[4] * intensity_multiplier)
+-- 	end
+
+-- 	if render_settings then
+-- 		layer = (render_settings.start_layer or 0) + layer
+-- 	end
+
+-- 	local font_data = UIFonts.data_by_type(font_type)
+-- 	local flags = (font_data.render_flags or 0) + Gui.RenderPass
+-- 	local gui = retained_mode and ui_renderer.gui_retained or ui_renderer.gui
+-- 	local gui_position = position or Vector3.zero()
+-- 	local render_pass_flag = ui_renderer.render_pass_flag
+-- 	local render_pass = ui_renderer.base_render_pass
+
+-- 	if retained_id then
+-- 		return Gui_update_slug_text_3d(gui, retained_id, text, font_data.path, font_size, render_pass_flag, render_pass, transform, gui_position, layer, size, color, "flags", flags)
+-- 	else
+-- 		return Gui_slug_text_3d(gui, text, font_data.path, font_size, render_pass_flag, render_pass, transform, gui_position, layer, size, color, "flags", flags)
+-- 	end
+-- end
+
+-- mod:hook(UIRenderer, "script_draw_text_3d", function(func, ui_renderer, text, font_size, font_type, transform, position, layer, size, color, options, retained_id)
+-- 	if ui_renderer.name ~= CURVED_RENDERER_NAME then
+-- 		return func(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, options, retained_id)
+-- 	end
+
+-- 	return draw_text_3d_to_render_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
+-- end)
 
 -------------------------------------
 -- REFRESH HUD ON MOD OPTIONS EXIT --
