@@ -704,9 +704,7 @@ local function set_effect_enabled(enabled)
 	if not enabled then
 		reset_camera_lag()
 		destroy_all_hud_compositors()
-	end
-
-	if enabled then
+	else
 		world_enabled_by_name = {}
 	end
 end
@@ -797,6 +795,8 @@ mod.on_disabled = function()
 end
 
 mod.on_unload = function()
+	set_effect_enabled(false)
+
 	for hud in pairs(known_huds) do
 		restore_hud_draw(hud)
 	end
