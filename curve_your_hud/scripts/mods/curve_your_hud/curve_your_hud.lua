@@ -116,12 +116,20 @@ mod.settings = {
 	opacity_multiplier = mod:get("opacity_multiplier"),
 	horizontal_margin  = mod:get("horizontal_margin"),
 	vertical_margin    = mod:get("vertical_margin"),
+	debug_grid         = mod:get("debug_grid"),
 }
 
 mod.on_setting_changed = function(setting_id)
 	mod.settings[setting_id] = mod:get(setting_id)
 	recreate_hud_compositors_requested = true
 end
+
+mod:register_hud_element({
+	class_name = "HudElementCurveYourHudDebugGrid",
+	filename = "curve_your_hud/scripts/mods/curve_your_hud/hud/curve_your_hud_debug_grid",
+	visibility_groups = { "alive" },
+	use_hud_scale = false,
+})
 
 -----------------
 -- CAMERA SWAY --

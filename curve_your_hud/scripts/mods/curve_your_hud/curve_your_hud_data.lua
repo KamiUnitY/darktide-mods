@@ -70,6 +70,17 @@ return {
 				decimals_number = 0,
 				step_size_value = 5,
 			},
+			{
+				setting_id = "debug_group",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "debug_grid",
+						type = "checkbox",
+						default_value = false,
+					},
+				},
+			},
 		},
 	},
 }

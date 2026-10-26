@@ -35,4 +35,9 @@ return {
 	vertical_margin_description = {
 		en = "Sets the top and bottom margin around the HUD in pixels.",
 	},
+	debug_group = { en = "Debug" },
+	debug_grid = { en = "Debug Grid" },
+	debug_grid_description = {
+		en = "Draw 10x10 grid lines to visualize the curve.",
+	},
 }
