@@ -717,11 +717,13 @@ end)
 mod:hook(UIViewHandler, "_force_close", function(func, self, view_name, ...)
 	local result = func(self, view_name, ...)
 
-	if view_name == DMF_OPTIONS_VIEW_NAME and recreate_hud_compositors_requested then
-		recreate_hud_compositors_requested = false
-
-		if mod:is_enabled() and mod.effect_enabled then
-			destroy_all_hud_compositors()
+	if view_name == DMF_OPTIONS_VIEW_NAME then
+		reset_camera_lag()
+		if recreate_hud_compositors_requested then
+			recreate_hud_compositors_requested = false
+			if mod:is_enabled() and mod.effect_enabled then
+				destroy_all_hud_compositors()
+			end
 		end
 	end
 
@@ -774,8 +776,6 @@ mod.update = function(dt)
 	if mod.effect_enabled then
 		if mod.settings.camera_sway ~= 0 then
 			update_camera_lag(dt)
-		else
-			reset_camera_lag()
 		end
 	end
 end
