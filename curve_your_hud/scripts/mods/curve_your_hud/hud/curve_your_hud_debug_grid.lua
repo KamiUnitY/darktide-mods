@@ -3,7 +3,8 @@ local mod = get_mod("curve_your_hud")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 
-local GRID_LINE_WIDTH = 1
+local GRID_LINE_WIDTH = 2
+local GRID_OUTER_LINE_WIDTH = 5
 local GRID_DIVISIONS = 10
 local grid_passes = {}
 local vertical_style_ids = {}
@@ -80,18 +81,24 @@ local function update_grid(self)
 
 	for i = 0, GRID_DIVISIONS do
 		local style = grid_style[vertical_style_ids[i + 1]]
+		local is_outer_line = i == 0 or i == GRID_DIVISIONS
+		local line_width = is_outer_line and GRID_OUTER_LINE_WIDTH or GRID_LINE_WIDTH
 
-		style.offset[1] = usable_width * i / GRID_DIVISIONS
-		style.size[1] = GRID_LINE_WIDTH
+		style.offset[1] = i == GRID_DIVISIONS and math.max(0, width - line_width)
+			or usable_width * i / GRID_DIVISIONS
+		style.size[1] = line_width
 		style.size[2] = height
 	end
 
 	for i = 0, GRID_DIVISIONS do
 		local style = grid_style[horizontal_style_ids[i + 1]]
+		local is_outer_line = i == 0 or i == GRID_DIVISIONS
+		local line_width = is_outer_line and GRID_OUTER_LINE_WIDTH or GRID_LINE_WIDTH
 
-		style.offset[2] = usable_height * i / GRID_DIVISIONS
+		style.offset[2] = i == GRID_DIVISIONS and math.max(0, height - line_width)
+			or usable_height * i / GRID_DIVISIONS
 		style.size[1] = width
-		style.size[2] = GRID_LINE_WIDTH
+		style.size[2] = line_width
 	end
 end
 
