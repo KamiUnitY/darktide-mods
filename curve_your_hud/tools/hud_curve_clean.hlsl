@@ -57,9 +57,6 @@ float4 main(PixelInput input) : SV_Target0
     float curve_offset_y = curve_weight * centered_y * strength;
     float2 curved_uv = base_uv + float2(0.0, curve_offset_y);
 
-    // Evaluate every auxiliary UV at the same pre-curve location as the HUD
-    // source. This is the single-pass equivalent of applying the material
-    // effects first and curving the completed result last.
     float base_uv_y_step = ddy(base_uv.y);
     float curved_row_offset = abs(base_uv_y_step) > 1e-8
         ? curve_offset_y / base_uv_y_step
@@ -68,6 +65,11 @@ float4 main(PixelInput input) : SV_Target0
     float2 curved_custom2 = input.custom2 + ddy(input.custom2) * curved_row_offset;
     float2 variation_a_uv = input.custom6 + ddy(input.custom6) * curved_row_offset;
     float2 variation_b_uv = input.custom7 + ddy(input.custom7) * curved_row_offset;
+
+    if (any(curved_uv < 0.0) || any(curved_uv > 1.0))
+    {
+        return float4(0.0, 0.0, 0.0, 0.0);
+    }
 
     float2 raster_uv = curved_uv * curved_custom2;
     float raster_min_lod = global_texture2D[NonUniformResourceIndex(__bindless_minlod_raster.x)]

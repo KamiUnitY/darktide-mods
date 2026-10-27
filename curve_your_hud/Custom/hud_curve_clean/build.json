@@ -7,7 +7,7 @@
   "applied_approximations": [],
   "texture_dimension_normalizations": [],
   "memory": {
-    "loaded_bytes": 16844,
+    "loaded_bytes": 16760,
     "game_copy_bytes": 0,
     "streamed_bytes": 0
   },
@@ -44,7 +44,7 @@
       },
       "role": "stream",
       "path": "data/am/de029efbb14d6635",
-      "size": 16776
+      "size": 16692
     }
   ],
   "resources": [
@@ -63,8 +63,8 @@
         "name": "data/am/de029efbb14d6635",
         "file": {
           "path": "data/am/de029efbb14d6635",
-          "size": 16776,
-          "crc32": "b8d6240d"
+          "size": 16692,
+          "crc32": "bb3889b8"
         }
       },
       "dependencies": []
