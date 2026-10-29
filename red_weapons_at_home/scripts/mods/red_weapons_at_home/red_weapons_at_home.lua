@@ -1,5 +1,3 @@
--- Red Weapons at Home by KamiUnitY. Ver. 1.2.6
-
 local mod = get_mod("red_weapons_at_home")
 local modding_tools = get_mod("modding_tools")
 
@@ -162,13 +160,20 @@ mod.is_sainted_item = function(item)
         local expertise_level_text = Items.expertise_level(item, true)
         local expertise_level = tonumber(expertise_level_text)
 
+        local has_max_traits = not item.traits or not next(table.filter(item.traits, function(trait)
+            return trait and trait.rarity and trait.rarity < 4
+        end))
+        local has_max_perks = not item.perks or not next(table.filter(item.perks, function(perk)
+            return perk and perk.rarity and perk.rarity < 4
+        end))
+
         if item.rarity == 5 and expertise_level then
             if item.item_type == "GADGET" then
                 local trait = item.traits[1]
                 local trait_type, trait_value = get_trait_data(trait.id, trait.value)
-                return expertise_level >= TRAIT_REQUIRED_EXPERTISE[trait_type] and trait_value >= TRAIT_MAX_VALUE[trait_type]
+                return expertise_level >= TRAIT_REQUIRED_EXPERTISE[trait_type] and trait_value >= TRAIT_MAX_VALUE[trait_type] and has_max_perks
             else
-                return expertise_level == MAX_EXPERTISE_LEVEL
+                return expertise_level == MAX_EXPERTISE_LEVEL and has_max_traits and has_max_perks
             end
         end
     end
@@ -196,5 +201,21 @@ mod:hook_require("scripts/utilities/items", function(Items)
             return RARITY_6_DISPLAY_NAME
         end
         return original_rarity_name
+    end
+
+    Items.original_compare_item_rarity = Items.original_compare_item_rarity or Items.compare_item_rarity
+    Items.compare_item_rarity = function(a, b)
+        if mod:is_enabled() then
+            local a_rarity = mod.is_sainted_item(a) and 6 or a.rarity or 0
+            local b_rarity = mod.is_sainted_item(b) and 6 or b.rarity or 0
+            if a_rarity < b_rarity then
+                return true
+            elseif b_rarity < a_rarity then
+                return false
+            end
+	        return nil
+        end
+
+        return Items.original_compare_item_rarity(a, b)
     end
 end)
