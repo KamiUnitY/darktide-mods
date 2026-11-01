@@ -37,7 +37,7 @@ local UNCURVED_ELEMENT_NAMES = {
 	HudElementDamageIndicator = true,
 }
 
-local SCREEN_ELEMENT_NAMES = {
+local OVERLAY_ELEMENT_NAMES = {
 	HudElementCustomizer = true,
 	HudElementTacticalOverlay = true,
 	HudElementCutsceneOverlay = true,
@@ -47,7 +47,7 @@ local SCREEN_ELEMENT_NAMES = {
 local HUD_DRAW_TARGET = {
 	UNCURVED = "uncurved",
 	CURVED = "curved",
-	SCREEN = "screen",
+	OVERLAY = "overlay",
 }
 
 local CAMERA_FOLLOW_DELAY_SECONDS = 0.01
@@ -58,13 +58,15 @@ local HUD_RENDER_TARGET_MATERIAL = "content/mods/curve_your_hud/hud_curve_clean"
 
 local SCREEN_RENDERER_NAME = "curve_your_hud_screen_renderer"
 local CURVED_RENDERER_NAME = "curve_your_hud_curved_renderer"
-local UNCURVED_RENDER_PASS = "curve_your_hud_screen_uncurved"
-local CURVED_RENDER_PASS   = "curve_your_hud_screen_curved"
+
+local DEFAULT_SCREEN_RENDER_PASS = "to_screen"
+local CURVED_RENDER_PASS   = "curve_your_hud_curved_renderpass"
+local OVERLAY_RENDER_PASS  = "curve_your_hud_overlay_renderpass"
 
 local BITMAP_CURVED_LAYER = 0
 local UNCURVED_SCREEN_PASS_LAYER = 1
 local CURVED_SCREEN_PASS_LAYER = 2
-local SCREEN_PASS_LAYER = 3
+local OVERLAY_PASS_LAYER = 3
 
 local FULLSCREEN_UVS = { { 0, 0 }, { 1, 1 } }
 
@@ -293,8 +295,8 @@ end
 local function calculate_hud_element_draw_target(element)
 	local element_name = element.__class_name
 
-	if SCREEN_ELEMENT_NAMES[element_name] then
-		return HUD_DRAW_TARGET.SCREEN
+	if OVERLAY_ELEMENT_NAMES[element_name] then
+		return HUD_DRAW_TARGET.OVERLAY
 	end
 
 	local scenegraph = element._ui_scenegraph
@@ -390,7 +392,7 @@ local function get_or_create_hud_compositor(hud)
 	local screen_renderer = Managers.ui:create_renderer(SCREEN_RENDERER_NAME, world)
 
 	screen_renderer.render_pass_flag = "render_pass"
-	screen_renderer.base_render_pass = "to_screen"
+	screen_renderer.base_render_pass = DEFAULT_SCREEN_RENDER_PASS
 
 	local curved_renderer = Managers.ui:create_renderer(
 		CURVED_RENDERER_NAME,
@@ -417,7 +419,7 @@ local function get_or_create_hud_compositor(hud)
 	Gui.render_pass(
 		screen_renderer.gui_retained,
 		UNCURVED_SCREEN_PASS_LAYER,
-		UNCURVED_RENDER_PASS,
+		DEFAULT_SCREEN_RENDER_PASS,
 		false
 	)
 	Gui.render_pass(
@@ -428,8 +430,8 @@ local function get_or_create_hud_compositor(hud)
 	)
 	Gui.render_pass(
 		screen_renderer.gui_retained,
-		SCREEN_PASS_LAYER,
-		screen_renderer.base_render_pass,
+		OVERLAY_PASS_LAYER,
+		OVERLAY_RENDER_PASS,
 		false
 	)
 
@@ -487,7 +489,7 @@ local function composite_hud(compositor)
 	UIRenderer.add_render_pass(
 		screen_renderer,
 		UNCURVED_SCREEN_PASS_LAYER,
-		UNCURVED_RENDER_PASS,
+		DEFAULT_SCREEN_RENDER_PASS,
 		false
 	)
 	UIRenderer.add_render_pass(
@@ -498,8 +500,8 @@ local function composite_hud(compositor)
 	)
 	UIRenderer.add_render_pass(
 		screen_renderer,
-		SCREEN_PASS_LAYER,
-		"to_screen",
+		OVERLAY_PASS_LAYER,
+		OVERLAY_RENDER_PASS,
 		false
 	)
 
@@ -563,7 +565,7 @@ local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_ta
 			and element.draw
 		then
 			local hud_scale_applied = false
-			local opacity = not SCREEN_ELEMENT_NAMES[element_name]
+			local opacity = not OVERLAY_ELEMENT_NAMES[element_name]
 				and opacity_multiplier or 1
 
 			if elements_hud_scale_lookup[element_name] then
@@ -614,9 +616,9 @@ local function install_hud_draw(hud)
 		end
 
 		composite_hud(compositor)
-		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.UNCURVED, UNCURVED_RENDER_PASS)
+		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.UNCURVED)
 		draw_hud_elements(self, dt, t, input_service, compositor.curved_renderer, HUD_DRAW_TARGET.CURVED)
-		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.SCREEN)
+		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.OVERLAY, OVERLAY_RENDER_PASS)
 	end
 end
 
