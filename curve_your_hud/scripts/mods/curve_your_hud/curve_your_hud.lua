@@ -58,15 +58,11 @@ local HUD_RENDER_TARGET_MATERIAL = "content/mods/curve_your_hud/hud_curve_clean"
 
 local SCREEN_RENDERER_NAME = "curve_your_hud_screen_renderer"
 local CURVED_RENDERER_NAME = "curve_your_hud_curved_renderer"
-
 local DEFAULT_SCREEN_RENDER_PASS = "to_screen"
-local CURVED_RENDER_PASS   = "curve_your_hud_curved_renderpass"
-local OVERLAY_RENDER_PASS  = "curve_your_hud_overlay_renderpass"
 
-local BITMAP_CURVED_LAYER = 0
-local UNCURVED_SCREEN_PASS_LAYER = 1
-local CURVED_SCREEN_PASS_LAYER = 2
-local OVERLAY_PASS_LAYER = 3
+local CURVED_TARGET_PASS_LAYER = 0
+local SCREEN_PASS_LAYER = 1
+local CURVED_COMPOSITE_LAYER = 0
 
 local FULLSCREEN_UVS = { { 0, 0 }, { 1, 1 } }
 
@@ -83,6 +79,7 @@ local known_huds = setmetatable({}, { __mode = "k" })
 local hud_compositors = setmetatable({}, { __mode = "k" })
 local hud_element_draw_targets = setmetatable({}, { __mode = "k" })
 local original_hud_draw_methods = setmetatable({}, { __mode = "k" })
+local widget_renderer_owners = setmetatable({}, { __mode = "k" })
 local world_enabled_by_name = {}
 local gameplay_state_active
 local hud_material_ready = false
@@ -322,9 +319,9 @@ local function hud_element_draw_target(element)
 	return draw_target
 end
 
-----------------------------
--- HUD RENDERER MIGRATION --
-----------------------------
+-------------------------
+-- HUD WIDGET OWNERSHIP --
+-------------------------
 
 local function is_live_widget(value)
 	local passes = type(value) == "table" and rawget(value, "passes")
@@ -335,7 +332,7 @@ local function is_live_widget(value)
 	return parent_name ~= nil and parent_name == rawget(value, "name")
 end
 
-local function release_owned_widgets(value, ui_renderer, visited)
+local function release_owned_widgets(value, ui_renderer, destination_renderer, visited)
 	if type(value) ~= "table" or visited[value] then
 		return
 	end
@@ -345,30 +342,42 @@ local function release_owned_widgets(value, ui_renderer, visited)
 	if is_live_widget(value) then
 		UIWidget.destroy(ui_renderer, value)
 		value.dirty = true
+		widget_renderer_owners[value] = destination_renderer
 		return
 	end
 
 	for key, child in pairs(value) do
 		if key ~= "_parent" and type(child) == "table" then
-			release_owned_widgets(child, ui_renderer, visited)
+			release_owned_widgets(child, ui_renderer, destination_renderer, visited)
 		end
 	end
 end
 
-local function migrate_hud_renderer(hud, source_renderer, destination_renderer)
+local function release_hud_element_widgets(hud, ui_renderer, destination_renderer, draw_target)
 	local elements = hud._elements_array
 
-	if source_renderer and elements then
+	if ui_renderer and elements then
 		local visited = {}
 
 		for i = 1, #elements do
-			release_owned_widgets(elements[i], source_renderer, visited)
+			local element = elements[i]
+
+			if not draw_target or hud_element_draw_target(element) == draw_target then
+				release_owned_widgets(element, ui_renderer, destination_renderer, visited)
+			end
 		end
 	end
 
-	hud._ui_renderer = destination_renderer
 	hud._refresh_retained = true
 end
+
+mod:hook(UIWidget, "destroy", function(func, ui_renderer, widget, ...)
+	return func(widget_renderer_owners[widget] or ui_renderer, widget, ...)
+end)
+
+mod:hook(UIWidget, "set_visible", function(func, widget, ui_renderer, ...)
+	return func(widget, widget_renderer_owners[widget] or ui_renderer, ...)
+end)
 
 --------------------
 -- HUD COMPOSITOR --
@@ -388,15 +397,14 @@ local function get_or_create_hud_compositor(hud)
 		return nil
 	end
 
-	local world = Managers.world:world(hud._world_name)
-	local screen_renderer = Managers.ui:create_renderer(SCREEN_RENDERER_NAME, world)
+	local screen_renderer = Managers.ui:create_renderer(SCREEN_RENDERER_NAME)
 
 	screen_renderer.render_pass_flag = "render_pass"
 	screen_renderer.base_render_pass = DEFAULT_SCREEN_RENDER_PASS
 
 	local curved_renderer = Managers.ui:create_renderer(
 		CURVED_RENDERER_NAME,
-		world,
+		nil,
 		true,
 		screen_renderer.gui,
 		screen_renderer.gui_retained,
@@ -411,27 +419,15 @@ local function get_or_create_hud_compositor(hud)
 
 	Gui.render_pass(
 		screen_renderer.gui_retained,
-		BITMAP_CURVED_LAYER,
+		CURVED_TARGET_PASS_LAYER,
 		curved_renderer.base_render_pass,
 		true,
 		curved_renderer.render_target
 	)
 	Gui.render_pass(
 		screen_renderer.gui_retained,
-		UNCURVED_SCREEN_PASS_LAYER,
+		SCREEN_PASS_LAYER,
 		DEFAULT_SCREEN_RENDER_PASS,
-		false
-	)
-	Gui.render_pass(
-		screen_renderer.gui_retained,
-		CURVED_SCREEN_PASS_LAYER,
-		CURVED_RENDER_PASS,
-		false
-	)
-	Gui.render_pass(
-		screen_renderer.gui_retained,
-		OVERLAY_PASS_LAYER,
-		OVERLAY_RENDER_PASS,
 		false
 	)
 
@@ -442,12 +438,12 @@ local function get_or_create_hud_compositor(hud)
 	}
 
 	hud_compositors[hud] = compositor
-	migrate_hud_renderer(hud, original_renderer, curved_renderer)
+	release_hud_element_widgets(hud, original_renderer, curved_renderer, HUD_DRAW_TARGET.CURVED)
 
 	return compositor
 end
 
-local function destroy_hud_compositor(hud, restore_original_renderer)
+local function destroy_hud_compositor(hud)
 	local compositor = hud_compositors[hud]
 
 	if not compositor then
@@ -455,10 +451,7 @@ local function destroy_hud_compositor(hud, restore_original_renderer)
 	end
 
 	hud_compositors[hud] = nil
-
-	if restore_original_renderer and hud._ui_renderer == compositor.curved_renderer then
-		migrate_hud_renderer(hud, compositor.curved_renderer, compositor.original_renderer)
-	end
+	release_hud_element_widgets(hud, compositor.curved_renderer, nil, HUD_DRAW_TARGET.CURVED)
 
 	Managers.ui:destroy_renderer(CURVED_RENDERER_NAME)
 	Managers.ui:destroy_renderer(SCREEN_RENDERER_NAME)
@@ -466,7 +459,7 @@ end
 
 local function destroy_all_hud_compositors()
 	for hud in pairs(hud_compositors) do
-		destroy_hud_compositor(hud, true)
+		destroy_hud_compositor(hud)
 	end
 end
 
@@ -474,36 +467,29 @@ end
 -- HUD DRAWING --
 -----------------
 
-local function composite_hud(compositor)
+local function prepare_hud_render_passes(compositor)
 	local screen_renderer = compositor.screen_renderer
 	local curved_renderer = compositor.curved_renderer
 
 	UIRenderer.clear_render_pass_queue(screen_renderer)
 	UIRenderer.add_render_pass(
 		screen_renderer,
-		BITMAP_CURVED_LAYER,
+		CURVED_TARGET_PASS_LAYER,
 		curved_renderer.base_render_pass,
 		false,
 		curved_renderer.render_target
 	)
 	UIRenderer.add_render_pass(
 		screen_renderer,
-		UNCURVED_SCREEN_PASS_LAYER,
+		SCREEN_PASS_LAYER,
 		DEFAULT_SCREEN_RENDER_PASS,
 		false
 	)
-	UIRenderer.add_render_pass(
-		screen_renderer,
-		CURVED_SCREEN_PASS_LAYER,
-		CURVED_RENDER_PASS,
-		false
-	)
-	UIRenderer.add_render_pass(
-		screen_renderer,
-		OVERLAY_PASS_LAYER,
-		OVERLAY_RENDER_PASS,
-		false
-	)
+end
+
+local function composite_hud(compositor)
+	local screen_renderer = compositor.screen_renderer
+	local curved_renderer = compositor.curved_renderer
 
 	local width = RESOLUTION_LOOKUP.width
 	local height = RESOLUTION_LOOKUP.height
@@ -519,7 +505,7 @@ local function composite_hud(compositor)
 	}
 
 	UIRenderer.begin_pass(screen_renderer, scenegraph, nil, 0, render_settings)
-	screen_renderer.base_render_pass = CURVED_RENDER_PASS
+	screen_renderer.base_render_pass = DEFAULT_SCREEN_RENDER_PASS
 
 	local scale = screen_renderer.scale or 1
 	local snapped_lag_x = math.floor(camera_lag_x + 0.5)
@@ -528,7 +514,7 @@ local function composite_hud(compositor)
 	local right = math.floor(horizontal_margin + content_width + 0.5) + snapped_lag_x
 	local top = math.floor(vertical_margin + 0.5) + snapped_lag_y
 	local bottom = math.floor(vertical_margin + content_height + 0.5) + snapped_lag_y
-	local position = Vector3(left / scale, top / scale, BITMAP_CURVED_LAYER)
+	local position = Vector3(left / scale, top / scale, CURVED_COMPOSITE_LAYER)
 	local size = Vector3((right - left) / scale, (bottom - top) / scale, 0)
 
 	UIRenderer.script_draw_bitmap_uv(
@@ -590,6 +576,30 @@ local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_ta
 	render_settings.start_layer = saved_start_layer
 end
 
+local function draw_original_hud_without_curved_elements(hud, original_draw, dt, t, input_service)
+	local currently_visible_elements = hud._currently_visible_elements
+	local elements_array = hud._elements_array
+	local hidden_element_names = {}
+
+	for i = 1, #elements_array do
+		local element = elements_array[i]
+		local element_name = element.__class_name
+
+		if currently_visible_elements[element_name]
+			and hud_element_draw_target(element) == HUD_DRAW_TARGET.CURVED
+		then
+			currently_visible_elements[element_name] = false
+			hidden_element_names[#hidden_element_names + 1] = element_name
+		end
+	end
+
+	original_draw(hud, dt, t, input_service)
+
+	for i = 1, #hidden_element_names do
+		currently_visible_elements[hidden_element_names[i]] = true
+	end
+end
+
 local function is_world_enabled(world_name)
 	if world_enabled_by_name[world_name] == nil then
 		world_enabled_by_name[world_name] = Managers.world:is_world_enabled(world_name) == true
@@ -615,10 +625,10 @@ local function install_hud_draw(hud)
 			return original_draw(self, dt, t, input_service)
 		end
 
-		composite_hud(compositor)
-		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.UNCURVED)
+		prepare_hud_render_passes(compositor)
+		draw_original_hud_without_curved_elements(self, original_draw, dt, t, input_service)
 		draw_hud_elements(self, dt, t, input_service, compositor.curved_renderer, HUD_DRAW_TARGET.CURVED)
-		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.OVERLAY, OVERLAY_RENDER_PASS)
+		composite_hud(compositor)
 	end
 end
 
@@ -654,13 +664,11 @@ mod:hook(UIHud, "init", function(func, self, ...)
 end)
 
 mod:hook(UIHud, "destroy", function(func, self, ...)
-	local result = func(self, ...)
-
-	destroy_hud_compositor(self, false)
+	destroy_hud_compositor(self)
 	restore_hud_draw(self)
 	known_huds[self] = nil
 
-	return result
+	return func(self, ...)
 end)
 
 ----------------
