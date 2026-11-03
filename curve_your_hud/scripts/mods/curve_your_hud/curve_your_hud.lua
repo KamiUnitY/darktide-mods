@@ -57,12 +57,11 @@ local HUD_CUSTOM_ASSET_ID = "curve_your_hud:hud_curve_clean"
 local HUD_RENDER_TARGET_MATERIAL = "content/mods/curve_your_hud/hud_curve_clean"
 
 local SCREEN_RENDERER_NAME = "curve_your_hud_screen_renderer"
-local CURVED_RENDERER_NAME = "curve_your_hud_curved_renderer"
+local OFFSCREEN_RENDERER_NAME = "curve_your_hud_offscreen_renderer"
 local DEFAULT_SCREEN_RENDER_PASS = "to_screen"
 
-local CURVED_TARGET_PASS_LAYER = 0
+local OFFSCREEN_PASS_LAYER = 0
 local SCREEN_PASS_LAYER = 1
-local CURVED_COMPOSITE_LAYER = 0
 
 local FULLSCREEN_UVS = { { 0, 0 }, { 1, 1 } }
 
@@ -402,15 +401,15 @@ local function get_or_create_hud_compositor(hud)
 	screen_renderer.render_pass_flag = "render_pass"
 	screen_renderer.base_render_pass = DEFAULT_SCREEN_RENDER_PASS
 
-	local curved_renderer = Managers.ui:create_renderer(
-		CURVED_RENDERER_NAME,
+	local offscreen_renderer = Managers.ui:create_renderer(
+		OFFSCREEN_RENDERER_NAME,
 		nil,
 		true,
 		screen_renderer.gui,
 		screen_renderer.gui_retained,
 		HUD_RENDER_TARGET_MATERIAL
 	)
-	local curved_material = curved_renderer.render_target_material
+	local curved_material = offscreen_renderer.render_target_material
 
 	Material.set_scalar(curved_material, "material_variable_a0cca63e", mod.settings.noise_effect)
 	Material.set_scalar(curved_material, "raster_intensity", mod.settings.stripe_effect)
@@ -419,10 +418,10 @@ local function get_or_create_hud_compositor(hud)
 
 	Gui.render_pass(
 		screen_renderer.gui_retained,
-		CURVED_TARGET_PASS_LAYER,
-		curved_renderer.base_render_pass,
+		OFFSCREEN_PASS_LAYER,
+		offscreen_renderer.base_render_pass,
 		true,
-		curved_renderer.render_target
+		offscreen_renderer.render_target
 	)
 	Gui.render_pass(
 		screen_renderer.gui_retained,
@@ -434,11 +433,11 @@ local function get_or_create_hud_compositor(hud)
 	local compositor = {
 		original_renderer = original_renderer,
 		screen_renderer = screen_renderer,
-		curved_renderer = curved_renderer,
+		offscreen_renderer = offscreen_renderer,
 	}
 
 	hud_compositors[hud] = compositor
-	release_hud_element_widgets(hud, original_renderer, curved_renderer, HUD_DRAW_TARGET.CURVED)
+	release_hud_element_widgets(hud, original_renderer, offscreen_renderer, HUD_DRAW_TARGET.CURVED)
 
 	return compositor
 end
@@ -451,9 +450,9 @@ local function destroy_hud_compositor(hud)
 	end
 
 	hud_compositors[hud] = nil
-	release_hud_element_widgets(hud, compositor.curved_renderer, nil, HUD_DRAW_TARGET.CURVED)
+	release_hud_element_widgets(hud, compositor.offscreen_renderer, nil, HUD_DRAW_TARGET.CURVED)
 
-	Managers.ui:destroy_renderer(CURVED_RENDERER_NAME)
+	Managers.ui:destroy_renderer(OFFSCREEN_RENDERER_NAME)
 	Managers.ui:destroy_renderer(SCREEN_RENDERER_NAME)
 end
 
@@ -469,15 +468,15 @@ end
 
 local function prepare_hud_render_passes(compositor)
 	local screen_renderer = compositor.screen_renderer
-	local curved_renderer = compositor.curved_renderer
+	local offscreen_renderer = compositor.offscreen_renderer
 
 	UIRenderer.clear_render_pass_queue(screen_renderer)
 	UIRenderer.add_render_pass(
 		screen_renderer,
-		CURVED_TARGET_PASS_LAYER,
-		curved_renderer.base_render_pass,
+		OFFSCREEN_PASS_LAYER,
+		offscreen_renderer.base_render_pass,
 		false,
-		curved_renderer.render_target
+		offscreen_renderer.render_target
 	)
 	UIRenderer.add_render_pass(
 		screen_renderer,
@@ -489,7 +488,7 @@ end
 
 local function composite_hud(compositor)
 	local screen_renderer = compositor.screen_renderer
-	local curved_renderer = compositor.curved_renderer
+	local offscreen_renderer = compositor.offscreen_renderer
 
 	local width = RESOLUTION_LOOKUP.width
 	local height = RESOLUTION_LOOKUP.height
@@ -514,12 +513,12 @@ local function composite_hud(compositor)
 	local right = math.floor(horizontal_margin + content_width + 0.5) + snapped_lag_x
 	local top = math.floor(vertical_margin + 0.5) + snapped_lag_y
 	local bottom = math.floor(vertical_margin + content_height + 0.5) + snapped_lag_y
-	local position = Vector3(left / scale, top / scale, CURVED_COMPOSITE_LAYER)
+	local position = Vector3(left / scale, top / scale, 0)
 	local size = Vector3((right - left) / scale, (bottom - top) / scale, 0)
 
 	UIRenderer.script_draw_bitmap_uv(
 		screen_renderer,
-		curved_renderer.render_target_material,
+		offscreen_renderer.render_target_material,
 		position,
 		size,
 		FULLSCREEN_UVS,
@@ -627,7 +626,7 @@ local function install_hud_draw(hud)
 
 		prepare_hud_render_passes(compositor)
 		draw_original_hud_without_curved_elements(self, original_draw, dt, t, input_service)
-		draw_hud_elements(self, dt, t, input_service, compositor.curved_renderer, HUD_DRAW_TARGET.CURVED)
+		draw_hud_elements(self, dt, t, input_service, compositor.offscreen_renderer, HUD_DRAW_TARGET.CURVED)
 		composite_hud(compositor)
 	end
 end
@@ -683,11 +682,11 @@ mod:hook(WorldManager, "enable_world", function(func, self, world_name, enabled,
 	return result
 end)
 
----------------------------------
--- 3D TEXT RENDER-PASS ROUTING --
----------------------------------
+------------------------------------
+-- 3D TEXT OFFSCREEN-PASS ROUTING --
+------------------------------------
 
-local function draw_text_3d_to_render_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
+local function draw_text_3d_to_offscreen_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
 	local render_settings = ui_renderer.render_settings
 	local retained_mode = not not retained_id
 
@@ -721,11 +720,11 @@ local function draw_text_3d_to_render_pass(ui_renderer, text, font_size, font_ty
 end
 
 mod:hook(UIRenderer, "script_draw_text_3d", function(func, ui_renderer, text, font_size, font_type, transform, position, layer, size, color, options, retained_id)
-	if ui_renderer.name ~= CURVED_RENDERER_NAME then
+	if ui_renderer.name ~= OFFSCREEN_RENDERER_NAME then
 		return func(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, options, retained_id)
 	end
 
-	return draw_text_3d_to_render_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
+	return draw_text_3d_to_offscreen_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
 end)
 
 -------------------------------------
