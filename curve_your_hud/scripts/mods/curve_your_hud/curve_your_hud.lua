@@ -84,7 +84,6 @@ local gameplay_state_active
 local hud_material_ready = false
 local recreate_hud_compositors_requested = false
 
-
 ---@type string?
 local previous_viewport_name
 
@@ -431,7 +430,6 @@ local function get_or_create_hud_compositor(hud)
 	)
 
 	local compositor = {
-		original_renderer = original_renderer,
 		screen_renderer = screen_renderer,
 		offscreen_renderer = offscreen_renderer,
 	}
@@ -486,6 +484,73 @@ local function prepare_hud_render_passes(compositor)
 	)
 end
 
+local function draw_original_hud_without_curved_elements(hud, original_draw, dt, t, input_service)
+	local currently_visible_elements = hud._currently_visible_elements
+	local elements_array = hud._elements_array
+	local hidden_element_names = {}
+
+	for i = 1, #elements_array do
+		local element = elements_array[i]
+		local element_name = element.__class_name
+
+		if currently_visible_elements[element_name]
+			and hud_element_draw_target(element) == HUD_DRAW_TARGET.CURVED
+		then
+			currently_visible_elements[element_name] = false
+			hidden_element_names[#hidden_element_names + 1] = element_name
+		end
+	end
+
+	original_draw(hud, dt, t, input_service)
+
+	for i = 1, #hidden_element_names do
+		currently_visible_elements[hidden_element_names[i]] = true
+	end
+end
+
+local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_target)
+	local render_settings = hud._render_settings
+	local saved_start_layer = render_settings.start_layer
+	local saved_base_render_pass = ui_renderer.base_render_pass
+	local alpha_multiplier = render_settings.alpha_multiplier or 1
+	local opacity_multiplier = mod.settings.opacity_multiplier
+	local currently_visible_elements = hud._currently_visible_elements
+	local elements_hud_scale_lookup = hud._elements_hud_scale_lookup
+	local elements_array = hud._elements_array
+	local elements_hud_retained_mode_lookup = hud._elements_hud_retained_mode_lookup
+
+	for i = 1, #elements_array do
+		local element = elements_array[i]
+		local element_name = element.__class_name
+
+		if hud_element_draw_target(element) == draw_target
+			and currently_visible_elements[element_name]
+			and element.draw
+		then
+			local hud_scale_applied = false
+
+			if elements_hud_scale_lookup[element_name] then
+				hud_scale_applied = true
+				hud:_apply_hud_scale()
+			end
+
+			render_settings.force_retained_mode = elements_hud_retained_mode_lookup[element_name]
+			render_settings.alpha_multiplier = alpha_multiplier * opacity_multiplier
+			ui_renderer.base_render_pass = saved_base_render_pass
+
+			element:draw(dt, t, ui_renderer, render_settings, input_service)
+			render_settings.alpha_multiplier = alpha_multiplier
+
+			if hud_scale_applied then
+				hud:_abort_hud_scale()
+			end
+		end
+	end
+
+	ui_renderer.base_render_pass = saved_base_render_pass
+	render_settings.start_layer = saved_start_layer
+end
+
 local function composite_hud(compositor)
 	local screen_renderer = compositor.screen_renderer
 	local offscreen_renderer = compositor.offscreen_renderer
@@ -528,75 +593,6 @@ local function composite_hud(compositor)
 
 	screen_renderer.base_render_pass = previous_base_render_pass
 	UIRenderer.end_pass(screen_renderer)
-end
-
-local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_target, base_render_pass)
-	local render_settings = hud._render_settings
-	local saved_start_layer = render_settings.start_layer
-	local saved_base_render_pass = ui_renderer.base_render_pass
-	local alpha_multiplier = render_settings.alpha_multiplier or 1
-	local opacity_multiplier = mod.settings.opacity_multiplier
-	local currently_visible_elements = hud._currently_visible_elements
-	local elements_hud_scale_lookup = hud._elements_hud_scale_lookup
-	local elements_array = hud._elements_array
-	local elements_hud_retained_mode_lookup = hud._elements_hud_retained_mode_lookup
-
-	for i = 1, #elements_array do
-		local element = elements_array[i]
-		local element_name = element.__class_name
-
-		if hud_element_draw_target(element) == draw_target
-			and currently_visible_elements[element_name]
-			and element.draw
-		then
-			local hud_scale_applied = false
-			local opacity = not OVERLAY_ELEMENT_NAMES[element_name]
-				and opacity_multiplier or 1
-
-			if elements_hud_scale_lookup[element_name] then
-				hud_scale_applied = true
-				hud:_apply_hud_scale()
-			end
-
-			render_settings.force_retained_mode = elements_hud_retained_mode_lookup[element_name]
-			render_settings.alpha_multiplier = alpha_multiplier * opacity
-			ui_renderer.base_render_pass = base_render_pass or saved_base_render_pass
-
-			element:draw(dt, t, ui_renderer, render_settings, input_service)
-			render_settings.alpha_multiplier = alpha_multiplier
-
-			if hud_scale_applied then
-				hud:_abort_hud_scale()
-			end
-		end
-	end
-
-	ui_renderer.base_render_pass = saved_base_render_pass
-	render_settings.start_layer = saved_start_layer
-end
-
-local function draw_original_hud_without_curved_elements(hud, original_draw, dt, t, input_service)
-	local currently_visible_elements = hud._currently_visible_elements
-	local elements_array = hud._elements_array
-	local hidden_element_names = {}
-
-	for i = 1, #elements_array do
-		local element = elements_array[i]
-		local element_name = element.__class_name
-
-		if currently_visible_elements[element_name]
-			and hud_element_draw_target(element) == HUD_DRAW_TARGET.CURVED
-		then
-			currently_visible_elements[element_name] = false
-			hidden_element_names[#hidden_element_names + 1] = element_name
-		end
-	end
-
-	original_draw(hud, dt, t, input_service)
-
-	for i = 1, #hidden_element_names do
-		currently_visible_elements[hidden_element_names[i]] = true
-	end
 end
 
 local function is_world_enabled(world_name)
@@ -821,9 +817,9 @@ mod.on_all_mods_loaded = function()
 	set_effect_enabled(false)
 
 	if not custom_assets or not custom_assets.is_api_compatible(CUSTOM_ASSETS_API_VERSION) then
-        mod:error("Needs Custom Assets")
-        return
-    end
+		mod:error("Needs Custom Assets")
+		return
+	end
 
 	local ticket, acquire_error = custom_assets.acquire(mod, HUD_CUSTOM_ASSET_ID, function(_, asset, load_error)
 		if load_error or not asset or not asset.primary then
@@ -904,7 +900,6 @@ mod.toggle_keybind = function()
 	if not can_press_keybind() then return end
 	mod.toggle()
 end
-
 
 --------------------
 -- INITIALIZATION --
