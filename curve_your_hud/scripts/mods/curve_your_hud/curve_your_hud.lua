@@ -371,6 +371,14 @@ local function release_hud_element_widgets(hud, ui_renderer, destination_rendere
 	hud._refresh_retained = true
 end
 
+mod:hook(UIWidget, "draw", function(func, widget, ui_renderer, ...)
+	if ui_renderer.name == OFFSCREEN_RENDERER_NAME then
+		widget_renderer_owners[widget] = ui_renderer
+	end
+
+	return func(widget, ui_renderer, ...)
+end)
+
 mod:hook(UIWidget, "destroy", function(func, ui_renderer, widget, ...)
 	return func(widget_renderer_owners[widget] or ui_renderer, widget, ...)
 end)
