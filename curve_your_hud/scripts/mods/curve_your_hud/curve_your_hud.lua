@@ -678,11 +678,11 @@ mod:hook(WorldManager, "enable_world", function(func, self, world_name, enabled,
 	return result
 end)
 
-------------------------------------
--- 3D TEXT OFFSCREEN-PASS ROUTING --
-------------------------------------
+---------------------------------
+-- 3D TEXT RENDER-PASS ROUTING --
+---------------------------------
 
-local function draw_text_3d_to_offscreen_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
+local function draw_text_3d_to_render_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
 	local render_settings = ui_renderer.render_settings
 	local retained_mode = not not retained_id
 
@@ -716,11 +716,11 @@ local function draw_text_3d_to_offscreen_pass(ui_renderer, text, font_size, font
 end
 
 mod:hook(UIRenderer, "script_draw_text_3d", function(func, ui_renderer, text, font_size, font_type, transform, position, layer, size, color, options, retained_id)
-	if ui_renderer.name ~= OFFSCREEN_RENDERER_NAME then
-		return func(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, options, retained_id)
+	if ui_renderer.name == OFFSCREEN_RENDERER_NAME then
+		return draw_text_3d_to_render_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
 	end
 
-	return draw_text_3d_to_offscreen_pass(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, retained_id)
+	return func(ui_renderer, text, font_size, font_type, transform, position, layer, size, color, options, retained_id)
 end)
 
 -------------------------------------
