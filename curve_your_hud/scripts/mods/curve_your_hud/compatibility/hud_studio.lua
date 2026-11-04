@@ -1,10 +1,12 @@
+local mod = get_mod("curve_your_hud")
+
 local Vector3 = Vector3
 
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
 
 local CompatHudStudio = {}
 
-CompatHudStudio.install = function(mod, offscreen_renderer_name)
+CompatHudStudio.install = function(offscreen_renderer_name)
 	local hud_studio = get_mod("hud_studio")
 	local gui_direct = hud_studio and hud_studio.hud_studio_gui_direct
 
