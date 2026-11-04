@@ -19,6 +19,8 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIViewHandler = require("scripts/managers/ui/ui_view_handler")
 local WorldManager = require("scripts/foundation/managers/world/world_manager")
 
+local CompatHudStudio = mod:io_dofile("curve_your_hud/scripts/mods/curve_your_hud/compatibility/hud_studio")
+
 ---------------
 -- CONSTANTS --
 ---------------
@@ -815,6 +817,8 @@ end
 
 mod.on_all_mods_loaded = function()
 	set_effect_enabled(false)
+
+	CompatHudStudio.install(mod, OFFSCREEN_RENDERER_NAME)
 
 	if not custom_assets or not custom_assets.is_api_compatible(CUSTOM_ASSETS_API_VERSION) then
 		mod:error("Needs Custom Assets")
