@@ -40,7 +40,6 @@ local UNCURVED_ELEMENT_NAMES = {
 }
 
 local OVERLAY_ELEMENT_NAMES = {
-	HudElementCustomizer = true,
 	HudElementTacticalOverlay = true,
 	HudElementCutsceneOverlay = true,
 	HudElementCutsceneFading = true,
@@ -295,6 +294,7 @@ local function get_or_create_hud_compositor(hud)
 
 	hud_compositors[hud] = compositor
 	release_hud_element_widgets(hud, original_renderer, offscreen_renderer, HUD_DRAW_TARGET.CURVED)
+	release_hud_element_widgets(hud, original_renderer, screen_renderer, HUD_DRAW_TARGET.OVERLAY)
 
 	return compositor
 end
@@ -308,6 +308,7 @@ local function destroy_hud_compositor(hud)
 
 	hud_compositors[hud] = nil
 	release_hud_element_widgets(hud, compositor.offscreen_renderer, nil, HUD_DRAW_TARGET.CURVED)
+	release_hud_element_widgets(hud, compositor.screen_renderer, nil, HUD_DRAW_TARGET.OVERLAY)
 
 	Managers.ui:destroy_renderer(OFFSCREEN_RENDERER_NAME)
 	Managers.ui:destroy_renderer(SCREEN_RENDERER_NAME)
@@ -343,7 +344,7 @@ local function prepare_hud_render_passes(compositor)
 	)
 end
 
-local function draw_original_hud_without_curved_elements(hud, original_draw, dt, t, input_service)
+local function draw_original_hud_elements(hud, original_draw, dt, t, input_service)
 	local currently_visible_elements = hud._currently_visible_elements
 	local elements_array = hud._elements_array
 	local hidden_element_names = {}
@@ -353,7 +354,7 @@ local function draw_original_hud_without_curved_elements(hud, original_draw, dt,
 		local element_name = element.__class_name
 
 		if currently_visible_elements[element_name]
-			and hud_element_draw_target(element) == HUD_DRAW_TARGET.CURVED
+			and hud_element_draw_target(element) ~= HUD_DRAW_TARGET.UNCURVED
 		then
 			currently_visible_elements[element_name] = false
 			hidden_element_names[#hidden_element_names + 1] = element_name
@@ -372,7 +373,7 @@ local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_ta
 	local saved_start_layer = render_settings.start_layer
 	local saved_base_render_pass = ui_renderer.base_render_pass
 	local alpha_multiplier = render_settings.alpha_multiplier or 1
-	local opacity_multiplier = mod.settings.opacity_multiplier
+	local opacity_settings = mod.settings.opacity_multiplier
 	local currently_visible_elements = hud._currently_visible_elements
 	local elements_hud_scale_lookup = hud._elements_hud_scale_lookup
 	local elements_array = hud._elements_array
@@ -387,6 +388,7 @@ local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_ta
 			and element.draw
 		then
 			local hud_scale_applied = false
+			local opacity_multiplier = draw_target == HUD_DRAW_TARGET.OVERLAY and 1 or opacity_settings
 
 			if elements_hud_scale_lookup[element_name] then
 				hud_scale_applied = true
@@ -410,7 +412,7 @@ local function draw_hud_elements(hud, dt, t, input_service, ui_renderer, draw_ta
 	render_settings.start_layer = saved_start_layer
 end
 
-local function composite_hud(compositor)
+local function draw_curved_hud_to_screen(compositor)
 	local screen_renderer = compositor.screen_renderer
 	local offscreen_renderer = compositor.offscreen_renderer
 
@@ -481,9 +483,10 @@ local function install_hud_draw(hud)
 		end
 
 		prepare_hud_render_passes(compositor)
-		draw_original_hud_without_curved_elements(self, original_draw, dt, t, input_service)
+		draw_original_hud_elements(self, original_draw, dt, t, input_service)
 		draw_hud_elements(self, dt, t, input_service, compositor.offscreen_renderer, HUD_DRAW_TARGET.CURVED)
-		composite_hud(compositor)
+		draw_curved_hud_to_screen(compositor)
+		draw_hud_elements(self, dt, t, input_service, compositor.screen_renderer, HUD_DRAW_TARGET.OVERLAY)
 	end
 end
 
