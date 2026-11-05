@@ -11,12 +11,9 @@ local matrix_rotation, yaw, pitch = Matrix4x4.rotation, Quaternion.yaw, Quaterni
 ---@class CameraSway
 local CameraSway = {}
 
-CameraSway.CAMERA_PX_PER_RAD = 15
-
+CameraSway.CAMERA_PX_PER_RAD = 10
 CameraSway.MAX_RATE = 15
-
-CameraSway.CAMERA_DELAY = 0.15
-
+CameraSway.CAMERA_DELAY = 0.1
 CameraSway.MOTION_PX_PER_RAD = 1500
 
 local CAMERA_BONE = "ap_camera_node"
@@ -117,18 +114,31 @@ end
 ---@param dt number
 ---@return number offset_x, number offset_y
 function CameraSway.update(dt)
-	CameraSway.sample_camera(dt)
-	CameraSway.sample_motion()
+	local camera_strength = mod.settings.camera_sway
+	local motion_strength = mod.settings.motion_sway
 	
-	local strength = mod.settings.camera_sway
-	local delay = CameraSway.CAMERA_DELAY
-	local scale = CameraSway.CAMERA_PX_PER_RAD * strength
-	local target_x, target_y = yaw_rate * scale, pitch_rate * scale
-	local blend = delay > 0 and (1 - exp(-dt / delay)) or 1
-	camera_lag_x = camera_lag_x + (target_x - camera_lag_x) * blend
-	camera_lag_y = camera_lag_y + (target_y - camera_lag_y) * blend
-	offset_x = camera_lag_x + motion_x * strength
-	offset_y = camera_lag_y + motion_y * strength
+	if camera_strength ~= 0 then
+		CameraSway.sample_camera(dt)
+		local delay = CameraSway.CAMERA_DELAY
+		local scale = CameraSway.CAMERA_PX_PER_RAD * camera_strength
+		local target_x, target_y = yaw_rate * scale, pitch_rate * scale
+		local blend = delay > 0 and (1 - exp(-dt / delay)) or 1
+		camera_lag_x = camera_lag_x + (target_x - camera_lag_x) * blend
+		camera_lag_y = camera_lag_y + (target_y - camera_lag_y) * blend
+	else
+		yaw_rate, pitch_rate = 0, 0
+		last_yaw, last_pitch = nil, nil
+		camera_lag_x, camera_lag_y = 0, 0
+	end
+
+	if motion_strength ~= 0 then
+		CameraSway.sample_motion()
+	else
+		motion_x, motion_y = 0, 0
+	end
+
+	offset_x = camera_lag_x + motion_x * motion_strength
+	offset_y = camera_lag_y + motion_y * motion_strength
 	return offset_x, offset_y
 end
 

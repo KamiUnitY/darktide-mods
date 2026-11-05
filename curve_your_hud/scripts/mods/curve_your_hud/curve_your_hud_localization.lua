@@ -21,7 +21,11 @@ return {
 	},
 	camera_sway = { en = "Camera Sway" },
 	camera_sway_description = {
-		en = "Controls how much the camera sways when the player moves.",
+		en = "Controls how much the HUD sways when turning the camera.",
+	},
+	motion_sway = { en = "Motion Sway" },
+	motion_sway_description = {
+		en = "Controls how much the HUD follows player motion.",
 	},
 	opacity_multiplier = { en = "Opacity Multiplier" },
 	opacity_multiplier_description = {

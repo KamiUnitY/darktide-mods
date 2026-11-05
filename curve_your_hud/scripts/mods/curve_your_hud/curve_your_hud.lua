@@ -93,6 +93,7 @@ mod.settings = {
 	noise_effect       = mod:get("noise_effect"),
 	stripe_effect      = mod:get("stripe_effect"),
 	camera_sway        = mod:get("camera_sway"),
+	motion_sway        = mod:get("motion_sway"),
 	opacity_multiplier = mod:get("opacity_multiplier"),
 	horizontal_margin  = mod:get("horizontal_margin"),
 	vertical_margin    = mod:get("vertical_margin"),
@@ -646,7 +647,7 @@ end
 
 mod.update = function(dt)
 	if mod.effect_enabled then
-		if mod.settings.camera_sway ~= 0 then
+		if mod.settings.camera_sway ~= 0 or mod.settings.motion_sway ~= 0 then
 			CameraSway.update(dt)
 		end
 	end

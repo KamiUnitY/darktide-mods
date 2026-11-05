@@ -47,6 +47,14 @@ return {
   				step_size_value = 0.05,
 			},
 			{
+				setting_id = "motion_sway",
+				type = "numeric",
+				default_value = 0.25,
+				range = { -1.0, 1.0 },
+				decimals_number = 2,
+				step_size_value = 0.05,
+			},
+			{
 				setting_id = "opacity_multiplier",
 				type = "numeric",
 				default_value = 0.85,
