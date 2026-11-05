@@ -2,7 +2,6 @@ local mod = get_mod("curve_your_hud")
 local custom_assets = get_mod("CustomAssets")
 
 local Managers = Managers
-local Quaternion = Quaternion
 local Vector3 = Vector3
 local math = math
 local Color = Color
@@ -19,6 +18,7 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIViewHandler = require("scripts/managers/ui/ui_view_handler")
 local WorldManager = require("scripts/foundation/managers/world/world_manager")
 
+local CameraSway = mod:io_dofile("curve_your_hud/scripts/mods/curve_your_hud/library/camera_sway")
 local CompatHudStudio = mod:io_dofile("curve_your_hud/scripts/mods/curve_your_hud/compatibility/hud_studio")
 
 ---------------
@@ -52,8 +52,6 @@ local HUD_DRAW_TARGET = {
 	OVERLAY = "overlay",
 }
 
-local CAMERA_FOLLOW_DELAY_SECONDS = 0.01
-local WORLD_PIXELS_PER_SCREEN_HEIGHT = 0.16
 local CUSTOM_ASSETS_API_VERSION = 1
 local HUD_CUSTOM_ASSET_ID = "curve_your_hud:hud_curve_clean"
 local HUD_RENDER_TARGET_MATERIAL = "content/mods/curve_your_hud/hud_curve_clean"
@@ -86,23 +84,6 @@ local gameplay_state_active
 local hud_material_ready = false
 local recreate_hud_compositors_requested = false
 
----@type string?
-local previous_viewport_name
-
----@type number?
-local smoothed_camera_yaw
----@type number?
-local smoothed_camera_pitch
----@type number?
-local smoothed_camera_x
----@type number?
-local smoothed_camera_y
----@type number?
-local smoothed_camera_z
-
-local camera_lag_x = 0.0
-local camera_lag_y = 0.0
-
 --------------------------
 -- MOD SETTINGS CACHING --
 --------------------------
@@ -129,139 +110,6 @@ mod:register_hud_element({
 	visibility_groups = { "alive" },
 	use_hud_scale = false,
 })
-
------------------
--- CAMERA SWAY --
------------------
-
-local function shortest_angle_delta(target, current)
-	return (target - current + math.pi) % (math.pi * 2) - math.pi
-end
-
-local function reset_camera_lag()
-	smoothed_camera_yaw = nil
-	smoothed_camera_pitch = nil
-	smoothed_camera_x = nil
-	smoothed_camera_y = nil
-	smoothed_camera_z = nil
-	previous_viewport_name = nil
-	camera_lag_x = 0.0
-	camera_lag_y = 0.0
-end
-
-local function set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z, viewport_name)
-	smoothed_camera_yaw = yaw
-	smoothed_camera_pitch = pitch
-	smoothed_camera_x = position_x
-	smoothed_camera_y = position_y
-	smoothed_camera_z = position_z
-	previous_viewport_name = viewport_name
-	camera_lag_x = 0.0
-	camera_lag_y = 0.0
-end
-
-local function current_camera_pose()
-	local player_manager = Managers.player
-	local camera_manager = Managers.state and Managers.state.camera
-
-	if not player_manager or not camera_manager then
-		return nil, nil
-	end
-
-	local player = player_manager:local_player_safe(1)
-	local viewport_name = player and player.viewport_name
-
-	if not viewport_name or not camera_manager:has_camera(viewport_name) then
-		return nil, nil
-	end
-
-	local rotation = camera_manager:camera_rotation(viewport_name)
-	local position = camera_manager:camera_position(viewport_name)
-
-	if not rotation or not Quaternion.is_valid(rotation) or not position or not Vector3.is_valid(position) then
-		return nil, nil
-	end
-
-	return rotation, position, viewport_name
-end
-
-local function clamp_screen_offset(offset_x, offset_y, limit)
-	local distance = math.sqrt(offset_x * offset_x + offset_y * offset_y)
-
-	if distance <= limit then
-		return offset_x, offset_y
-	end
-
-	local scale = limit / distance
-
-	return offset_x * scale, offset_y * scale
-end
-
-local function movement_limit_pixels(width, height)
-	local movement_limit_percent = 2.0
-
-	return math.min(width, height) * movement_limit_percent * 0.01
-end
-
-local function update_camera_lag(dt)
-	if not dt or dt <= 0 then
-		reset_camera_lag()
-		return
-	end
-
-	local rotation, position, viewport_name = current_camera_pose()
-
-	if not rotation then
-		reset_camera_lag()
-		return
-	end
-
-	local yaw, pitch = Quaternion.to_yaw_pitch_roll(rotation)
-	local position_x = position[1]
-	local position_y = position[2]
-	local position_z = position[3]
-
-	if viewport_name ~= previous_viewport_name or smoothed_camera_yaw == nil then
-		set_camera_lag_origin(yaw, pitch, position_x, position_y, position_z, viewport_name)
-		return
-	end
-
-	local follow_fraction = 1 - math.exp(-dt / CAMERA_FOLLOW_DELAY_SECONDS)
-
-	smoothed_camera_yaw = smoothed_camera_yaw + shortest_angle_delta(yaw, smoothed_camera_yaw) * follow_fraction
-	smoothed_camera_pitch = smoothed_camera_pitch + shortest_angle_delta(pitch, smoothed_camera_pitch) * follow_fraction
-	smoothed_camera_x = smoothed_camera_x + (position_x - smoothed_camera_x) * follow_fraction
-	smoothed_camera_y = smoothed_camera_y + (position_y - smoothed_camera_y) * follow_fraction
-	smoothed_camera_z = smoothed_camera_z + (position_z - smoothed_camera_z) * follow_fraction
-
-	local lag_yaw = shortest_angle_delta(smoothed_camera_yaw, yaw)
-	local lag_pitch = shortest_angle_delta(smoothed_camera_pitch, pitch)
-	local world_lag_x = smoothed_camera_x - position_x
-	local world_lag_y = smoothed_camera_y - position_y
-	local world_lag_z = smoothed_camera_z - position_z
-	local camera_right = Quaternion.right(rotation)
-	local camera_up = Quaternion.up(rotation)
-	local lag_right = world_lag_x * camera_right[1] + world_lag_y * camera_right[2] + world_lag_z * camera_right[3]
-	local lag_up = world_lag_x * camera_up[1] + world_lag_y * camera_up[2] + world_lag_z * camera_up[3]
-	local width = RESOLUTION_LOOKUP.width
-	local height = RESOLUTION_LOOKUP.height
-	local movement_limit = movement_limit_pixels(width, height)
-	local world_pixels_per_meter = height * WORLD_PIXELS_PER_SCREEN_HEIGHT
-	local camera_sway_scale = mod.settings.camera_sway
-	local world_sway_scale = camera_sway_scale * 5
-	local target_lag_x = -lag_yaw * width * 0.5 * camera_sway_scale + lag_right * world_pixels_per_meter * world_sway_scale
-	local target_lag_y = -lag_pitch * height * camera_sway_scale - lag_up * world_pixels_per_meter * world_sway_scale
-
-	local limited_lag_x, limited_lag_y = clamp_screen_offset(target_lag_x, target_lag_y, movement_limit)
-
-	local movement_smoothing_time = math.max(CAMERA_FOLLOW_DELAY_SECONDS * 0.5, 0.05)
-	local movement_fraction = 1 - math.exp(-dt / movement_smoothing_time)
-
-	camera_lag_x = camera_lag_x + (limited_lag_x - camera_lag_x) * movement_fraction
-	camera_lag_y = camera_lag_y + (limited_lag_y - camera_lag_y) * movement_fraction
-
-	camera_lag_x, camera_lag_y = clamp_screen_offset(camera_lag_x, camera_lag_y, movement_limit)
-end
 
 -------------------------
 -- HUD ELEMENT ROUTING --
@@ -582,6 +430,7 @@ local function composite_hud(compositor)
 	screen_renderer.base_render_pass = DEFAULT_SCREEN_RENDER_PASS
 
 	local scale = screen_renderer.scale or 1
+	local camera_lag_x, camera_lag_y = CameraSway.offset()
 	local snapped_lag_x = math.floor(camera_lag_x + 0.5)
 	local snapped_lag_y = math.floor(camera_lag_y + 0.5)
 	local left = math.floor(horizontal_margin + 0.5) + snapped_lag_x
@@ -741,7 +590,7 @@ mod:hook(UIViewHandler, "_force_close", function(func, self, view_name, ...)
 	local result = func(self, view_name, ...)
 
 	if view_name == DMF_OPTIONS_VIEW_NAME then
-		reset_camera_lag()
+		CameraSway.reset()
 		if recreate_hud_compositors_requested then
 			recreate_hud_compositors_requested = false
 			if mod:is_enabled() and mod.effect_enabled then
@@ -775,7 +624,7 @@ local function set_effect_enabled(enabled)
 	mod.effect_enabled = enabled
 
 	if not enabled then
-		reset_camera_lag()
+		CameraSway.reset()
 		destroy_all_hud_compositors()
 	else
 		world_enabled_by_name = {}
@@ -798,7 +647,7 @@ end
 mod.update = function(dt)
 	if mod.effect_enabled then
 		if mod.settings.camera_sway ~= 0 then
-			update_camera_lag(dt)
+			CameraSway.update(dt)
 		end
 	end
 end

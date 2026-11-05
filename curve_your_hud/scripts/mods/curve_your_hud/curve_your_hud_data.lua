@@ -17,7 +17,7 @@ return {
 			{
 				setting_id = "curve_strength",
 				type = "numeric",
-				default_value = 0.08,
+				default_value = 0.05,
 				range = { 0, 0.25 },
 				decimals_number = 3,
 				step_size_value = 0.005,

@@ -1,17 +1,10 @@
----@class mod : DL_Mod
+--this file is originally from Hud Studio mod all credit goes to the original author, malevhf.
+
 local mod = get_mod("curve_your_hud")
-
-if mod.curve_your_hud_camera_sway then
-	return mod.curve_your_hud_camera_sway
-end
-
-local Block = mod:core(mod.curve_your_hud_block, "blocks/block")
-local Player = mod.dl.player
 
 local PI = math.pi
 local TWO_PI = PI * 2
 local exp = math.exp
-local player_ext, get_local_player = Player.extensions, Player.local_player_unit
 local alive, has_node, node, local_pose = Unit.alive, Unit.has_node, Unit.node, Unit.local_pose
 local matrix_rotation, yaw, pitch = Matrix4x4.rotation, Quaternion.yaw, Quaternion.pitch
 
@@ -31,10 +24,9 @@ local CAMERA_BONE = "ap_camera_node"
 local yaw_rate, pitch_rate = 0, 0
 local last_yaw, last_pitch
 
+local camera_lag_x, camera_lag_y = 0, 0
 local motion_x, motion_y = 0, 0
-local motion_sampled = false
-
-local camera_sampled = false
+local offset_x, offset_y = 0, 0
 
 local bone_unit, bone_index
 
@@ -51,23 +43,23 @@ local function clamp_rate(rate)
 	return rate > max and max or (rate < -max and -max or rate)
 end
 
----@param follow BlockCameraSway
----@param key string
----@param default any
----@return any
-local function read(follow, key, default)
-	local value = follow[key]
-	if type(value) ~= type(default) then
-		return default
-	end
-	return value
+local function local_player()
+	local player_manager = Managers.player
+	return player_manager and player_manager:local_player_safe(1)
 end
-CameraSway.read = read
+
+local function get_local_player()
+	local player = local_player()
+	return player and player.player_unit
+end
+
+local function player_ext(unit, extension_name)
+	return unit and alive(unit) and ScriptUnit.has_extension(unit, extension_name)
+end
 
 ---@param dt number
 function CameraSway.sample_camera(dt)
-	camera_sampled = true
-	local player = Player.local_player()
+	local player = local_player()
 	local orientation = player and player:get_orientation()
 	if not orientation or dt <= 0 then
 		last_yaw, last_pitch = nil, nil
@@ -93,8 +85,7 @@ function CameraSway.sway_intensity()
 	return type(value) == "number" and value / 100 or 1
 end
 
-local function sample_motion()
-	motion_sampled = true
+function CameraSway.sample_motion()
 	motion_x, motion_y = 0, 0
 	local first_person = player_ext(get_local_player(), "first_person_system")
 	local fp_unit = first_person and first_person:first_person_unit()
@@ -113,68 +104,37 @@ local function sample_motion()
 	motion_x = wrap(yaw(bone_rotation)) * scale
 	motion_y = wrap(pitch(bone_rotation)) * scale
 end
-CameraSway.sample_motion = sample_motion
 
----@param block Block
----@param follow BlockCameraSway
+function CameraSway.reset()
+	yaw_rate, pitch_rate = 0, 0
+	last_yaw, last_pitch = nil, nil
+	camera_lag_x, camera_lag_y = 0, 0
+	motion_x, motion_y = 0, 0
+	offset_x, offset_y = 0, 0
+	bone_unit, bone_index = nil, nil
+end
+
 ---@param dt number
----@return number lag_x, number lag_y
-local function step_camera(block, follow, dt)
-	local strength = read(follow, "camera_strength", Block.FOLLOW_STRENGTH_DEFAULT)
-	local delay = read(follow, "camera_delay", CameraSway.CAMERA_DELAY)
+---@return number offset_x, number offset_y
+function CameraSway.update(dt)
+	CameraSway.sample_camera(dt)
+	CameraSway.sample_motion()
+	
+	local strength = mod.settings.camera_sway
+	local delay = CameraSway.CAMERA_DELAY
 	local scale = CameraSway.CAMERA_PX_PER_RAD * strength
 	local target_x, target_y = yaw_rate * scale, pitch_rate * scale
 	local blend = delay > 0 and (1 - exp(-dt / delay)) or 1
-	local lag_x, lag_y = block._camera_lag_x or 0, block._camera_lag_y or 0
-	lag_x = lag_x + (target_x - lag_x) * blend
-	lag_y = lag_y + (target_y - lag_y) * blend
-	block._camera_lag_x, block._camera_lag_y = lag_x, lag_y
-	return lag_x, lag_y
+	camera_lag_x = camera_lag_x + (target_x - camera_lag_x) * blend
+	camera_lag_y = camera_lag_y + (target_y - camera_lag_y) * blend
+	offset_x = camera_lag_x + motion_x * strength
+	offset_y = camera_lag_y + motion_y * strength
+	return offset_x, offset_y
 end
 
----@param blocks Block[]
----@param evaluated table<integer, any>
----@param dt number
-function CameraSway.update(blocks, evaluated, dt)
-	camera_sampled, motion_sampled = false, false
-	for b = 1, #blocks do
-		local block = blocks[b]
-		local follow = block.follow
-		local dx, dy = 0, 0
-		local any = false
-		if follow and evaluated[b] ~= false then
-			if follow.camera == true then
-				if not camera_sampled then
-					CameraSway.sample_camera(dt)
-				end
-				dx, dy = step_camera(block, follow, dt)
-				any = true
-			else
-				block._camera_lag_x, block._camera_lag_y = nil, nil
-			end
-
-			if follow.motion == true then
-				if not motion_sampled then
-					sample_motion()
-				end
-				dx, dy = dx + motion_x, dy + motion_y
-				any = true
-			end
-		elseif block._camera_lag_x then
-			block._camera_lag_x, block._camera_lag_y = nil, nil
-		end
-		if any then
-			block._follow_x, block._follow_y = dx, dy
-		elseif block._follow_x then
-			block._follow_x, block._follow_y = nil, nil
-		end
-	end
-
-	if not camera_sampled then
-		last_yaw, last_pitch = nil, nil
-	end
+---@return number offset_x, number offset_y
+function CameraSway.offset()
+	return offset_x, offset_y
 end
-
-mod.curve_your_hud_camera_sway = CameraSway
 
 return CameraSway
