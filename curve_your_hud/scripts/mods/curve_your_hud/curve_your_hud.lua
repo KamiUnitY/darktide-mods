@@ -45,19 +45,19 @@ local OVERLAY_ELEMENT_NAMES = {
 	HudElementCutsceneFading = true,
 }
 
-local HUD_DRAW_TARGET = {
+local RENDER_MODE = {
 	ORIGINAL = "original",
 	CURVED = "curved",
 	OVERLAY = "overlay",
 }
 
-local VALID_DRAW_TARGETS = {
-	[HUD_DRAW_TARGET.ORIGINAL] = true,
-	[HUD_DRAW_TARGET.CURVED] = true,
-	[HUD_DRAW_TARGET.OVERLAY] = true,
+local VALID_RENDER_MODES = {
+	[RENDER_MODE.ORIGINAL] = true,
+	[RENDER_MODE.CURVED] = true,
+	[RENDER_MODE.OVERLAY] = true,
 }
 
-local DRAW_TARGET_PROPERTY = "curve_your_hud_draw_target"
+local RENDER_MODE_OVERRIDE_PROPERTY = "curve_your_hud_render_mode_override"
 
 local CUSTOM_ASSETS_API_VERSION = 1
 local HUD_CUSTOM_ASSET_ID = "curve_your_hud:hud_curve_clean"
@@ -81,7 +81,7 @@ mod.want_enabled = true
 
 local known_huds = setmetatable({}, { __mode = "k" })
 local hud_compositors = setmetatable({}, { __mode = "k" })
-local hud_element_draw_targets = setmetatable({}, { __mode = "k" })
+local hud_element_render_modes = setmetatable({}, { __mode = "k" })
 local original_hud_draw_methods = setmetatable({}, { __mode = "k" })
 local original_element_lifecycle_methods = setmetatable({}, { __mode = "k" })
 local widget_renderer_owners = setmetatable({}, { __mode = "k" })
@@ -161,57 +161,57 @@ local function is_gameplay_hud_element(element)
 	return false
 end
 
-local function calculate_hud_element_draw_target(element)
-	local requested_target = element[DRAW_TARGET_PROPERTY]
+local function calculate_hud_element_render_mode(element)
+	local render_mode_override = element[RENDER_MODE_OVERRIDE_PROPERTY]
 
-	if VALID_DRAW_TARGETS[requested_target] then
-		return requested_target
+	if VALID_RENDER_MODES[render_mode_override] then
+		return render_mode_override
 	end
 
 	local element_name = element.__class_name
 
 	if ORIGINAL_ELEMENT_NAMES[element_name] then
-		return HUD_DRAW_TARGET.ORIGINAL
+		return RENDER_MODE.ORIGINAL
 	end
 
 	if OVERLAY_ELEMENT_NAMES[element_name] then
-		return HUD_DRAW_TARGET.OVERLAY
+		return RENDER_MODE.OVERLAY
 	end
 
 	if element._ui_scenegraph and is_gameplay_hud_element(element) then
-		return HUD_DRAW_TARGET.CURVED
+		return RENDER_MODE.CURVED
 	end
 
-	return HUD_DRAW_TARGET.ORIGINAL
+	return RENDER_MODE.ORIGINAL
 end
 
-local function hud_element_draw_target(element)
-	local draw_target = hud_element_draw_targets[element]
+local function hud_element_render_mode(element)
+	local render_mode = hud_element_render_modes[element]
 
-	if not draw_target then
-		draw_target = calculate_hud_element_draw_target(element)
-		hud_element_draw_targets[element] = draw_target
+	if not render_mode then
+		render_mode = calculate_hud_element_render_mode(element)
+		hud_element_render_modes[element] = render_mode
 	end
 
-	return draw_target
+	return render_mode
 end
 
 local function apply_hud_element_definition(element, definition)
-	local draw_target = definition[DRAW_TARGET_PROPERTY]
+	local render_mode_override = definition[RENDER_MODE_OVERRIDE_PROPERTY]
 
-	if VALID_DRAW_TARGETS[draw_target] then
-		element[DRAW_TARGET_PROPERTY] = draw_target
+	if VALID_RENDER_MODES[render_mode_override] then
+		element[RENDER_MODE_OVERRIDE_PROPERTY] = render_mode_override
 	end
 
-	hud_element_draw_targets[element] = nil
+	hud_element_render_modes[element] = nil
 end
 
 local function renderer_for_element(compositor, element)
-	local draw_target = hud_element_draw_target(element)
+	local render_mode = hud_element_render_mode(element)
 
-	if draw_target == HUD_DRAW_TARGET.CURVED then
+	if render_mode == RENDER_MODE.CURVED then
 		return compositor.offscreen_renderer
-	elseif draw_target == HUD_DRAW_TARGET.OVERLAY then
+	elseif render_mode == RENDER_MODE.OVERLAY then
 		return compositor.screen_renderer
 	end
 
@@ -329,7 +329,7 @@ local function release_owned_widgets(value, ui_renderer, destination_renderer, v
 	end
 end
 
-local function migrate_hud_element_widgets(hud, source_renderer, destination_renderer, draw_target)
+local function migrate_hud_element_widgets(hud, source_renderer, destination_renderer, render_mode)
 	local elements = hud._elements_array
 
 	if source_renderer and elements then
@@ -338,7 +338,7 @@ local function migrate_hud_element_widgets(hud, source_renderer, destination_ren
 		for i = 1, #elements do
 			local element = elements[i]
 
-			if hud_element_draw_target(element) == draw_target then
+			if hud_element_render_mode(element) == render_mode then
 				release_owned_widgets(element, source_renderer, destination_renderer, visited)
 			end
 		end
@@ -435,8 +435,8 @@ local function get_or_create_hud_compositor(hud)
 
 	hud_compositors[hud] = compositor
 
-	migrate_hud_element_widgets(hud, original_renderer, offscreen_renderer, HUD_DRAW_TARGET.CURVED)
-	migrate_hud_element_widgets(hud, original_renderer, screen_renderer, HUD_DRAW_TARGET.OVERLAY)
+	migrate_hud_element_widgets(hud, original_renderer, offscreen_renderer, RENDER_MODE.CURVED)
+	migrate_hud_element_widgets(hud, original_renderer, screen_renderer, RENDER_MODE.OVERLAY)
 
 	return compositor
 end
@@ -450,8 +450,8 @@ local function destroy_hud_compositor(hud)
 
 	hud_compositors[hud] = nil
 
-	migrate_hud_element_widgets(hud, compositor.offscreen_renderer, compositor.original_renderer, HUD_DRAW_TARGET.CURVED)
-	migrate_hud_element_widgets(hud, compositor.screen_renderer, compositor.original_renderer, HUD_DRAW_TARGET.OVERLAY)
+	migrate_hud_element_widgets(hud, compositor.offscreen_renderer, compositor.original_renderer, RENDER_MODE.CURVED)
+	migrate_hud_element_widgets(hud, compositor.screen_renderer, compositor.original_renderer, RENDER_MODE.OVERLAY)
 	transfer_widget_renderer_owners(compositor.offscreen_renderer, compositor.original_renderer)
 	transfer_widget_renderer_owners(compositor.screen_renderer, compositor.original_renderer)
 
@@ -499,7 +499,7 @@ local function draw_original_hud_elements(hud, original_draw, dt, t, input_servi
 		local element_name = element.__class_name
 
 		if currently_visible_elements[element_name]
-			and hud_element_draw_target(element) ~= HUD_DRAW_TARGET.ORIGINAL
+			and hud_element_render_mode(element) ~= RENDER_MODE.ORIGINAL
 		then
 			currently_visible_elements[element_name] = false
 			hidden_element_names[#hidden_element_names + 1] = element_name
@@ -513,8 +513,8 @@ local function draw_original_hud_elements(hud, original_draw, dt, t, input_servi
 	end
 end
 
-local function draw_hud_elements(hud, dt, t, input_service, compositor, draw_target)
-	local ui_renderer = draw_target == HUD_DRAW_TARGET.CURVED
+local function draw_hud_elements(hud, dt, t, input_service, compositor, render_mode)
+	local ui_renderer = render_mode == RENDER_MODE.CURVED
 		and compositor.offscreen_renderer or compositor.screen_renderer
 	local render_settings = hud._render_settings
 	local saved_start_layer = render_settings.start_layer
@@ -531,12 +531,12 @@ local function draw_hud_elements(hud, dt, t, input_service, compositor, draw_tar
 		local element = elements_array[i]
 		local element_name = element.__class_name
 
-		if hud_element_draw_target(element) == draw_target
+		if hud_element_render_mode(element) == render_mode
 			and currently_visible_elements[element_name]
 			and element.draw
 		then
 			local hud_scale_applied = false
-			local opacity_multiplier = draw_target == HUD_DRAW_TARGET.OVERLAY and 1 or opacity_settings
+			local opacity_multiplier = render_mode == RENDER_MODE.OVERLAY and 1 or opacity_settings
 
 			if elements_hud_scale_lookup[element_name] then
 				hud_scale_applied = true
@@ -637,9 +637,9 @@ local function install_hud_methods(hud)
 
 		prepare_hud_render_passes(compositor)
 		draw_original_hud_elements(self, original_draw, dt, t, input_service)
-		draw_hud_elements(self, dt, t, input_service, compositor, HUD_DRAW_TARGET.CURVED)
+		draw_hud_elements(self, dt, t, input_service, compositor, RENDER_MODE.CURVED)
 		draw_curved_hud_to_screen(compositor)
-		draw_hud_elements(self, dt, t, input_service, compositor, HUD_DRAW_TARGET.OVERLAY)
+		draw_hud_elements(self, dt, t, input_service, compositor, RENDER_MODE.OVERLAY)
 	end
 end
 
