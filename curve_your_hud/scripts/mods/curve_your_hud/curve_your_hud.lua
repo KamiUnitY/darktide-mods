@@ -670,8 +670,15 @@ local function register_hud(hud)
 
 			if element then
 				apply_hud_element_definition(element, definition)
-				install_element_lifecycle_routing(element)
 			end
+		end
+	end
+
+	local elements_array = hud._elements_array
+
+	if elements_array then
+		for i = 1, #elements_array do
+			install_element_lifecycle_routing(elements_array[i])
 		end
 	end
 
@@ -868,6 +875,9 @@ end
 
 mod.on_disabled = function()
 	set_effect_enabled(false)
+
+	-- Preserve render-mode registration while mod is disabled.
+	mod:hook_enable(UIHud, "_add_element")
 end
 
 mod.on_unload = function()
