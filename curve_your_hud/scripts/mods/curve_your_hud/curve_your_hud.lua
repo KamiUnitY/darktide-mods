@@ -84,7 +84,6 @@ local hud_compositors = setmetatable({}, { __mode = "k" })
 local hud_element_render_modes = setmetatable({}, { __mode = "k" })
 local original_hud_draw_methods = setmetatable({}, { __mode = "k" })
 local original_element_lifecycle_methods = setmetatable({}, { __mode = "k" })
-local widget_renderer_owners = setmetatable({}, { __mode = "k" })
 local world_enabled_by_name = {}
 local gameplay_state_active
 local hud_material_ready = false
@@ -267,6 +266,15 @@ local function install_element_lifecycle_routing(element)
 	route_element_update_method(element, originals, "begin_update")
 	route_element_update_method(element, originals, "update")
 	route_element_update_method(element, originals, "end_update")
+
+	if element.set_visible then
+		originals.set_visible = element.set_visible
+		element.set_visible = function(self, visible, ui_renderer, ...)
+			local selected_renderer = element_renderer(self, ui_renderer)
+
+			call_with_element_renderer(self, selected_renderer, originals.set_visible, visible, selected_renderer, ...)
+		end
+	end
 end
 
 local function restore_element_lifecycle_routing(element)
@@ -308,7 +316,7 @@ local function is_live_widget(value)
 	return parent_name ~= nil and parent_name == rawget(value, "name")
 end
 
-local function release_owned_widgets(value, ui_renderer, destination_renderer, visited)
+local function release_owned_widgets(value, ui_renderer, visited)
 	if type(value) ~= "table" or visited[value] then
 		return
 	end
@@ -318,18 +326,17 @@ local function release_owned_widgets(value, ui_renderer, destination_renderer, v
 	if is_live_widget(value) then
 		UIWidget.destroy(ui_renderer, value)
 		value.dirty = true
-		widget_renderer_owners[value] = destination_renderer
 		return
 	end
 
 	for key, child in pairs(value) do
 		if key ~= "_parent" and type(child) == "table" then
-			release_owned_widgets(child, ui_renderer, destination_renderer, visited)
+			release_owned_widgets(child, ui_renderer, visited)
 		end
 	end
 end
 
-local function migrate_hud_element_widgets(hud, source_renderer, destination_renderer, render_mode)
+local function release_hud_element_widgets(hud, source_renderer, render_mode)
 	local elements = hud._elements_array
 
 	if source_renderer and elements then
@@ -339,46 +346,13 @@ local function migrate_hud_element_widgets(hud, source_renderer, destination_ren
 			local element = elements[i]
 
 			if hud_element_render_mode(element) == render_mode then
-				release_owned_widgets(element, source_renderer, destination_renderer, visited)
+				release_owned_widgets(element, source_renderer, visited)
 			end
 		end
 	end
 
 	hud._refresh_retained = true
 end
-
-local function transfer_widget_renderer_owners(source_renderer, destination_renderer)
-	for widget, ui_renderer in pairs(widget_renderer_owners) do
-		if ui_renderer == source_renderer then
-			widget_renderer_owners[widget] = destination_renderer
-		end
-	end
-end
-
-mod:hook(UIWidget, "draw", function(func, widget, ui_renderer, ...)
-	local renderer_name = ui_renderer.name
-
-	if widget_renderer_owners[widget]
-		or renderer_name == SCREEN_RENDERER_NAME
-		or renderer_name == OFFSCREEN_RENDERER_NAME
-	then
-		widget_renderer_owners[widget] = ui_renderer
-	end
-
-	return func(widget, ui_renderer, ...)
-end)
-
-mod:hook(UIWidget, "destroy", function(func, ui_renderer, widget, ...)
-	local widget_renderer = widget_renderer_owners[widget] or ui_renderer
-
-	widget_renderer_owners[widget] = nil
-
-	return func(widget_renderer, widget, ...)
-end)
-
-mod:hook(UIWidget, "set_visible", function(func, widget, ui_renderer, ...)
-	return func(widget, widget_renderer_owners[widget] or ui_renderer, ...)
-end)
 
 --------------------
 -- HUD COMPOSITOR --
@@ -435,8 +409,8 @@ local function get_or_create_hud_compositor(hud)
 
 	hud_compositors[hud] = compositor
 
-	migrate_hud_element_widgets(hud, original_renderer, offscreen_renderer, RENDER_MODE.CURVED)
-	migrate_hud_element_widgets(hud, original_renderer, screen_renderer, RENDER_MODE.OVERLAY)
+	release_hud_element_widgets(hud, original_renderer, RENDER_MODE.CURVED)
+	release_hud_element_widgets(hud, original_renderer, RENDER_MODE.OVERLAY)
 
 	return compositor
 end
@@ -450,10 +424,8 @@ local function destroy_hud_compositor(hud)
 
 	hud_compositors[hud] = nil
 
-	migrate_hud_element_widgets(hud, compositor.offscreen_renderer, compositor.original_renderer, RENDER_MODE.CURVED)
-	migrate_hud_element_widgets(hud, compositor.screen_renderer, compositor.original_renderer, RENDER_MODE.OVERLAY)
-	transfer_widget_renderer_owners(compositor.offscreen_renderer, compositor.original_renderer)
-	transfer_widget_renderer_owners(compositor.screen_renderer, compositor.original_renderer)
+	release_hud_element_widgets(hud, compositor.offscreen_renderer, RENDER_MODE.CURVED)
+	release_hud_element_widgets(hud, compositor.screen_renderer, RENDER_MODE.OVERLAY)
 
 	Managers.ui:destroy_renderer(OFFSCREEN_RENDERER_NAME)
 	Managers.ui:destroy_renderer(SCREEN_RENDERER_NAME)
