@@ -240,9 +240,7 @@ local function call_with_element_renderer(element, ui_renderer, callback, ...)
 end
 
 local function install_element_lifecycle_routing(element)
-	if original_element_lifecycle_methods[element] then
-		return
-	end
+	if original_element_lifecycle_methods[element] then return end
 
 	local originals = {}
 
@@ -284,9 +282,7 @@ end
 local function restore_element_lifecycle_routing(element)
 	local originals = original_element_lifecycle_methods[element]
 
-	if not originals then
-		return
-	end
+	if not originals then return end
 
 	for method_name, original_method in pairs(originals) do
 		element[method_name] = original_method
@@ -298,9 +294,7 @@ end
 local function restore_hud_element_lifecycle_routing(hud)
 	local elements = hud._elements_array
 
-	if not elements then
-		return
-	end
+	if not elements then return end
 
 	for i = 1, #elements do
 		restore_element_lifecycle_routing(elements[i])
@@ -321,9 +315,7 @@ local function is_live_widget(value)
 end
 
 local function release_owned_widgets(value, ui_renderer, visited)
-	if type(value) ~= "table" or visited[value] then
-		return
-	end
+	if visited[value] then return end
 
 	visited[value] = true
 
@@ -422,9 +414,7 @@ end
 local function destroy_hud_compositor(hud)
 	local compositor = hud_compositors[hud]
 
-	if not compositor then
-		return
-	end
+	if not compositor then return end
 
 	hud_compositors[hud] = nil
 
@@ -594,9 +584,7 @@ local function is_world_enabled(world_name)
 end
 
 local function install_hud_methods(hud)
-	if original_hud_draw_methods[hud] then
-		return
-	end
+	if original_hud_draw_methods[hud] then return end
 
 	local original_draw = hud.draw
 
@@ -629,9 +617,7 @@ local function restore_hud_draw_methods(hud)
 end
 
 local function register_hud(hud)
-	if not hud then
-		return
-	end
+	if not hud then return end
 
 	known_huds[hud] = true
 	world_enabled_by_name[hud._world_name] = Managers.world:is_world_enabled(hud._world_name) == true
@@ -754,9 +740,7 @@ end
 local function set_effect_enabled(enabled)
 	enabled = not not enabled
 
-	if mod.effect_enabled == enabled then
-		return
-	end
+	if mod.effect_enabled == enabled then return end
 
 	mod.effect_enabled = enabled
 
@@ -910,9 +894,7 @@ end
 mod:hook_safe(UIHud, "_add_element", function(self, definition, elements)
 	local element = elements[definition.class_name]
 
-	if not element then
-		return
-	end
+	if not element then return end
 
 	apply_hud_element_definition(element, definition)
 	install_element_lifecycle_routing(element)
