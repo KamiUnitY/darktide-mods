@@ -83,7 +83,7 @@ local known_huds = setmetatable({}, { __mode = "k" })
 local hud_compositors = setmetatable({}, { __mode = "k" })
 local hud_element_render_modes = setmetatable({}, { __mode = "k" })
 local original_hud_draw_methods = setmetatable({}, { __mode = "k" })
-local original_element_lifecycle_methods = setmetatable({}, { __mode = "k" })
+local original_element_renderer_routing = setmetatable({}, { __mode = "k" })
 local world_enabled_by_name = {}
 local gameplay_state_active
 local hud_material_ready = false
@@ -239,12 +239,12 @@ local function call_with_element_renderer(element, ui_renderer, callback, ...)
 	end
 end
 
-local function install_element_lifecycle_routing(element)
-	if original_element_lifecycle_methods[element] then return end
+local function install_element_renderer_routing(element)
+	if original_element_renderer_routing[element] then return end
 
 	local originals = {}
 
-	original_element_lifecycle_methods[element] = originals
+	original_element_renderer_routing[element] = originals
 
 	if element.begin_update then
 		originals.begin_update = element.begin_update
@@ -279,8 +279,8 @@ local function install_element_lifecycle_routing(element)
 	end
 end
 
-local function restore_element_lifecycle_routing(element)
-	local originals = original_element_lifecycle_methods[element]
+local function restore_element_renderer_routing(element)
+	local originals = original_element_renderer_routing[element]
 
 	if not originals then return end
 
@@ -288,16 +288,16 @@ local function restore_element_lifecycle_routing(element)
 		element[method_name] = original_method
 	end
 
-	original_element_lifecycle_methods[element] = nil
+	original_element_renderer_routing[element] = nil
 end
 
-local function restore_hud_element_lifecycle_routing(hud)
+local function restore_hud_element_renderer_routing(hud)
 	local elements = hud._elements_array
 
 	if not elements then return end
 
 	for i = 1, #elements do
-		restore_element_lifecycle_routing(elements[i])
+		restore_element_renderer_routing(elements[i])
 	end
 end
 
@@ -640,7 +640,7 @@ local function register_hud(hud)
 
 	if elements_array then
 		for i = 1, #elements_array do
-			install_element_lifecycle_routing(elements_array[i])
+			install_element_renderer_routing(elements_array[i])
 		end
 	end
 
@@ -662,7 +662,7 @@ end)
 mod:hook(UIHud, "destroy", function(func, self, ...)
 	destroy_hud_compositor(self)
 	restore_hud_draw_methods(self)
-	restore_hud_element_lifecycle_routing(self)
+	restore_hud_element_renderer_routing(self)
 	known_huds[self] = nil
 
 	return func(self, ...)
@@ -845,7 +845,7 @@ mod.on_unload = function()
 
 	for hud in pairs(known_huds) do
 		restore_hud_draw_methods(hud)
-		restore_hud_element_lifecycle_routing(hud)
+		restore_hud_element_renderer_routing(hud)
 	end
 
 	if custom_assets then
@@ -897,7 +897,7 @@ mod:hook_safe(UIHud, "_add_element", function(self, definition, elements)
 	if not element then return end
 
 	apply_hud_element_definition(element, definition)
-	install_element_lifecycle_routing(element)
+	install_element_renderer_routing(element)
 end)
 
 --------------------
