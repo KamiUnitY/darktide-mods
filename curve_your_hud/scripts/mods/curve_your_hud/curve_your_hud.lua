@@ -161,12 +161,6 @@ local function is_gameplay_hud_element(element)
 end
 
 local function calculate_hud_element_render_mode(element)
-	local render_mode_override = element[RENDER_MODE_OVERRIDE_PROPERTY]
-
-	if VALID_RENDER_MODES[render_mode_override] then
-		return render_mode_override
-	end
-
 	local element_name = element.__class_name
 
 	if ORIGINAL_ELEMENT_NAMES[element_name] then
@@ -188,7 +182,19 @@ local function hud_element_render_mode(element)
 	local render_mode = hud_element_render_modes[element]
 
 	if not render_mode then
-		render_mode = calculate_hud_element_render_mode(element)
+		local render_mode_calculated = calculate_hud_element_render_mode(element)
+		local render_mode_override = element[RENDER_MODE_OVERRIDE_PROPERTY]
+		local log_render_mode_override = ""
+
+		render_mode = render_mode_calculated
+
+		if VALID_RENDER_MODES[render_mode_override] then
+			render_mode = render_mode_override
+			log_render_mode_override = string.format(" -> '%s'", render_mode)
+		end
+
+		mod:info("Render mode '%s': '%s'%s", tostring(element.__class_name), render_mode_calculated, log_render_mode_override)
+
 		hud_element_render_modes[element] = render_mode
 	end
 
