@@ -217,6 +217,13 @@ local function renderer_for_element(compositor, element)
 	return compositor.original_renderer
 end
 
+local function element_renderer(element, fallback_renderer)
+	local hud = element._parent
+	local compositor = hud and hud_compositors[hud]
+
+	return compositor and renderer_for_element(compositor, element) or fallback_renderer
+end
+
 local function call_with_element_renderer(element, ui_renderer, callback, ...)
 	local hud = element._parent
 	local saved_hud_renderer = hud and hud._ui_renderer
@@ -232,28 +239,6 @@ local function call_with_element_renderer(element, ui_renderer, callback, ...)
 	end
 end
 
-local function element_renderer(element, fallback_renderer)
-	local hud = element._parent
-	local compositor = hud and hud_compositors[hud]
-
-	return compositor and renderer_for_element(compositor, element) or fallback_renderer
-end
-
-local function route_element_update_method(element, originals, method_name)
-	local original_method = element[method_name]
-
-	if not original_method then
-		return
-	end
-
-	originals[method_name] = original_method
-	element[method_name] = function(self, dt, t, ui_renderer, ...)
-		local selected_renderer = element_renderer(self, ui_renderer)
-
-		call_with_element_renderer(self, selected_renderer, original_method, dt, t, selected_renderer, ...)
-	end
-end
-
 local function install_element_lifecycle_routing(element)
 	if original_element_lifecycle_methods[element] then
 		return
@@ -263,15 +248,34 @@ local function install_element_lifecycle_routing(element)
 
 	original_element_lifecycle_methods[element] = originals
 
-	route_element_update_method(element, originals, "begin_update")
-	route_element_update_method(element, originals, "update")
-	route_element_update_method(element, originals, "end_update")
+	if element.begin_update then
+		originals.begin_update = element.begin_update
+		element.begin_update = function(self, dt, t, ui_renderer, ...)
+			local selected_renderer = element_renderer(self, ui_renderer)
+			call_with_element_renderer(self, selected_renderer, originals.begin_update, dt, t, selected_renderer, ...)
+		end
+	end
+
+	if element.update then
+		originals.update = element.update
+		element.update = function(self, dt, t, ui_renderer, ...)
+			local selected_renderer = element_renderer(self, ui_renderer)
+			call_with_element_renderer(self, selected_renderer, originals.update, dt, t, selected_renderer, ...)
+		end
+	end
+
+	if element.end_update then
+		originals.end_update = element.end_update
+		element.end_update = function(self, dt, t, ui_renderer, ...)
+			local selected_renderer = element_renderer(self, ui_renderer)
+			call_with_element_renderer(self, selected_renderer, originals.end_update, dt, t, selected_renderer, ...)
+		end
+	end
 
 	if element.set_visible then
 		originals.set_visible = element.set_visible
 		element.set_visible = function(self, visible, ui_renderer, ...)
 			local selected_renderer = element_renderer(self, ui_renderer)
-
 			call_with_element_renderer(self, selected_renderer, originals.set_visible, visible, selected_renderer, ...)
 		end
 	end
