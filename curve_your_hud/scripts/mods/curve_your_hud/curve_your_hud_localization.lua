@@ -1,7 +1,7 @@
 return {
 	mod_name = { en = "Curve Your HUD" },
 	mod_description = {
-		en = "Applies a curve effect to the HUD.",
+		en = "Applies a curved effect to the HUD, along with scanlines, noise, camera and motion sway effects.",
 	},
 	toggle_keybind = { en = "Toggle Mod" },
 	toggle_keybind_description = {
