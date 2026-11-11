@@ -336,6 +336,10 @@ local function release_owned_widgets(value, ui_renderer, visited)
 			release_owned_widgets(child, ui_renderer, visited)
 		end
 	end
+
+	if rawget(value, "_widgets") and type(value.set_dirty) == "function" then
+		value:set_dirty()
+	end
 end
 
 local function release_hud_element_widgets(hud, source_renderer, render_mode)
