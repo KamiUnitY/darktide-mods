@@ -57,8 +57,6 @@ local VALID_RENDER_MODES = {
 	[RENDER_MODE.OVERLAY] = true,
 }
 
-local RENDER_MODE_OVERRIDE_PROPERTY = "curve_your_hud_render_mode_override"
-
 local CUSTOM_ASSETS_API_VERSION = 1
 local HUD_CUSTOM_ASSET_ID = "curve_your_hud:hud_curve_clean"
 local HUD_RENDER_TARGET_MATERIAL = "content/mods/curve_your_hud/hud_curve_clean"
@@ -182,8 +180,10 @@ local function hud_element_render_mode(element)
 	local render_mode = hud_element_render_modes[element]
 
 	if not render_mode then
+		local config = element.curve_your_hud
+
 		local render_mode_calculated = calculate_hud_element_render_mode(element)
-		local render_mode_override = element[RENDER_MODE_OVERRIDE_PROPERTY]
+		local render_mode_override = config and config.render_mode_override
 		local log_render_mode_override = ""
 
 		render_mode = render_mode_calculated
@@ -202,10 +202,10 @@ local function hud_element_render_mode(element)
 end
 
 local function apply_hud_element_definition(element, definition)
-	local render_mode_override = definition[RENDER_MODE_OVERRIDE_PROPERTY]
+	local config = definition.curve_your_hud
 
-	if VALID_RENDER_MODES[render_mode_override] then
-		element[RENDER_MODE_OVERRIDE_PROPERTY] = render_mode_override
+	if type(config) == "table" then
+		element.curve_your_hud = config
 	end
 
 	hud_element_render_modes[element] = nil
