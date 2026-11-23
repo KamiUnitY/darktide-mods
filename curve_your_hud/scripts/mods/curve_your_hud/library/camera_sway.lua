@@ -45,9 +45,18 @@ local function local_player()
 	return player_manager and player_manager:local_player_safe(1)
 end
 
-local function get_local_player()
+local function active_player()
 	local player = local_player()
-	return player and player.player_unit
+	local camera_handler = player and player.camera_handler
+	local follow_unit = camera_handler and camera_handler:camera_follow_unit()
+
+	if follow_unit and alive(follow_unit) then
+		local player_unit_spawn = Managers.state and Managers.state.player_unit_spawn
+		local follow_player = player_unit_spawn and player_unit_spawn:owner(follow_unit)
+		return follow_player or player
+	end
+
+	return player
 end
 
 local function player_ext(unit, extension_name)
@@ -56,7 +65,7 @@ end
 
 ---@param dt number
 function CameraSway.sample_camera(dt)
-	local player = local_player()
+	local player = active_player()
 	local orientation = player and player:get_orientation()
 	if not orientation or dt <= 0 then
 		last_yaw, last_pitch = nil, nil
@@ -84,7 +93,9 @@ end
 
 function CameraSway.sample_motion()
 	motion_x, motion_y = 0, 0
-	local first_person = player_ext(get_local_player(), "first_person_system")
+	local player = active_player()
+	local player_unit = player and player.player_unit
+	local first_person = player_ext(player_unit, "first_person_system")
 	local fp_unit = first_person and first_person:first_person_unit()
 	if not (fp_unit and alive(fp_unit)) then
 		return
