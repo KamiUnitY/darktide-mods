@@ -37,12 +37,17 @@ local ORIGINAL_ELEMENT_NAMES = {
 	HudElementEmoteWheel = true,
 	HudElementSmartTagging = true,
 	HudElementDamageIndicator = true,
+
+	StrikemapElement = true, --strikemap
 }
 
 local OVERLAY_ELEMENT_NAMES = {
 	HudElementTacticalOverlay = true,
 	HudElementCutsceneOverlay = true,
 	HudElementCutsceneFading = true,
+
+	HudElementReplaysMenu = true, --Replays
+	HudEditor = true, --hud_studio
 }
 
 local RENDER_MODE = {
