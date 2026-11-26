@@ -26,6 +26,7 @@ local motion_x, motion_y = 0, 0
 local offset_x, offset_y = 0, 0
 
 local bone_unit, bone_index
+local spectated_orientation = {}
 
 ---@param delta number
 ---@return number
@@ -45,28 +46,45 @@ local function local_player()
 	return player_manager and player_manager:local_player_safe(1)
 end
 
-local function active_player()
-	local player = local_player()
+local function camera_follow_unit(player)
 	local camera_handler = player and player.camera_handler
 	local follow_unit = camera_handler and camera_handler:camera_follow_unit()
 
 	if follow_unit and alive(follow_unit) then
-		local player_unit_spawn = Managers.state and Managers.state.player_unit_spawn
-		local follow_player = player_unit_spawn and player_unit_spawn:owner(follow_unit)
-		return follow_player or player
+		return follow_unit
 	end
 
-	return player
+	return player and player.player_unit
 end
 
 local function player_ext(unit, extension_name)
 	return unit and alive(unit) and ScriptUnit.has_extension(unit, extension_name)
 end
 
+local function camera_orientation(player)
+	if not player then return end
+
+	local follow_unit = camera_follow_unit(player)
+
+	if follow_unit and follow_unit ~= player.player_unit then
+		local first_person = player_ext(follow_unit, "first_person_system")
+		local rotation = first_person and first_person:spectated_aim_rotation()
+
+		if rotation then
+			spectated_orientation.yaw = yaw(rotation)
+			spectated_orientation.pitch = pitch(rotation)
+
+			return spectated_orientation
+		end
+	end
+
+	return player.get_orientation and player:get_orientation()
+end
+
 ---@param dt number
 function CameraSway.sample_camera(dt)
-	local player = active_player()
-	local orientation = player and player:get_orientation()
+	local orientation = camera_orientation(local_player())
+
 	if not orientation or dt <= 0 then
 		last_yaw, last_pitch = nil, nil
 		yaw_rate, pitch_rate = 0, 0
@@ -93,8 +111,7 @@ end
 
 function CameraSway.sample_motion()
 	motion_x, motion_y = 0, 0
-	local player = active_player()
-	local player_unit = player and player.player_unit
+	local player_unit = camera_follow_unit(local_player())
 	local first_person = player_ext(player_unit, "first_person_system")
 	local fp_unit = first_person and first_person:first_person_unit()
 	if not (fp_unit and alive(fp_unit)) then
